@@ -1,0 +1,30 @@
+# --- Frontend (Next.js) ---
+node_modules/
+.next/
+out/
+build/
+.env*.local
+.vercel
+
+# --- Backend (Go) ---
+# Binaries and icons
+bin/
+backend/backend    # If your compiled binary is named 'backend'
+main               # If your compiled binary is named 'main'
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Dependency directories
+vendor/
+
+# Go Air (hot reload) temporary files
+tmp/
+
+# --- General ---
+.env
+.DS_Store
+.vscode/
+.idea/
