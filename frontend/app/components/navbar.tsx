@@ -1,0 +1,196 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Cpu, Ticket, Plus, Activity, LogOut, User, LogIn } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase"; // Ensure this path matches your project
+import AuthModal from "./AuthModal";
+
+export default function Navbar() {
+	const pathname = usePathname();
+	const router = useRouter();
+	const [user, setUser] = useState<any>(null);
+	const [showLoginModal, setShowLoginModal] = useState(false);
+
+	// 1. Check User Session on Mount
+	useEffect(() => {
+		const getUser = async () => {
+			const {
+				data: { session },
+			} = await supabase.auth.getSession();
+			setUser(session?.user ?? null);
+		};
+		getUser();
+
+		// Optional: Listen for auth changes (login/logout) to update UI instantly
+		const {
+			data: { subscription },
+		} = supabase.auth.onAuthStateChange((_event, session) => {
+			setUser(session?.user ?? null);
+		});
+
+		return () => subscription.unsubscribe();
+	}, []);
+
+	// 2. Logout Function
+	const handleLogout = async () => {
+		await supabase.auth.signOut();
+		router.refresh();
+		// Optional: router.push('/') if you want to redirect home
+	};
+
+	const isActive = (path: string) => pathname === path;
+
+	const getLinkClass = (path: string) => {
+		const base = "pb-1 transition-colors hover:text-white";
+		return isActive(path)
+			? `${base} text-white border-b-2 border-[#00FFA3]`
+			: `${base} text-gray-400`;
+	};
+
+	return (
+		<>
+			<nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 py-4 px-8 flex justify-between items-center">
+				{/* LEFT: Logo */}
+				<Link href="/" className="flex items-center gap-3 group">
+					<div className="w-8 h-8 bg-[#00FFA3] rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(0,255,163,0.4)] group-hover:shadow-[0_0_25px_rgba(0,255,163,0.6)] transition">
+						<Cpu className="text-black w-5 h-5" />
+					</div>
+					<span className="text-xl font-bold tracking-tighter italic text-white">
+						Auto<span className="text-[#00FFA3]">Trader</span>
+					</span>
+				</Link>
+
+				{/* CENTER: Navigation Links */}
+				<div className="hidden md:flex gap-8 font-medium text-sm">
+					<Link href="/" className={getLinkClass("/")}>
+						Home
+					</Link>
+					<Link href="/dashboard" className={getLinkClass("/dashboard")}>
+						Dashboard
+					</Link>
+					<Link href="/bots" className={getLinkClass("/bots")}>
+						My Bots
+					</Link>
+					<Link href="/billing" className={getLinkClass("/billing")}>
+						Billing
+					</Link>
+				</div>
+
+				{/* RIGHT: System Fuel + Status + Profile */}
+				<div className="flex items-center gap-6">
+					{/* System Fuel */}
+					<div className="hidden lg:flex items-center gap-4 px-6 border-r border-white/10">
+						<div className="text-right">
+							<div className="flex items-center justify-end gap-2 mb-1">
+								<Ticket className="w-3 h-3 text-[#00FFA3]" />
+								<p className="text-[10px] text-gray-500 uppercase tracking-widest">
+									System Fuel
+								</p>
+							</div>
+
+							<div className="flex items-center gap-3">
+								<div className="flex flex-col items-end">
+									<span className="text-xs font-bold text-white">
+										<span className="text-[#00FFA3]">4.5</span> Tickets
+									</span>
+									<div className="w-24 h-1 bg-white/10 rounded-full mt-1 overflow-hidden border border-white/5">
+										<div className="bg-linear-to-r from-[#00FFA3] to-emerald-500 h-full w-[45%] shadow-[0_0_10px_rgba(0,255,163,0.5)]"></div>
+									</div>
+								</div>
+
+								<button
+									onClick={() => router.push("/buyTickets")}
+									className="w-7 h-7 rounded-lg bg-[#00FFA3]/10 border border-[#00FFA3]/20 flex items-center justify-center hover:bg-[#00FFA3] hover:text-black transition-all group active:scale-95"
+								>
+									<Plus className="w-4 h-4 group-hover:scale-110 transition" />
+								</button>
+							</div>
+						</div>
+					</div>
+
+					{/* MT5 Status */}
+					<div className="hidden sm:block text-right">
+						<p className="text-[10px] text-gray-500 uppercase tracking-widest mb-0.5">
+							MT5 Status
+						</p>
+						<div className="text-xs flex items-center gap-1 justify-end font-bold text-[#00FFA3]">
+							<Activity className="w-3 h-3 animate-pulse" />
+							Connected
+						</div>
+					</div>
+
+					{/* PROFILE DROPDOWN AREA */}
+					<div className="relative group">
+						{/* Avatar Trigger */}
+						<div className="w-10 h-10 rounded-full bg-linear-to-tr from-emerald-400 to-blue-500 border-2 border-white/10 cursor-pointer hover:scale-105 transition shadow-[0_0_15px_rgba(0,255,163,0.2)]"></div>
+
+						{/* Dropdown Menu (Visible on Group Hover) */}
+						<div className="absolute right-0 top-full pt-4 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2">
+							<div className="bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden">
+								{user ? (
+									// LOGGED IN MENU
+									<div className="flex flex-col">
+										<div className="px-4 py-3 border-b border-white/5">
+											<p className="text-xs text-gray-400">Signed in as</p>
+											<p className="text-sm font-bold text-white truncate">
+												{user.email}
+											</p>
+										</div>
+										<button
+											onClick={() => router.push("/profile")}
+											className="flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-[#00FFA3] transition-colors text-left"
+										>
+											<User className="w-4 h-4" />
+											Profile
+										</button>
+										<button
+											onClick={handleLogout}
+											className="flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-white/5 hover:text-red-300 transition-colors text-left"
+										>
+											<LogOut className="w-4 h-4" />
+											Log Out
+										</button>
+									</div>
+								) : (
+									// LOGGED OUT MENU
+									<div className="flex flex-col p-1">
+										<button
+											onClick={() => setShowLoginModal(true)}
+											className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-white bg-[#00FFA3]/10 hover:bg-[#00FFA3] hover:text-black rounded-lg transition-all"
+										>
+											<LogIn className="w-4 h-4" />
+											Log In
+										</button>
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
+				</div>
+			</nav>
+
+			{/* LOGIN MODAL */}
+			{/* Conditionally render your modal here based on showLoginModal state */}
+			{showLoginModal && (
+				// <LoginModal onClose={() => setShowLoginModal(false)} />
+				// Replace the div below with your actual <LoginModal /> component
+				<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+					<div className="bg-[#111] border border-white/10 p-8 rounded-2xl relative">
+						<button
+							onClick={() => setShowLoginModal(false)}
+							className="absolute top-4 right-4 text-gray-500 hover:text-white"
+						>
+							✕
+						</button>
+						<AuthModal
+							isOpen={showLoginModal}
+							onClose={() => setShowLoginModal(false)}
+						/>
+					</div>
+				</div>
+			)}
+		</>
+	);
+}
