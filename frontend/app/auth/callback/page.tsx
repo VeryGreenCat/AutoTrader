@@ -11,7 +11,7 @@ export default function AuthCallback() {
 		supabase.auth.getSession().then(({ data }) => {
 			if (data.session) {
 				console.log("User signed in:", data.session.user);
-				// router.push("/");
+				router.push("/dashboard");
 			}
 		});
 	}, [router]);

@@ -132,12 +132,6 @@ export default function Navbar() {
 								{user ? (
 									// LOGGED IN MENU
 									<div className="flex flex-col">
-										<div className="px-4 py-3 border-b border-white/5">
-											<p className="text-xs text-gray-400">Signed in as</p>
-											<p className="text-sm font-bold text-white truncate">
-												{user.email}
-											</p>
-										</div>
 										<button
 											onClick={() => router.push("/profile")}
 											className="flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-[#00FFA3] transition-colors text-left"

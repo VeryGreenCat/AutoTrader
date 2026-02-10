@@ -2,12 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+	// 1. Setup Response
 	let response = NextResponse.next({
-		request: {
-			headers: request.headers,
-		},
+		request: { headers: request.headers },
 	});
 
+	// 2. Setup Supabase
 	const supabase = createServerClient(
 		process.env.NEXT_PUBLIC_SUPABASE_URL!,
 		process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -21,9 +21,7 @@ export async function middleware(request: NextRequest) {
 						request.cookies.set(name, value),
 					);
 					response = NextResponse.next({
-						request: {
-							headers: request.headers,
-						},
+						request: { headers: request.headers },
 					});
 					cookiesToSet.forEach(({ name, value, options }) =>
 						response.cookies.set(name, value, options),
@@ -33,25 +31,21 @@ export async function middleware(request: NextRequest) {
 		},
 	);
 
+	// 3. Get User
 	const {
 		data: { session },
 	} = await supabase.auth.getSession();
 
-	// --- CONFIGURATION ---
+	// 4. Access Control
 	const path = request.nextUrl.pathname;
 
-	// 1. Define Public Routes (Guests can see these)
+	// Define explicitly what is PUBLIC. Everything else is private.
 	const isPublicRoute = path === "/" || path.startsWith("/auth");
 
-	// 2. Define Protected Routes (Only logged in users can see these)
-	// For now, let's say ANYTHING that isn't public is protected.
-	// Or you can make a specific list like: const isProtectedRoute = path.startsWith('/dashboard')
-
-	// LOGIC:
-	// If user is NOT logged in AND tries to visit a private page -> Login
+	// If NO session AND NOT public -> Redirect
 	if (!session && !isPublicRoute) {
 		const url = request.nextUrl.clone();
-		url.pathname = "/auth/login";
+		url.pathname = "/"; // Redirect to Home or Login
 		return NextResponse.redirect(url);
 	}
 
@@ -60,7 +54,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
 	matcher: [
-		// Apply to all routes excluding static files
+		// Matches everything EXCEPT static files (images, css, etc.)
 		"/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
 	],
 };

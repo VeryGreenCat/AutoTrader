@@ -19,21 +19,30 @@ export default function AuthProvider({
 				data: { session },
 			} = await supabase.auth.getSession();
 
+			// 1. Define Public Routes (Pages guests are ALLOWED to see)
+			const publicRoutes = ["/", "/auth/callback"];
+
+			// Check if current path starts with any public route
+			// e.g., "/auth/verify-otp" starts with "/auth" so it might be public depending on logic
+			const isPublic = publicRoutes.some(
+				(route) => pathname === route || pathname.startsWith("/auth"),
+			);
+
 			// CASE 1: No Session (Guest)
-			// If we are on a protected page, middleware would have already kicked us out.
-			// If we are on homepage, we stay as guest.
 			if (!session) {
+				// If they are on a PROTECTED page, kick them to login
+				if (!isPublic) {
+					router.push("/"); // Or router.push("/auth/login")
+				}
 				setLoading(false);
 				return;
 			}
 
-			// CASE 2: User is Logged in (Google or Email)
-			// Now we check if they did the OTP step.
+			// CASE 2: User is Logged in
+			// Check OTP logic
 			const isOtpVerified = sessionStorage.getItem("otp_verified") === "true";
 
-			// If they are logged in, BUT not verified, AND not currently on the verify page...
 			if (!isOtpVerified && pathname !== "/auth/verify-otp") {
-				// Force them to verify
 				router.push("/auth/verify-otp");
 			}
 
@@ -43,8 +52,8 @@ export default function AuthProvider({
 		checkAuth();
 	}, [router, pathname]);
 
-	// Optional: You can show a loading spinner while checking auth
-	// if (loading) return <div>Loading...</div>;
+	// While checking, render nothing (or a spinner) to prevent "flashing" the dashboard
+	if (loading) return null;
 
 	return <>{children}</>;
 }
