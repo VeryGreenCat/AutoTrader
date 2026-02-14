@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, usePathname } from "next/navigation";
+import VerifyOTP from "./VerifyOTP";
 
 export default function AuthProvider({
 	children,
@@ -12,6 +13,7 @@ export default function AuthProvider({
 	const router = useRouter();
 	const pathname = usePathname();
 	const [loading, setLoading] = useState(true);
+	const [openModal, setOpenModal] = useState(false);
 
 	useEffect(() => {
 		const checkAuth = async () => {
@@ -23,7 +25,7 @@ export default function AuthProvider({
 			const publicRoutes = ["/", "/auth/callback"];
 
 			// Check if current path starts with any public route
-			// e.g., "/auth/verify-otp" starts with "/auth" so it might be public depending on logic
+
 			const isPublic = publicRoutes.some(
 				(route) => pathname === route || pathname.startsWith("/auth"),
 			);
@@ -42,8 +44,8 @@ export default function AuthProvider({
 			// Check OTP logic
 			const isOtpVerified = sessionStorage.getItem("otp_verified") === "true";
 
-			if (!isOtpVerified && pathname !== "/auth/verify-otp") {
-				router.push("/auth/verify-otp");
+			if (!isOtpVerified && !openModal) {
+				setOpenModal(true);
 			}
 
 			setLoading(false);
@@ -55,5 +57,10 @@ export default function AuthProvider({
 	// While checking, render nothing (or a spinner) to prevent "flashing" the dashboard
 	if (loading) return null;
 
-	return <>{children}</>;
+	return (
+		<>
+			{children}
+			<VerifyOTP open={openModal} setOpen={setOpenModal} />
+		</>
+	);
 }

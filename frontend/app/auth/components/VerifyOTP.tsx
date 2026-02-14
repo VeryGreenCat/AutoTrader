@@ -10,8 +10,15 @@ import {
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { message, Modal } from "antd";
 
-export default function VerifyOtpPage() {
+export default function VerifyOTP({
+	open,
+	setOpen,
+}: {
+	open: boolean;
+	setOpen: (open: boolean) => void;
+}) {
 	const [code, setCode] = useState("");
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
@@ -69,9 +76,8 @@ export default function VerifyOtpPage() {
 
 		if (error) {
 			setError("Wait a bit before retrying!");
-		} else {
-			alert("New code sent!"); // Simple feedback
 		}
+		message.success("New OTP sent!");
 	};
 
 	const handleVerify = async () => {
@@ -99,18 +105,37 @@ export default function VerifyOtpPage() {
 			if (typeof window !== "undefined") {
 				sessionStorage.setItem("otp_verified", "true");
 			}
-			router.push("/");
+			router.push("/dashboard");
 			router.refresh();
+			setOpen(false);
 		}
 	};
 
-	return (
-		<div className="flex flex-col items-center justify-center min-h-screen bg-black text-white relative overflow-hidden">
-			{/* Background Ambient Glow (Optional visual flair) */}
-			<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#00FFA3]/5 rounded-full blur-[100px] pointer-events-none" />
+	const handleCancel = () => {
+		setOpen(false);
+	};
 
-			<div className="w-full max-w-md p-4 animate-in fade-in slide-in-from-bottom-8 duration-500 relative z-10">
-				<div className="glass-card p-8 border border-[#00FFA3]/20 bg-black/40 backdrop-blur-xl rounded-2xl shadow-[0_0_40px_rgba(0,255,163,0.05)]">
+	return (
+		<Modal
+			open={open}
+			onCancel={handleCancel}
+			loading={loading}
+			footer={null}
+			centered
+			maskClosable={false}
+			keyboard={false}
+			closable={false}
+			closeIcon={null}
+		>
+			<div className="flex items-center justify-center p-4">
+				<div
+					className="w-full max-w-md p-8 rounded-2xl 
+                  bg-[#0f0f0f] 
+                  border border-[#00FFA3]/20
+                  shadow-[0_0_40px_rgba(0,255,163,0.12)]
+                  relative"
+				>
+					<div className="absolute -top-24 -left-24 w-48 h-48 bg-[#00FFA3]/10 rounded-full blur-3xl"></div>
 					{/* Header Section */}
 					<div className="text-center mb-8">
 						<div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#00FFA3]/10 mb-4 border border-[#00FFA3]/20 shadow-[0_0_15px_rgba(0,255,163,0.2)]">
@@ -158,7 +183,7 @@ export default function VerifyOtpPage() {
 					<button
 						onClick={handleVerify}
 						disabled={loading || code.length < 6}
-						className={`w-full font-black py-4 rounded-xl mb-6 flex items-center justify-center gap-2 transition-all uppercase tracking-wider
+						className={`w-full font-black py-4 rounded-xl mb-6 flex items-center justify-center gap-2 transition-all uppercase tracking-wider cursor-pointer
             ${
 							loading || code.length < 6
 								? "bg-white/5 text-gray-500 cursor-not-allowed border border-white/5"
@@ -181,7 +206,7 @@ export default function VerifyOtpPage() {
 						<button
 							onClick={handleResend}
 							disabled={!canResend}
-							className={`text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 mx-auto px-4 py-2 rounded-lg
+							className={`text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 mx-auto px-4 py-2 rounded-lg cursor-pointer
               ${
 								canResend
 									? "text-[#00FFA3] hover:text-white hover:bg-white/5 cursor-pointer"
@@ -202,6 +227,6 @@ export default function VerifyOtpPage() {
 					</div>
 				</div>
 			</div>
-		</div>
+		</Modal>
 	);
 }

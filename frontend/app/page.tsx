@@ -1,18 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Gift, ArrowRight, CheckCircle2 } from "lucide-react";
-import AuthModal from "./components/AuthModal"; // Ensure this path matches where you saved the modal
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import AuthModal from "./auth/components/AuthModal";
+import { AuthMode } from "@/types/auth";
 
 export default function Home() {
-	const [isAuthOpen, setIsAuthOpen] = useState(false);
+	const [openModal, setOpenModal] = useState(false);
+	const [authMode, setAuthMode] = useState<AuthMode>("signup");
+	const router = useRouter();
 
 	// Smooth Scroll Function
 	const scrollToPricing = () => {
 		const element = document.getElementById("pricing");
 		if (element) {
 			element.scrollIntoView({ behavior: "smooth" });
+		}
+	};
+
+	const handleLaunch = async () => {
+		const {
+			data: { session },
+		} = await supabase.auth.getSession();
+
+		if (session) {
+			router.push("/dashboard");
+		} else {
+			setAuthMode("signin");
+			setOpenModal(true);
 		}
 	};
 
@@ -32,8 +49,8 @@ export default function Home() {
 					</h1>
 
 					<p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-						The world’s first Forex bot powered by Large Language Models. Beyond
-						rules. Beyond technicals. We understand market sentiment.
+						The Forex bot powered by Large Language Models. Beyond rule. Beyond
+						technicals. We understand market pattern.
 					</p>
 
 					{/* Bonus Badge */}
@@ -48,15 +65,16 @@ export default function Home() {
 
 					{/* Action Buttons */}
 					<div className="flex flex-col sm:flex-row justify-center gap-4 mb-20">
-						<Link href="/dashboard">
-							<button className="w-full sm:w-auto bg-[#00FFA3] text-black font-bold px-8 py-4 rounded-xl hover:scale-105 transition shadow-[0_0_30px_rgba(0,255,163,0.3)] hover:shadow-[0_0_50px_rgba(0,255,163,0.5)] uppercase tracking-wide">
-								Launch Command Center
-							</button>
-						</Link>
+						<button
+							onClick={handleLaunch}
+							className="w-full sm:w-auto bg-[#00FFA3] text-black font-bold px-8 py-4 rounded-xl hover:scale-105 transition shadow-[0_0_30px_rgba(0,255,163,0.3)] hover:shadow-[0_0_50px_rgba(0,255,163,0.5)] uppercase tracking-wide inline-block text-center cursor-pointer"
+						>
+							Launch Command Center
+						</button>
 
 						<button
 							onClick={scrollToPricing}
-							className="w-full sm:w-auto border border-white/20 text-white hover:bg-white/5 px-8 py-4 rounded-xl font-bold transition uppercase tracking-wide"
+							className="w-full sm:w-auto border border-white/20 text-white hover:bg-white/5 px-8 py-4 rounded-xl font-bold transition uppercase tracking-wide cursor-pointer"
 						>
 							View Pricing
 						</button>
@@ -127,10 +145,10 @@ export default function Home() {
 						</div>
 
 						{/* Card 2: Performance Fee (Highlighted) */}
-						<div className="bg-[#00FFA3]/5 backdrop-blur-sm border border-[#00FFA3]/40 p-8 rounded-2xl text-center relative shadow-[0_0_30px_rgba(0,255,163,0.1)] transform md:-translate-y-4">
-							<div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#00FFA3] text-black text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
+						<div className="bg-[#00FFA3]/5 backdrop-blur-sm border border-[#00FFA3]/40 p-8 rounded-2xl text-center relative shadow-[0_0_30px_rgba(0,255,163,0.1)]">
+							{/* <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#00FFA3] text-black text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
 								Most Popular
-							</div>
+							</div> */}
 							<h3 className="text-xl font-bold mb-2 text-white">
 								Performance Fee
 							</h3>
@@ -183,8 +201,8 @@ export default function Home() {
 					{/* CTA Button */}
 					<div className="flex justify-center mt-16">
 						<button
-							onClick={() => setIsAuthOpen(true)}
-							className="bg-[#00FFA3] text-black font-bold px-8 py-4 rounded-xl hover:scale-105 transition shadow-[0_0_30px_rgba(0,255,163,0.3)] hover:shadow-[0_0_50px_rgba(0,255,163,0.5)] flex items-center gap-2 uppercase tracking-wide"
+							onClick={() => setOpenModal(true)}
+							className="bg-[#00FFA3] text-black font-bold px-8 py-4 rounded-xl hover:scale-105 transition shadow-[0_0_30px_rgba(0,255,163,0.3)] hover:shadow-[0_0_50px_rgba(0,255,163,0.5)] flex items-center gap-2 uppercase tracking-wide cursor-pointer"
 						>
 							Claim 10 Free Tickets
 							<ArrowRight className="w-5 h-5" />
@@ -193,8 +211,12 @@ export default function Home() {
 				</div>
 			</section>
 
-			{/* Auth Modal (Hidden by default, triggered by button) */}
-			<AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+			<AuthModal
+				open={openModal}
+				setOpen={setOpenModal}
+				mode={authMode}
+				setMode={setAuthMode}
+			/>
 		</main>
 	);
 }

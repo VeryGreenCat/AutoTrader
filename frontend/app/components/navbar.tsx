@@ -1,17 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Cpu, Ticket, Plus, Activity, LogOut, User, LogIn } from "lucide-react";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase"; // Ensure this path matches your project
-import AuthModal from "./AuthModal";
+import { supabase } from "@/lib/supabase";
+import { AuthMode } from "@/types/auth";
+import AuthModal from "../auth/components/AuthModal";
 
 export default function Navbar() {
 	const pathname = usePathname();
 	const router = useRouter();
 	const [user, setUser] = useState<any>(null);
-	const [showLoginModal, setShowLoginModal] = useState(false);
+	const [openModal, setOpenModal] = useState(false);
+	const [authMode, setAuthMode] = useState<AuthMode>("signin");
 
 	// 1. Check User Session on Mount
 	useEffect(() => {
@@ -36,14 +37,14 @@ export default function Navbar() {
 	// 2. Logout Function
 	const handleLogout = async () => {
 		await supabase.auth.signOut();
-		router.refresh();
-		// Optional: router.push('/') if you want to redirect home
+		router.push("/");
+		sessionStorage.removeItem("otp_verified");
 	};
 
 	const isActive = (path: string) => pathname === path;
 
 	const getLinkClass = (path: string) => {
-		const base = "pb-1 transition-colors hover:text-white";
+		const base = "pb-1 transition-colors hover:text-white cursor-pointer";
 		return isActive(path)
 			? `${base} text-white border-b-2 border-[#00FFA3]`
 			: `${base} text-gray-400`;
@@ -53,29 +54,46 @@ export default function Navbar() {
 		<>
 			<nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 py-4 px-8 flex justify-between items-center">
 				{/* LEFT: Logo */}
-				<Link href="/" className="flex items-center gap-3 group">
+				{/* LEFT: Logo */}
+				<div
+					onClick={() => router.push("/")}
+					className="flex items-center gap-3 group cursor-pointer"
+				>
 					<div className="w-8 h-8 bg-[#00FFA3] rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(0,255,163,0.4)] group-hover:shadow-[0_0_25px_rgba(0,255,163,0.6)] transition">
 						<Cpu className="text-black w-5 h-5" />
 					</div>
 					<span className="text-xl font-bold tracking-tighter italic text-white">
 						Auto<span className="text-[#00FFA3]">Trader</span>
 					</span>
-				</Link>
+				</div>
 
 				{/* CENTER: Navigation Links */}
+				{/* CENTER: Navigation Links */}
 				<div className="hidden md:flex gap-8 font-medium text-sm">
-					<Link href="/" className={getLinkClass("/")}>
+					<button
+						onClick={() => router.push("/")}
+						className={getLinkClass("/")}
+					>
 						Home
-					</Link>
-					<Link href="/dashboard" className={getLinkClass("/dashboard")}>
+					</button>
+					<button
+						onClick={() => router.push("/dashboard")}
+						className={getLinkClass("/dashboard")}
+					>
 						Dashboard
-					</Link>
-					<Link href="/bots" className={getLinkClass("/bots")}>
+					</button>
+					<button
+						onClick={() => router.push("/bots")}
+						className={getLinkClass("/bots")}
+					>
 						My Bots
-					</Link>
-					<Link href="/billing" className={getLinkClass("/billing")}>
+					</button>
+					<button
+						onClick={() => router.push("/billing")}
+						className={getLinkClass("/billing")}
+					>
 						Billing
-					</Link>
+					</button>
 				</div>
 
 				{/* RIGHT: System Fuel + Status + Profile */}
@@ -102,7 +120,7 @@ export default function Navbar() {
 
 								<button
 									onClick={() => router.push("/buyTickets")}
-									className="w-7 h-7 rounded-lg bg-[#00FFA3]/10 border border-[#00FFA3]/20 flex items-center justify-center hover:bg-[#00FFA3] hover:text-black transition-all group active:scale-95"
+									className="w-7 h-7 rounded-lg bg-[#00FFA3]/10 border border-[#00FFA3]/20 flex items-center justify-center hover:bg-[#00FFA3] hover:text-black transition-all group active:scale-95 cursor-pointer"
 								>
 									<Plus className="w-4 h-4 group-hover:scale-110 transition" />
 								</button>
@@ -134,14 +152,14 @@ export default function Navbar() {
 									<div className="flex flex-col">
 										<button
 											onClick={() => router.push("/profile")}
-											className="flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-[#00FFA3] transition-colors text-left"
+											className="flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-[#00FFA3] transition-colors text-left cursor-pointer"
 										>
 											<User className="w-4 h-4" />
 											Profile
 										</button>
 										<button
 											onClick={handleLogout}
-											className="flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-white/5 hover:text-red-300 transition-colors text-left"
+											className="flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-white/5 hover:text-red-300 transition-colors text-left cursor-pointer"
 										>
 											<LogOut className="w-4 h-4" />
 											Log Out
@@ -151,8 +169,8 @@ export default function Navbar() {
 									// LOGGED OUT MENU
 									<div className="flex flex-col p-1">
 										<button
-											onClick={() => setShowLoginModal(true)}
-											className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-white bg-[#00FFA3]/10 hover:bg-[#00FFA3] hover:text-black rounded-lg transition-all"
+											onClick={() => setOpenModal(true)}
+											className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-white bg-[#00FFA3]/10 hover:bg-[#00FFA3] hover:text-black rounded-lg transition-all cursor-pointer"
 										>
 											<LogIn className="w-4 h-4" />
 											Log In
@@ -165,26 +183,12 @@ export default function Navbar() {
 				</div>
 			</nav>
 
-			{/* LOGIN MODAL */}
-			{/* Conditionally render your modal here based on showLoginModal state */}
-			{showLoginModal && (
-				// <LoginModal onClose={() => setShowLoginModal(false)} />
-				// Replace the div below with your actual <LoginModal /> component
-				<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-					<div className="bg-[#111] border border-white/10 p-8 rounded-2xl relative">
-						<button
-							onClick={() => setShowLoginModal(false)}
-							className="absolute top-4 right-4 text-gray-500 hover:text-white"
-						>
-							✕
-						</button>
-						<AuthModal
-							isOpen={showLoginModal}
-							onClose={() => setShowLoginModal(false)}
-						/>
-					</div>
-				</div>
-			)}
+			<AuthModal
+				open={openModal}
+				setOpen={setOpenModal}
+				mode={authMode}
+				setMode={setAuthMode}
+			/>
 		</>
 	);
 }

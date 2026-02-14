@@ -155,7 +155,7 @@ export default function ProfilePage() {
 							</div>
 							<div>
 								<p className="text-[10px] text-gray-500 uppercase tracking-widest">
-									Fleet Commissioned
+									Last Login
 								</p>
 								<p className="font-mono text-sm text-gray-300">
 									{profile.joinedDate}

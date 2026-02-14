@@ -2,37 +2,35 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v3"
-	"github.com/golang-jwt/jwt/v5"
 	// You will need a JWT middleware or parser here
 )
 
-func AuthMiddleware(c fiber.Ctx) error {
-    // 1. Get the token from header (Bearer ...)
-    tokenString := c.Get("Authorization")
-    if tokenString == "" {
-        return c.Status(401).SendString("Missing Token")
-    }
-    // Remove "Bearer " prefix
-    tokenString = tokenString[7:]
+func main() {
+	app := fiber.New()
 
-    // 2. Parse and Verify Token (Use your Supabase JWT Secret)
-    token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-        return []byte("YOUR_SUPABASE_JWT_SECRET"), nil
-    })
+	// 1. Public Route (Auth)
+	app.Post("/api/auth/login", func(c fiber.Ctx) error {
+		// TODO: Implement Supabase Auth Logic here
+		// 1. Get email/password from body
+		// 2. Call Supabase Admin API to verify credentials
+		// 3. If valid, generate a JWT token (or use Supabase session)
+		// 4. Return token to frontend
+		return c.SendString("Login Endpoint - Not Implemented Yet")
+	})
 
-    if err != nil || !token.Valid {
-        return c.Status(401).SendString("Invalid Token")
-    }
+	// 2. Protected Route (Trading)
+	// We apply the middleware to this route group
+	api := app.Group("/api")
+	api.Use(AuthMiddleware)
 
-    // 3. (Advanced) Check for OTP/MFA
-    // If you used the standard Supabase MFA (TOTP), the 'aal' claim will be 'aal2'.
-    // If you used the Email OTP flow above, the user just has a valid session.
-    
-    claims := token.Claims.(jwt.MapClaims)
-    userID := claims["sub"].(string)
-    
-    // Store user ID in context for next handlers
-    c.Locals("user_id", userID)
+	api.Get("/protected", func(c fiber.Ctx) error {
+		// Access user ID from context (set by middleware)
+		userID := c.Locals("user_id").(string)
+		return c.JSON(fiber.Map{
+			"message": "Access Granted",
+			"user_id": userID,
+		})
+	})
 
-    return c.Next()
+	app.Listen(":8080")
 }
