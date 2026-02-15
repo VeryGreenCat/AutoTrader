@@ -1,11 +1,11 @@
-package main
+package middleware
 
 import (
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func AuthMiddleware(c fiber.Ctx) error {
+func AuthMiddleware(c *fiber.Ctx) error {
     // 1. Get the token from header (Bearer ...)
     tokenString := c.Get("Authorization")
     if tokenString == "" {

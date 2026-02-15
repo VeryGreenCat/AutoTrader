@@ -1,4 +1,4 @@
-export type AuthMode = "signin" | "signup" | "otp";
+export type AuthMode = "signin" | "signup";
 
 export interface AuthModalProps {
 	open: boolean;

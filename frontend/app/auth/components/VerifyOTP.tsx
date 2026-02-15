@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { message, Modal } from "antd";
+import { Session } from "inspector/promises";
 
 export default function VerifyOTP({
 	open,
@@ -31,6 +32,7 @@ export default function VerifyOTP({
 
 	// 1. Send OTP on mount (Initial Send)
 	useEffect(() => {
+		if (sessionStorage.getItem("otp_verified")) return;
 		const sendOtp = async () => {
 			const {
 				data: { user },
@@ -104,6 +106,7 @@ export default function VerifyOTP({
 		} else {
 			if (typeof window !== "undefined") {
 				sessionStorage.setItem("otp_verified", "true");
+				localStorage.setItem("user_id", user.id);
 			}
 			router.push("/dashboard");
 			router.refresh();
