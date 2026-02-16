@@ -1,18 +1,13 @@
 @import "tailwindcss";
 
-/* :root {
-	--color-primary: #16a34a; /*change these below color to match my theme according to my other file ex homepage and profilepage
-	--color-background: #0f172a;
+:root {
+	--color-primary: #080808;
+	--color-background: #0b0e11;
+	--color-background-secondary: #252525;
 
-	--color-text: #f8fafc;
-	--color-text-secondary: #94a3b8;
-
-	--color-border: #334155;
-
-	--color-success: #22c55e;
-	--color-warning: #f59e0b;
-	--color-error: #ef4444;
-} */
+	--color-text: #e0e0e0;
+	--color-text-secondary: #00ffa3;
+}
 
 .account-dropdown .ant-dropdown-menu {
 	background-color: rgba(0, 0, 0, 0.9) !important;
@@ -21,10 +16,10 @@
 	border-radius: 12px !important;
 }
 
-/* .account-dropdown .ant-dropdown-menu-item {
+.account-dropdown .ant-dropdown-menu-item {
 	transition: all 0.2s ease !important;
-} */
+}
 
 .account-dropdown .ant-dropdown-menu-item:hover {
-	background-color: rgba(104, 210, 180, 0.9) !important;
+	background-color: rgba(21, 59, 48, 0.9) !important;
 }

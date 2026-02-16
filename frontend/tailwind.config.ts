@@ -4,17 +4,11 @@ module.exports = {
 	theme: {
 		extend: {
 			colors: {
-				// fix this
-				// primary: "var(--color-primary)",
-				// background: "var(--color-background)",
-				// text: {
-				// 	DEFAULT: "var(--color-text)",
-				// 	secondary: "var(--color-text-secondary)",
-				// },
-				// border: "var(--color-border)",
-				// success: "var(--color-success)",
-				// warning: "var(--color-warning)",
-				// error: "var(--color-error)",
+				primary: "var(--color-primary)",
+				background: "var(--color-background)",
+				backgroundSecondary: "var(--color-background-secondary)",
+				text: "var(--color-text)",
+				textSecondary: "var(--color-text-secondary)",
 			},
 		},
 	},

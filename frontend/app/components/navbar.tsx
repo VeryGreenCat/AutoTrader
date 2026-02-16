@@ -84,7 +84,6 @@ export default function Navbar() {
 		<>
 			<nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 py-4 px-8 flex justify-between items-center">
 				{/* LEFT: Logo */}
-				{/* LEFT: Logo */}
 				<div
 					onClick={() => router.push("/")}
 					className="flex items-center gap-3 group cursor-pointer"
@@ -97,7 +96,6 @@ export default function Navbar() {
 					</span>
 				</div>
 
-				{/* CENTER: Navigation Links */}
 				{/* CENTER: Navigation Links */}
 				<div className="hidden md:flex gap-8 font-medium text-sm">
 					<button
