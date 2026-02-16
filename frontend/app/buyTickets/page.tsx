@@ -20,7 +20,7 @@ export default function BuyTicketsPage() {
 					Energy <span className="text-[#00FFA3]">Reserve</span>
 				</h2>
 				<p className="text-gray-500 text-sm mt-1">
-					Acquire runtime tickets to keep your fleet operational.
+					Acquire runtime tickets to keep your accounts operational.
 				</p>
 			</div>
 
@@ -93,7 +93,7 @@ export default function BuyTicketsPage() {
 						<p className="text-sm text-gray-400">
 							Buying{" "}
 							<span className="text-white font-bold">{selectedPackage}</span>{" "}
-							ticket(s) will power your current fleet for approximately{" "}
+							ticket(s) will power your current accounts for approximately{" "}
 							<span className="text-white font-bold">{hours}</span> hours of
 							continuous execution.
 						</p>

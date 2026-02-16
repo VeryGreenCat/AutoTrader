@@ -27,7 +27,7 @@ export default function BillingPage() {
 				<div className="col-span-12 lg:col-span-7 space-y-6">
 					<div className="glass-card p-6 border border-white/5 bg-white/5 rounded-2xl">
 						<h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">
-							Fleet Performance Log
+							Accout Performance Log
 						</h3>
 
 						<div className="space-y-3">
@@ -48,7 +48,7 @@ export default function BillingPage() {
 						<div className="mt-8 pt-6 border-t border-white/10">
 							<div className="flex justify-between mb-2">
 								<span className="text-gray-400 text-sm">
-									Total Fleet Net Profit:
+									Total Accounts Net Profit:
 								</span>
 								<span className="text-xl font-bold font-mono text-[#00FFA3]">
 									$719.70

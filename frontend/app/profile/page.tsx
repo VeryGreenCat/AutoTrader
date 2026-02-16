@@ -19,7 +19,7 @@ export default function ProfilePage() {
 
 				// API Call: Get User Profile
 				const userRes = await getProfileById(userId!);
-				console.log("ProfilePage|userRes:", userRes);
+				console.log("ProfilePage | userRes:", userRes);
 
 				//! API Call: Get Payment Methods
 				// const cardRes = await fetch('/api/v1/user/cards');
@@ -83,7 +83,7 @@ export default function ProfilePage() {
 					User <span className="text-[#00FFA3]">Profile</span>
 				</h2>
 				<p className="text-gray-500 text-sm mt-1">
-					Manage your identity, security, and fleet billing methods.
+					Manage your identity, security, and billing methods.
 				</p>
 			</div>
 
@@ -96,7 +96,7 @@ export default function ProfilePage() {
 							{/* If avatar URL exists, render image here */}
 						</div>
 
-						<h3 className="text-xl font-bold italic text-white">
+						<h3 className="text-md font-bold italic text-white">
 							{profile.email}
 						</h3>
 
@@ -156,7 +156,7 @@ export default function ProfilePage() {
 											? "Google Account"
 											: "Email Account"}
 									</p>
-									<p className="text-xs font-medium text-white truncate max-w-[150px]">
+									<p className="text-xs font-medium text-white max-w-[150px]">
 										{profile.email}
 									</p>
 								</div>

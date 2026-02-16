@@ -60,12 +60,12 @@ export default function AdminPage() {
 	);
 
 	// Action Handler
-	const handleLockFleet = (userId: string) => {
+	const handleLockAccounts = (userId: string) => {
 		message.loading({ content: "Locking protocols initiated...", key: "lock" });
 
 		setTimeout(() => {
 			message.success({
-				content: `Fleet for ${userId} has been emergency locked.`,
+				content: `Accounts for ${userId} has been emergency locked.`,
 				key: "lock",
 				duration: 3,
 			});
@@ -88,7 +88,7 @@ export default function AdminPage() {
 						Command <span className="text-red-500">Authority</span>
 					</h2>
 					<p className="text-gray-500 text-sm mt-1">
-						Global User Management & Fleet Oversight
+						Global User Management & Accounts Oversight
 					</p>
 				</div>
 
@@ -179,11 +179,11 @@ export default function AdminPage() {
 
 				<div className="glass-card p-6 border-white/5 bg-white/5 rounded-2xl border">
 					<p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-2">
-						Fleet Deployment
+						Accounts Deployment
 					</p>
 					<div className="flex items-end gap-2">
 						<p className="text-3xl font-bold font-mono text-white">1,024</p>
-						<p className="text-sm text-gray-500 pb-1">/ 1,500 Bots Online</p>
+						<p className="text-sm text-gray-500 pb-1">/ 1,500 Accounts Online</p>
 					</div>
 					<div className="w-full bg-white/5 h-1.5 rounded-full mt-4 overflow-hidden">
 						<div className="bg-[#00FFA3] h-full" style={{ width: "68%" }}></div>
@@ -215,7 +215,7 @@ export default function AdminPage() {
 							<th className="px-6 py-5">MT5 Accounts</th>
 							<th className="px-6 py-5">Latest Payment</th>
 							<th className="px-6 py-5">Fuel (Tickets)</th>
-							<th className="px-6 py-5">Fleet Status</th>
+							<th className="px-6 py-5">Accounts Status</th>
 							<th className="px-6 py-5 text-right">Emergency Actions</th>
 						</tr>
 					</thead>
@@ -262,7 +262,7 @@ export default function AdminPage() {
 										<span className="font-bold">{user.fuel} Tickets</span>
 									</td>
 
-									{/* Fleet Status */}
+									{/* Accounts Status */}
 									<td className="px-6 py-5">
 										<div className="flex items-center gap-2">
 											<span
@@ -279,10 +279,10 @@ export default function AdminPage() {
 									{/* Actions */}
 									<td className="px-6 py-5 text-right">
 										<button
-											onClick={() => handleLockFleet(user.id)}
+											onClick={() => handleLockAccounts(user.id)}
 											className="px-4 py-2 bg-red-500/10 border border-red-500/30 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all font-bold text-[9px] uppercase active:scale-95"
 										>
-											Lock All Bots
+											Lock All Accounts
 										</button>
 									</td>
 								</tr>
