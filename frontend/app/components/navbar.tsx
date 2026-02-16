@@ -1,8 +1,18 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { Cpu, Ticket, Plus, Activity, LogOut, User, LogIn } from "lucide-react";
+import {
+	Cpu,
+	Ticket,
+	Plus,
+	Activity,
+	LogOut,
+	User,
+	LogIn,
+	ChevronDown,
+} from "lucide-react";
 import { useEffect, useState } from "react";
+import { Dropdown, MenuProps } from "antd";
 import { supabase } from "@/lib/supabase";
 import { AuthMode } from "@/types/auth";
 import AuthModal from "../auth/components/AuthModal";
@@ -44,11 +54,31 @@ export default function Navbar() {
 	const isActive = (path: string) => pathname === path;
 
 	const getLinkClass = (path: string) => {
-		const base = "pb-1 transition-colors hover:text-white cursor-pointer";
+		const base =
+			"pb-1 transition-colors hover:text-white cursor-pointer flex items-center gap-1";
 		return isActive(path)
 			? `${base} text-white border-b-2 border-[#00FFA3]`
 			: `${base} text-gray-400`;
 	};
+
+	// Mock Data for Accounts
+	const mockAccounts = [
+		{ id: "acc_1", name: "Main Trading Account", balance: "$12,450.00" },
+		{ id: "acc_2", name: "Prop Firm Challenge", balance: "$50,000.00" },
+		{ id: "acc_3", name: "Scalping Bot Acc", balance: "$3,210.50" },
+	];
+
+	const accountMenuItems: MenuProps["items"] = mockAccounts.map((acc) => ({
+		key: acc.id,
+		label: (
+			<div
+				className="flex items-center py-1"
+				onClick={() => router.push(`/dashboard/${acc.id}`)}
+			>
+				<span className="font-medium text-white">{acc.name}</span>
+			</div>
+		),
+	}));
 
 	return (
 		<>
@@ -76,12 +106,28 @@ export default function Navbar() {
 					>
 						Home
 					</button>
-					<button
-						onClick={() => router.push("/dashboard")}
-						className={getLinkClass("/dashboard")}
-					>
-						Dashboard
-					</button>
+					{pathname.startsWith("/dashboard") ? (
+						<Dropdown
+							menu={{ items: accountMenuItems }}
+							placement="bottomLeft"
+							classNames={{ root: "account-dropdown" }}
+						>
+							<button
+								onClick={() => router.push("/dashboard")}
+								className={getLinkClass("/dashboard")}
+							>
+								Dashboard
+								<ChevronDown className="w-3 h-3 opacity-50" />
+							</button>
+						</Dropdown>
+					) : (
+						<button
+							onClick={() => router.push("/dashboard")}
+							className={getLinkClass("/dashboard")}
+						>
+							Dashboard
+						</button>
+					)}
 					<button
 						onClick={() => router.push("/bots")}
 						className={getLinkClass("/bots")}
