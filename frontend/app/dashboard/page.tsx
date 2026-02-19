@@ -42,7 +42,7 @@ const DashboardContent = () => {
 	};
 
 	return (
-		<section className="pb-20 max-w-7xl mx-auto px-4">
+		<section className="pb-10 max-w-7xl mx-auto px-4">
 			{/* Header */}
 			<div className="mb-10">
 				<h2 className="text-4xl font-bold tracking-tighter uppercase text-white">

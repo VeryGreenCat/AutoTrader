@@ -1,37 +1,42 @@
 package middleware
 
 import (
+	"log"
+	"strings"
+
+	"github.com/MicahParks/keyfunc/v3"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func AuthMiddleware(c *fiber.Ctx) error {
-    // 1. Get the token from header (Bearer ...)
-    tokenString := c.Get("Authorization")
-    if tokenString == "" {
-        return c.Status(401).SendString("Missing Token")
-    }
-    // Remove "Bearer " prefix
-    tokenString = tokenString[7:]
+var jwks keyfunc.Keyfunc
 
-    // 2. Parse and Verify Token (Use your Supabase JWT Secret)
-    token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-        return []byte("YOUR_SUPABASE_JWT_SECRET"), nil
+func InitJWKS() {
+    var err error
+    jwks, err = keyfunc.NewDefault([]string{
+        "https://csgyyrxddzsdrlrgvsjh.supabase.co/auth/v1/.well-known/jwks.json",
     })
+    if err != nil {
+        log.Fatal("failed to load JWKS:", err)
+    }
+    log.Println("JWKS loaded successfully")
+}
 
-    if err != nil || !token.Valid {
-        return c.Status(401).SendString("Invalid Token")
+func AuthMiddleware(c *fiber.Ctx) error {
+    authHeader := c.Get("Authorization")
+    if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+        return c.Status(401).JSON(fiber.Map{"error": "missing token"})
     }
 
-    // 3. (Advanced) Check for OTP/MFA
-    // If you used the standard Supabase MFA (TOTP), the 'aal' claim will be 'aal2'.
-    // If you used the Email OTP flow above, the user just has a valid session.
-    
-    claims := token.Claims.(jwt.MapClaims)
-    userID := claims["sub"].(string)
-    
-    // Store user ID in context for next handlers
-    c.Locals("user_id", userID)
+    tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 
+    token, err := jwt.Parse(tokenStr, jwks.Keyfunc)
+    if err != nil || !token.Valid {
+        log.Println("token invalid:", err)
+        return c.Status(401).JSON(fiber.Map{"error": "invalid token"})
+    }
+
+    claims := token.Claims.(jwt.MapClaims)
+    c.Locals("user_id", claims["sub"])
     return c.Next()
 }

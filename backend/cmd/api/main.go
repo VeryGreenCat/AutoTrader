@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/config"
+	"github.com/VeryGreenCat/AutoTrader/backend/internal/middleware"
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/routes"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -17,15 +18,18 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using system environment variables")
 	}
+
+	middleware.InitJWKS() // ← add this
+
 	app := fiber.New()
 	
 	// sets up security rules 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "*", // Wildcard allowed when credentials are false
-		AllowCredentials: false,
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		AllowMethods:     "GET, POST, PUT, DELETE, OPTIONS",
-	}))
+    AllowOrigins:     "http://localhost:3000", // add your prod URL later e.g. "https://yourapp.com"
+    AllowCredentials: false,
+    AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+    AllowMethods:     "GET, POST, PUT, DELETE, OPTIONS",
+}))
 	
 	config.ConnectDB()
 
