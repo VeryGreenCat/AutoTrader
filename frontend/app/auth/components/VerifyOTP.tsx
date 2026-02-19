@@ -11,7 +11,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { message, Modal } from "antd";
-import { Session } from "inspector/promises";
 
 export default function VerifyOTP({
 	open,
@@ -125,7 +124,6 @@ export default function VerifyOTP({
 			loading={loading}
 			footer={null}
 			centered
-			maskClosable={false}
 			keyboard={false}
 			closable={false}
 			closeIcon={null}

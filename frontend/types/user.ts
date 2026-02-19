@@ -7,4 +7,3 @@ export interface UserProfile {
 	created_at: string;
 	last_sign_in: string;
 }
- 

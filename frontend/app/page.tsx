@@ -105,10 +105,7 @@ export default function Home() {
 			</section>
 
 			{/* ================= PRICING SECTION ================= */}
-			<section
-				id="pricing"
-				className="py-24 bg-black/50 border-t border-white/5 relative"
-			>
+			<section id="pricing" className="py-24 relative">
 				<div className="max-w-6xl mx-auto px-4">
 					<h2 className="text-4xl font-bold text-center mb-6 text-white">
 						Simple. Fair. Performance-Aligned.

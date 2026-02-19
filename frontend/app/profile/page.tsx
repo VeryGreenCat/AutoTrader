@@ -76,7 +76,7 @@ export default function ProfilePage() {
 		);
 
 	return (
-		<section className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 max-w-7xl mx-auto px-4">
+		<section className="pb-20 max-w-7xl mx-auto px-4">
 			{/* Header */}
 			<div className="mb-10">
 				<h2 className="text-4xl font-bold tracking-tighter uppercase italic text-white">
@@ -91,7 +91,7 @@ export default function ProfilePage() {
 				{/* LEFT COLUMN: Identity & Auth */}
 				<div className="col-span-12 lg:col-span-4 space-y-6">
 					{/* Avatar Card */}
-					<div className="glass-card p-8 text-center border-[#00FFA3]/10 relative overflow-hidden bg-white/5 rounded-2xl">
+					<div className="p-8 text-center border-[#00FFA3]/10 relative overflow-hidden bg-white/5 rounded-2xl">
 						<div className="w-24 h-24 rounded-full bg-gradient-to-tr from-emerald-400 to-blue-500 mx-auto mb-6 border-4 border-white/5 shadow-xl">
 							{/* If avatar URL exists, render image here */}
 						</div>
@@ -129,7 +129,7 @@ export default function ProfilePage() {
 					</div>
 
 					{/* Authentication Method Card */}
-					<div className="glass-card p-6 border border-white/5 bg-white/5 rounded-2xl">
+					<div className="p-6 border border-white/5 bg-white/5 rounded-2xl">
 						<div className="flex items-center gap-3 mb-6">
 							<Mail className="text-gray-400 w-5 h-5" />
 							<h4 className="text-sm font-bold uppercase tracking-wider text-white">
@@ -167,7 +167,7 @@ export default function ProfilePage() {
 
 				{/* RIGHT COLUMN: Payment Methods */}
 				<div className="col-span-12 lg:col-span-8">
-					<div className="glass-card p-8 min-h-[500px] border border-white/5 bg-black/40 backdrop-blur-md rounded-2xl shadow-[0_0_30px_rgba(0,255,163,0.05)]">
+					<div className="p-8 min-h-[500px] border border-white/5 bg-black/40 backdrop-blur-md rounded-2xl shadow-[0_0_30px_rgba(0,255,163,0.05)]">
 						<div className="flex justify-between items-center mb-8">
 							<div className="flex items-center gap-3">
 								<CreditCardIcon className="text-[#00FFA3] w-6 h-6" />

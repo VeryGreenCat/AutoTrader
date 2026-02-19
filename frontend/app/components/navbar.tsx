@@ -73,7 +73,7 @@ export default function Navbar() {
 		label: (
 			<div
 				className="flex items-center py-1"
-				onClick={() => router.push(`/dashboard/${acc.id}`)}
+				onClick={() => router.push(`/dashboard?account=${acc.name}`)}
 			>
 				<span className="font-medium text-white">{acc.name}</span>
 			</div>
@@ -107,7 +107,7 @@ export default function Navbar() {
 					{pathname.startsWith("/dashboard") ? (
 						<Dropdown
 							menu={{ items: accountMenuItems }}
-							placement="bottomLeft"
+							placement="bottom"
 							classNames={{ root: "account-dropdown" }}
 						>
 							<button
