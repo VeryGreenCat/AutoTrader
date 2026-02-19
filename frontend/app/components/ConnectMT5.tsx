@@ -62,7 +62,7 @@ export default function ConnectMT5({ open, setOpen }: ConnectMT5Props) {
 				token: token,
 			});
 
-			console.log("Bots | userRes:", userRes);
+			console.log("ConnectMT5 | userRes:", userRes.message);
 			message.success("Account added successfully");
 		} catch (error) {
 			console.error("Failed to fetch accounts data", error);

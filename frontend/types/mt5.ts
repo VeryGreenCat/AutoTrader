@@ -4,3 +4,8 @@ export interface addAccountProps {
 	name: string;
 	token: string;
 }
+
+export interface MT5NamesResponse {
+	mt5_id: string;
+	name: string;
+}

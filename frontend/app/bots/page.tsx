@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import AccountCard from "../components/AccountCard";
 import ConnectMT5 from "../components/ConnectMT5";
 import { getAccountById } from "@/services/mt5";
-import { Skeleton, Spin } from "antd";
+import { Spin } from "antd";
+import { MT5NamesResponse } from "@/types/mt5";
 
 export default function Bots() {
-	const [accounts, setAccounts] = useState<string[]>(["8821932"]);
+	const [accounts, setAccounts] = useState<MT5NamesResponse[]>([]);
 	const [openModal, setOpenModal] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const userId = localStorage.getItem("user_id");
@@ -17,8 +18,13 @@ export default function Bots() {
 			try {
 				setLoading(true);
 
+				if (!userId) {
+					setLoading(false);
+					return;
+				}
+
 				// API Call: Get User Accounts
-				const userRes = await getAccountById(userId!);
+				const userRes = await getAccountById(userId);
 				console.log("Bots | userRes:", userRes);
 
 				setAccounts(userRes.data);
@@ -31,12 +37,6 @@ export default function Bots() {
 
 		fetchData();
 	}, []);
-
-	// This will be passed to modal later
-	const handleAccountCreated = (newAccountId: string) => {
-		setAccounts((prev) => [...prev, newAccountId]);
-		setOpenModal(false);
-	};
 
 	return (
 		<section className="pb-20 max-w-7xl mx-auto px-4">
@@ -56,8 +56,8 @@ export default function Bots() {
 						<Spin size="large" />
 					</div>
 				) : (
-					accounts.map((accountId) => (
-						<AccountCard key={accountId} accountId={accountId} />
+					accounts.map((account) => (
+						<AccountCard key={account.mt5_id} accountId={account.mt5_id} />
 					))
 				)}
 

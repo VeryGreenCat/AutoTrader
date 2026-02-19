@@ -5,6 +5,7 @@ package services
 
 import (
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/config"
+	"github.com/VeryGreenCat/AutoTrader/backend/internal/handlers/dto"
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/models"
 )
 
@@ -14,4 +15,20 @@ func RegisterMT5Account(account *models.MT5) error {
 		return err
 	}
 	return nil
+}
+
+func GetAccountsById(userId string) ([]dto.MT5NamesResponse, error) {
+    var accounts []models.MT5
+    if err := config.DB.Where("user_id = ?", userId).Find(&accounts).Error; err != nil {
+        return nil, err
+    }
+
+    var result []dto.MT5NamesResponse
+    for _, acc := range accounts {
+        result = append(result, dto.MT5NamesResponse{
+            MT5ID: acc.MT5ID,
+            Name:  acc.Name,
+        })
+    }
+    return result, nil
 }
