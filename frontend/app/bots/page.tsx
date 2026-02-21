@@ -26,7 +26,13 @@ export default function Bots() {
 			const userRes = await getAccountById(userId);
 			console.log("Bots | userRes:", userRes);
 
-			setAccounts(userRes.data);
+			// Sort accounts: connected (true) first, then disconnected (false)
+			const sortedAccounts = [...userRes.data].sort((a, b) => {
+				if (a.status === b.status) return 0;
+				return a.status ? -1 : 1;
+			});
+
+			setAccounts(sortedAccounts);
 		} catch (error) {
 			console.error("Failed to fetch accounts data", error);
 		} finally {

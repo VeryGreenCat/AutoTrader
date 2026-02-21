@@ -104,12 +104,18 @@ export default function BotRow({ botId, accountStatus }: BotRowProps) {
 				</span>
 			</div>
 
-			{/* Toggle - Stays fully styled to avoid user confusion */}
 			<div className="w-[10%] flex justify-end">
 				<Switch
 					checked={switchState}
 					onChange={(checked) => setSwitchState(checked)}
-					style={{ background: switchState ? "#00FFA3" : "#333" }}
+					disabled={!accountStatus}
+					style={{
+						background: switchState
+							? accountStatus
+								? "#00FFA3"
+								: "#14533D"
+							: "#333",
+					}}
 				/>
 			</div>
 		</div>

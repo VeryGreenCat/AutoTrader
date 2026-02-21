@@ -145,7 +145,13 @@ export default function AccountCard({
 						</button>
 						<button
 							onClick={() => setIsDeployModalOpen(true)}
-							className="text-[10px] font-bold uppercase tracking-wider bg-[#00FFA3] text-black px-3 py-1.5 rounded-md flex items-center gap-1 hover:shadow-[0_0_15px_rgba(0,255,163,0.4)] transition-all w-max cursor-pointer"
+							disabled={!account.status}
+							className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-md flex items-center gap-1 transition-all w-max
+                ${
+									account.status
+										? "bg-[#00FFA3] text-black hover:shadow-[0_0_15px_rgba(0,255,163,0.4)] cursor-pointer"
+										: "bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700"
+								}`}
 						>
 							<Plus className="w-3 h-3" /> Deploy New Bot
 						</button>
