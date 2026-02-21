@@ -1,6 +1,6 @@
 "use client";
 
-import { message, Modal } from "antd";
+import { Modal, App } from "antd";
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { addAccount } from "@/services/mt5";
@@ -16,6 +16,7 @@ export default function ConnectMT5({
 	setOpen,
 	onSuccess,
 }: ConnectMT5Props) {
+	const { message } = App.useApp();
 	const [name, setName] = useState("");
 	const [mt5Id, setMt5Id] = useState("");
 	const [token, setToken] = useState("");

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { message, Modal, Select } from "antd";
+import { Modal, Select, App } from "antd";
 import { X, Info } from "lucide-react";
 import { DeployModalProps } from "@/types/bot";
 import { Model } from "@/types/model";
@@ -9,7 +9,8 @@ import { deployBot } from "@/services/bots";
 import { getAvailableModels } from "@/services/model";
 
 export default function DeployModal(deployData: DeployModalProps) {
-	const { open, onClose, mt5Id, onSuccess } = deployData;
+	const { open, onClose, mt5Id, onSuccess, deployedModelIds = [] } = deployData;
+	const { message } = App.useApp();
 	const [loading, setLoading] = useState(false);
 	const [selectedPair, setSelectedPair] = useState<string | null>(null);
 	const [selectedBot, setSelectedBot] = useState<string | null>(null);
@@ -53,13 +54,19 @@ export default function DeployModal(deployData: DeployModalProps) {
 			setSelectedBot(null); // Reset bot selection on pair change
 			const options = models
 				.filter((m) => m.currency === selectedPair)
-				.map((m) => ({
-					label: `${m.name} (${m.version})`,
-					value: m.model_id,
-				}));
+				.map((m) => {
+					const isDeployed = deployedModelIds.includes(m.model_id);
+					return {
+						label: isDeployed
+							? `${m.name} (${m.version}) — Already Deployed`
+							: `${m.name} (${m.version})`,
+						value: m.model_id,
+						disabled: isDeployed,
+					};
+				});
 			setBotOptions(options);
 		}
-	}, [selectedPair, models]);
+	}, [selectedPair, models, deployedModelIds]);
 
 	const handleExecute = async () => {
 		if (!selectedBot) return;

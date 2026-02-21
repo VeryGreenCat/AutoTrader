@@ -4,19 +4,19 @@ import { useEffect, useState } from "react";
 import BotRow from "./BotRow";
 import DeployModal from "./DeployModal";
 import { Server, Plus, Trash2 } from "lucide-react";
-import { Modal, message } from "antd";
+import { App } from "antd";
 import { deleteAccount } from "@/services/mt5";
-import { Bot } from "@/types/bot";
+import { Bot, AccountCardProps } from "@/types/bot";
 import { getBotsByMt5Id } from "@/services/bots";
-import { AccountCardProps } from "@/types/bot";
 
 export default function AccountCard({ account, onDelete }: AccountCardProps) {
+	const { message, modal } = App.useApp();
 	const [bots, setBots] = useState<Bot[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
 
 	const handleDelete = () => {
-		Modal.confirm({
+		modal.confirm({
 			title: "Delete Account",
 			content: `Are you sure you want to delete "${account.name}"? This action cannot be undone.`,
 			okText: "Delete",
@@ -40,7 +40,12 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 		if (account?.mt5_id) {
 			try {
 				const res = await getBotsByMt5Id(account.mt5_id);
-				setBots(res.data || []);
+				const data: Bot[] = res.data || [];
+				const sorted = [...data].sort((a, b) => {
+					if (a.status === b.status) return 0;
+					return a.status ? -1 : 1;
+				});
+				setBots(sorted);
 			} catch (error) {
 				console.error("Failed to fetch bots:", error);
 				setBots([]);
@@ -183,6 +188,7 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 				onClose={() => setIsDeployModalOpen(false)}
 				onSuccess={fetchBots}
 				mt5Id={account.mt5_id}
+				deployedModelIds={bots.map((b) => b.model_id)}
 			/>
 		</div>
 	);

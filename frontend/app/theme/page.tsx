@@ -1,22 +1,27 @@
-import React from "react";
-import { ConfigProvider } from "antd";
+import { ConfigProvider, App, theme } from "antd";
 
 const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 	return (
-		<div>
-			<ConfigProvider
-				theme={{
-					token: {},
-					components: {
-						Modal: {
-							contentBg: "transparent",
-						},
+		<ConfigProvider
+			theme={{
+				algorithm: theme.darkAlgorithm,
+				token: {
+					colorPrimary: "#00FFA3",
+					colorBgBase: "#0b0e11",
+					colorTextBase: "#e0e0e0",
+					borderRadius: 12,
+					fontFamily: "inherit",
+				},
+				components: {
+					Message: {
+						contentBg: "#141414",
+						colorText: "#e0e0e0",
 					},
-				}}
-			>
-				{children}
-			</ConfigProvider>
-		</div>
+				},
+			}}
+		>
+			<App>{children}</App>
+		</ConfigProvider>
 	);
 };
 

@@ -14,11 +14,12 @@ export interface DeployModalProps {
 	onClose: () => void;
 	onSuccess?: () => void;
 	mt5Id: string;
+	deployedModelIds?: string[];
 }
 
 export interface BotRowProps {
 	bot: Bot;
-	accountStatus: boolean; // Helps determine overarching disconnects
+	accountStatus: boolean;
 	onDelete?: () => void;
 	onStatusChange?: () => void;
 }

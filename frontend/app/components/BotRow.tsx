@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Switch, Modal, message } from "antd";
+import { Switch, App } from "antd";
 import { Trash2 } from "lucide-react";
 import { deleteBot, updateBotStatus } from "@/services/bots";
 import { BotRowProps } from "@/types/bot";
@@ -12,6 +12,7 @@ export default function BotRow({
 	onDelete,
 	onStatusChange,
 }: BotRowProps) {
+	const { message, modal } = App.useApp();
 	const [switchState, setSwitchState] = useState(bot.status);
 
 	useEffect(() => {
@@ -19,7 +20,7 @@ export default function BotRow({
 	}, [bot.status]);
 
 	const handleDeleteBot = () => {
-		Modal.confirm({
+		modal.confirm({
 			title: "Delete Bot",
 			content:
 				"Are you sure you want to delete this bot? This action cannot be undone.",

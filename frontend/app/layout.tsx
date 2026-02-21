@@ -8,7 +8,7 @@ import ThemeProvider from "./theme/page";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-	title: "AuraAI - Trading Intelligence",
+	title: "Autotrader - Trading Intelligence",
 	description: "Advanced AI Trading Bot Platform",
 };
 
