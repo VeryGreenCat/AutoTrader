@@ -28,7 +28,7 @@ func main() {
     AllowOrigins:     "http://localhost:3000", // add your prod URL later e.g. "https://yourapp.com"
     AllowCredentials: false,
     AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-    AllowMethods:     "GET, POST, PUT, DELETE, OPTIONS",
+    AllowMethods:     "GET, POST, PUT, DELETE, PATCH, OPTIONS",
 }))
 	
 	config.ConnectDB()

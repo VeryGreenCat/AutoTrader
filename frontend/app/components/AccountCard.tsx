@@ -6,17 +6,11 @@ import DeployModal from "./DeployModal";
 import { Server, Plus, Trash2 } from "lucide-react";
 import { Modal, message } from "antd";
 import { deleteAccount } from "@/services/mt5";
-import { MT5 } from "@/types/mt5";
 import { Bot } from "@/types/bot";
 import { getBotsByMt5Id } from "@/services/bots";
+import { AccountCardProps } from "@/types/bot";
 
-export default function AccountCard({
-	account,
-	onDelete,
-}: {
-	account: MT5;
-	onDelete?: () => void;
-}) {
+export default function AccountCard({ account, onDelete }: AccountCardProps) {
 	const [bots, setBots] = useState<Bot[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
@@ -177,6 +171,7 @@ export default function AccountCard({
 							bot={bot}
 							accountStatus={account.status}
 							onDelete={fetchBots}
+							onStatusChange={fetchBots}
 						/>
 					))
 				)}

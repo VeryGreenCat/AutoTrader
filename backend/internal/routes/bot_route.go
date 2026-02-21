@@ -11,4 +11,5 @@ func BotRoutes(router fiber.Router) {
 	botRoutes.Post("/deploy-bot", handlers.DeployBot)
 	botRoutes.Get("/:mt5_id", handlers.GetBotsByMt5Id)
 	botRoutes.Delete("/:bot_id", handlers.DeleteBot)
+	botRoutes.Patch("/:bot_id/status", handlers.UpdateBotStatus)
 }

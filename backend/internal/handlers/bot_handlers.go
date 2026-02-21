@@ -59,3 +59,26 @@ func DeleteBot(c *fiber.Ctx) error {
 		"message": "Bot deleted successfully",
 	})
 }
+
+func UpdateBotStatus(c *fiber.Ctx) error {
+	botId := c.Params("bot_id")
+	var body struct {
+		Status bool `json:"status"`
+	}
+
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid request body",
+		})
+	}
+
+	if err := services.UpdateBotStatus(botId, body.Status); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to update bot status",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Bot status updated successfully",
+	})
+}

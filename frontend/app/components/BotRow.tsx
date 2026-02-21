@@ -1,19 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Switch, Modal, message } from "antd";
 import { Trash2 } from "lucide-react";
-import { deleteBot } from "@/services/bots";
-import { Bot } from "@/types/bot";
+import { deleteBot, updateBotStatus } from "@/services/bots";
+import { BotRowProps } from "@/types/bot";
 
-interface BotRowProps {
-	bot: Bot;
-	accountStatus: boolean; // Helps determine overarching disconnects
-	onDelete?: () => void;
-}
-
-export default function BotRow({ bot, accountStatus, onDelete }: BotRowProps) {
+export default function BotRow({
+	bot,
+	accountStatus,
+	onDelete,
+	onStatusChange,
+}: BotRowProps) {
 	const [switchState, setSwitchState] = useState(bot.status);
+
+	useEffect(() => {
+		setSwitchState(bot.status);
+	}, [bot.status]);
 
 	const handleDeleteBot = () => {
 		Modal.confirm({
@@ -35,6 +38,21 @@ export default function BotRow({ bot, accountStatus, onDelete }: BotRowProps) {
 				}
 			},
 		});
+	};
+
+	const handleStatusChange = async (checked: boolean) => {
+		try {
+			await updateBotStatus(bot.bot_id, checked);
+			setSwitchState(checked);
+			message.success(
+				`Bot ${checked ? "activated" : "deactivated"} successfully`,
+			);
+		} catch (error) {
+			console.error("Failed to update bot status:", error);
+			message.error("Failed to update bot status");
+		} finally {
+			if (onStatusChange) onStatusChange();
+		}
 	};
 
 	// Mock PnL for connected accounts as requested
@@ -101,7 +119,7 @@ export default function BotRow({ bot, accountStatus, onDelete }: BotRowProps) {
 			<div className="w-[10%] flex justify-end">
 				<Switch
 					checked={switchState}
-					onChange={(checked) => setSwitchState(checked)}
+					onChange={handleStatusChange}
 					disabled={!accountStatus}
 					style={{
 						background: switchState

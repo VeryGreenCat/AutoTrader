@@ -17,3 +17,8 @@ export const deleteBot = async (botId: string) => {
 	const response = await api.delete(`/bots/${botId}`);
 	return response.data;
 };
+
+export const updateBotStatus = async (botId: string, status: boolean) => {
+	const response = await api.patch(`/bots/${botId}/status`, { status });
+	return response.data;
+};

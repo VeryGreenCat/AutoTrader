@@ -1,3 +1,5 @@
+import { MT5 } from "./mt5";
+
 export interface Bot {
 	bot_id: string;
 	mt5_id: string;
@@ -12,4 +14,16 @@ export interface DeployModalProps {
 	onClose: () => void;
 	onSuccess?: () => void;
 	mt5Id: string;
+}
+
+export interface BotRowProps {
+	bot: Bot;
+	accountStatus: boolean; // Helps determine overarching disconnects
+	onDelete?: () => void;
+	onStatusChange?: () => void;
+}
+
+export interface AccountCardProps {
+	account: MT5;
+	onDelete?: () => void;
 }

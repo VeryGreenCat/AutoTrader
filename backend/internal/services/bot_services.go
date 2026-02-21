@@ -42,3 +42,10 @@ func DeleteBot(botId string) error {
 	}
 	return nil
 }
+
+func UpdateBotStatus(botId string, status bool) error {
+	if err := config.DB.Model(&models.Bot{}).Where("bot_id = ?", botId).Update("status", status).Error; err != nil {
+		return err
+	}
+	return nil
+}
