@@ -21,9 +21,16 @@ func DeployBot(req *dto.DeployBotRequest) error {
 	return nil
 }
 
-func GetBotsByMt5Id(mt5Id string) ([]models.Bot, error) {
-	var bots []models.Bot
-	if err := config.DB.Where("mt5_id = ?", mt5Id).Find(&bots).Error; err != nil {
+func GetBotsByMt5Id(mt5Id string) ([]dto.BotResponse, error) {
+	bots := []dto.BotResponse{}
+	
+	err := config.DB.Table("Bot").
+		Select("\"Bot\".*, \"Model\".name as name, \"Model\".currency as currency").
+		Joins("left join \"Model\" on \"Bot\".model_id = \"Model\".model_id").
+		Where("\"Bot\".mt5_id = ?", mt5Id).
+		Scan(&bots).Error
+
+	if err != nil {
 		return nil, err
 	}
 	return bots, nil

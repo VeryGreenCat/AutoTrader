@@ -1,55 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Switch, Modal, message } from "antd";
 import { Trash2 } from "lucide-react";
 import { deleteBot } from "@/services/bots";
-
-// --- Types ---
-interface BotDetail {
-	id: string;
-	name: string;
-	isActive: boolean;
-	pair: string;
-	pnl: number;
-}
-
-// --- Mock API ---
-const getBotById = async (botId: string): Promise<BotDetail> => {
-	return new Promise((resolve) => {
-		// Simulating variations based on ID for demonstration
-		setTimeout(() => {
-			resolve({
-				id: botId,
-				name: "Bot_name01",
-				isActive: botId === "b1",
-				pair: botId === "b1" ? "EURUSD" : botId === "b2" ? "tha/jpy" : "gbpusd",
-				pnl: botId === "b2" ? -656.32 : 12.4,
-			});
-		}, 300);
-	});
-};
+import { Bot } from "@/types/bot";
 
 interface BotRowProps {
-	botId: string;
+	bot: Bot;
 	accountStatus: boolean; // Helps determine overarching disconnects
 	onDelete?: () => void;
 }
 
-export default function BotRow({
-	botId,
-	accountStatus,
-	onDelete,
-}: BotRowProps) {
-	const [botData, setBotData] = useState<BotDetail | null>(null);
-	const [switchState, setSwitchState] = useState(false);
-
-	useEffect(() => {
-		getBotById(botId).then((data) => {
-			setBotData(data);
-			setSwitchState(data.isActive);
-		});
-	}, [botId]);
+export default function BotRow({ bot, accountStatus, onDelete }: BotRowProps) {
+	const [switchState, setSwitchState] = useState(bot.status);
 
 	const handleDeleteBot = () => {
 		Modal.confirm({
@@ -62,7 +26,7 @@ export default function BotRow({
 			centered: true,
 			onOk: async () => {
 				try {
-					await deleteBot(botId);
+					await deleteBot(bot.bot_id);
 					message.success("Bot deleted successfully");
 					if (onDelete) onDelete();
 				} catch (error) {
@@ -73,11 +37,8 @@ export default function BotRow({
 		});
 	};
 
-	if (!botData) {
-		return (
-			<div className="w-full h-16 bg-[#141414] animate-pulse rounded-xl border border-gray-800"></div>
-		);
-	}
+	// Mock PnL for connected accounts as requested
+	const pnlValue = accountStatus ? 12.45 : null;
 
 	// Determine if row should be grayed out (bot is inactive or account is disconnected)
 	const isRowDisabled = !switchState || !accountStatus;
@@ -89,7 +50,7 @@ export default function BotRow({
 				<span
 					className={`font-semibold ${isRowDisabled ? "text-gray-600" : "text-gray-200"}`}
 				>
-					{botData.name}
+					{bot.name}
 				</span>
 				<div
 					className={`px-3 py-0.5 rounded-full border text-xs font-bold uppercase tracking-wider
@@ -109,7 +70,7 @@ export default function BotRow({
 				<span
 					className={`uppercase font-medium tracking-wider ${isRowDisabled ? "text-gray-700" : "text-gray-400"}`}
 				>
-					{botData.pair}
+					{bot.currency}
 				</span>
 			</div>
 
@@ -124,12 +85,16 @@ export default function BotRow({
 					className={`font-bold ${
 						isRowDisabled
 							? "text-gray-700"
-							: botData.pnl >= 0
+							: pnlValue !== null && pnlValue >= 0
 								? "text-[#00FFA3]"
-								: "text-red-500"
+								: pnlValue !== null
+									? "text-red-500"
+									: "text-gray-500"
 					}`}
 				>
-					{botData.pnl >= 0 ? "+" : ""}${Math.abs(botData.pnl).toFixed(2)}
+					{pnlValue !== null
+						? `${pnlValue >= 0 ? "+" : ""}$${Math.abs(pnlValue).toFixed(2)}`
+						: "--"}
 				</span>
 			</div>
 

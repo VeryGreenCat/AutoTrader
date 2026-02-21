@@ -46,9 +46,10 @@ export default function AccountCard({
 		if (account?.mt5_id) {
 			try {
 				const res = await getBotsByMt5Id(account.mt5_id);
-				setBots(res.data);
+				setBots(res.data || []);
 			} catch (error) {
 				console.error("Failed to fetch bots:", error);
+				setBots([]);
 			} finally {
 				setLoading(false);
 			}
@@ -62,8 +63,8 @@ export default function AccountCard({
 	if (!account) return null;
 
 	// Mocking equity and active bot counts since they aren't in the MT5 interface
-	const activeBotsCount = bots.filter((b) => b.status).length;
-	const totalBotsCount = bots.length;
+	const activeBotsCount = (bots || []).filter((b) => b.status).length;
+	const totalBotsCount = (bots || []).length;
 	const mockEquity = account.balance * 1.05; // Just for display purposes
 
 	return (
@@ -173,7 +174,7 @@ export default function AccountCard({
 					bots.map((bot) => (
 						<BotRow
 							key={bot.bot_id}
-							botId={bot.bot_id}
+							bot={bot}
 							accountStatus={account.status}
 							onDelete={fetchBots}
 						/>
