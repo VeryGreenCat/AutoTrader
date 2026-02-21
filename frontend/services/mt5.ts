@@ -10,3 +10,8 @@ export const addAccount = async (accountData: addAccountProps) => {
 	const res = await api.post(`/mt5/accounts`, accountData);
 	return res.data;
 };
+
+export const deleteAccount = async (mt5Id: string) => {
+	const res = await api.delete(`/mt5/accounts/${mt5Id}`);
+	return res.data;
+};

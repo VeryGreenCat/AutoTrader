@@ -10,4 +10,5 @@ func MT5Routes(router fiber.Router) {
 
 	MT5Routes.Post("/accounts", handlers.AddMT5Account)
 	MT5Routes.Get("/accounts/:user_id", handlers.GetAccountById)
+	MT5Routes.Delete("/accounts/:mt5_id", handlers.DeleteAccount)
 }

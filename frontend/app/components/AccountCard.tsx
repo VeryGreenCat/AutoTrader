@@ -3,15 +3,44 @@
 import { useEffect, useState } from "react";
 import BotRow from "./BotRow";
 import DeployModal from "./DeployModal";
-import { Server, Plus } from "lucide-react";
+import { Server, Plus, Trash2 } from "lucide-react";
+import { Modal, message } from "antd";
+import { deleteAccount } from "@/services/mt5";
 import { MT5 } from "@/types/mt5";
 import { Bot } from "@/types/bot";
 import { getBotsByMt5Id } from "@/services/bots";
 
-export default function AccountCard({ account }: { account: MT5 }) {
+export default function AccountCard({
+	account,
+	onDelete,
+}: {
+	account: MT5;
+	onDelete?: () => void;
+}) {
 	const [bots, setBots] = useState<Bot[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+
+	const handleDelete = () => {
+		Modal.confirm({
+			title: "Delete Account",
+			content: `Are you sure you want to delete "${account.name}"? This action cannot be undone.`,
+			okText: "Delete",
+			okType: "danger",
+			cancelText: "Cancel",
+			centered: true,
+			onOk: async () => {
+				try {
+					await deleteAccount(account.mt5_id);
+					message.success("Account deleted successfully");
+					if (onDelete) onDelete();
+				} catch (error) {
+					console.error("Failed to delete account:", error);
+					message.error("Failed to delete account");
+				}
+			},
+		});
+	};
 
 	const fetchBots = async () => {
 		if (account?.mt5_id) {
@@ -107,12 +136,20 @@ export default function AccountCard({ account }: { account: MT5 }) {
 						></div>
 						{account.status ? "connected" : "disconnected"}
 					</div>
-					<button
-						onClick={() => setIsDeployModalOpen(true)}
-						className="text-[10px] font-bold uppercase tracking-wider bg-[#00FFA3] text-black px-3 py-1.5 rounded-md flex items-center gap-1 hover:shadow-[0_0_15px_rgba(0,255,163,0.4)] transition-all w-max cursor-pointer"
-					>
-						<Plus className="w-3 h-3" /> Deploy New Bot
-					</button>
+					<div className="flex gap-2">
+						<button
+							onClick={handleDelete}
+							className="text-[10px] font-bold uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/30 px-3 py-1.5 rounded-md flex items-center gap-1 hover:bg-red-500 hover:text-white transition-all w-max cursor-pointer"
+						>
+							<Trash2 className="w-3 h-3" />
+						</button>
+						<button
+							onClick={() => setIsDeployModalOpen(true)}
+							className="text-[10px] font-bold uppercase tracking-wider bg-[#00FFA3] text-black px-3 py-1.5 rounded-md flex items-center gap-1 hover:shadow-[0_0_15px_rgba(0,255,163,0.4)] transition-all w-max cursor-pointer"
+						>
+							<Plus className="w-3 h-3" /> Deploy New Bot
+						</button>
+					</div>
 				</div>
 			</div>
 

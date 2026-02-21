@@ -24,3 +24,10 @@ func GetAccountsById(userId string) ([]models.MT5, error) {
 
     return accounts, nil
 }
+
+func DeleteAccount(mt5Id string) error {
+    if err := config.DB.Where("mt5_id = ?", mt5Id).Delete(&models.MT5{}).Error; err != nil {
+        return err
+    }
+    return nil
+}

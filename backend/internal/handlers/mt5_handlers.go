@@ -46,3 +46,17 @@ func GetAccountById(c *fiber.Ctx) error {
 		"data":    account,
 	})
 }
+
+func DeleteAccount(c *fiber.Ctx) error {
+	mt5Id := c.Params("mt5_id")
+
+	if err := services.DeleteAccount(mt5Id); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete MT5 account",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "MT5 account deleted successfully",
+	})
+}

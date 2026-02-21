@@ -57,7 +57,11 @@ export default function Bots() {
 					</div>
 				) : (
 					accounts.map((account) => (
-						<AccountCard key={account.mt5_id} account={account} />
+						<AccountCard
+							key={account.mt5_id}
+							account={account}
+							onDelete={fetchData}
+						/>
 					))
 				)}
 
