@@ -8,9 +8,14 @@ import { addAccount } from "@/services/mt5";
 interface ConnectMT5Props {
 	open: boolean;
 	setOpen: (open: boolean) => void;
+	onSuccess?: () => void;
 }
 
-export default function ConnectMT5({ open, setOpen }: ConnectMT5Props) {
+export default function ConnectMT5({
+	open,
+	setOpen,
+	onSuccess,
+}: ConnectMT5Props) {
 	const [name, setName] = useState("");
 	const [mt5Id, setMt5Id] = useState("");
 	const [token, setToken] = useState("");
@@ -64,6 +69,7 @@ export default function ConnectMT5({ open, setOpen }: ConnectMT5Props) {
 
 			console.log("ConnectMT5 | userRes:", userRes.message);
 			message.success("Account added successfully");
+			if (onSuccess) onSuccess();
 		} catch (error) {
 			console.error("Failed to fetch accounts data", error);
 		} finally {

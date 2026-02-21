@@ -13,28 +13,28 @@ export default function Bots() {
 	const [loading, setLoading] = useState(false);
 	const userId = localStorage.getItem("user_id");
 
-	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				setLoading(true);
+	const fetchData = async () => {
+		try {
+			setLoading(true);
 
-				if (!userId) {
-					setLoading(false);
-					return;
-				}
-
-				// API Call: Get User Accounts
-				const userRes = await getAccountById(userId);
-				console.log("Bots | userRes:", userRes);
-
-				setAccounts(userRes.data);
-			} catch (error) {
-				console.error("Failed to fetch accounts data", error);
-			} finally {
+			if (!userId) {
 				setLoading(false);
+				return;
 			}
-		};
 
+			// API Call: Get User Accounts
+			const userRes = await getAccountById(userId);
+			console.log("Bots | userRes:", userRes);
+
+			setAccounts(userRes.data);
+		} catch (error) {
+			console.error("Failed to fetch accounts data", error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
 		fetchData();
 	}, []);
 
@@ -81,7 +81,13 @@ export default function Bots() {
 			</div>
 
 			{/* Add Account Modal */}
-			{openModal && <ConnectMT5 open={openModal} setOpen={setOpenModal} />}
+			{openModal && (
+				<ConnectMT5
+					open={openModal}
+					setOpen={setOpenModal}
+					onSuccess={fetchData}
+				/>
+			)}
 		</section>
 	);
 }
