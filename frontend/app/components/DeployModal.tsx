@@ -176,49 +176,6 @@ export default function DeployModal(deployData: DeployModalProps) {
 					</div>
 				</div>
 			</div>
-
-			{/* Add this CSS globally or in a styled-jsx block to fix AntD Select dark mode styling overrides */}
-			<style
-				dangerouslySetInnerHTML={{
-					__html: `
-        .ant-select-selector {
-          background-color: transparent !important;
-          border: 1px solid rgba(0, 255, 163, 0.2) !important;
-          border-radius: 0.75rem !important;
-          color: white !important;
-          align-items: center !important;
-        }
-        .ant-select-arrow {
-          color: #00FFA3 !important;
-        }
-        .ant-select-selection-placeholder {
-          color: #6b7280 !important;
-          display: flex;
-          align-items: center;
-        }
-        .ant-select-selection-item {
-          color: white !important;
-          display: flex;
-          align-items: center;
-        }
-        .dark-select-dropdown .ant-select-item {
-          color: #9ca3af !important;
-        }
-        .dark-select-dropdown .ant-select-item-option-selected {
-          background-color: rgba(0, 255, 163, 0.1) !important;
-          color: #00FFA3 !important;
-        }
-        .dark-select-dropdown .ant-select-item-option-active {
-          background-color: rgba(255, 255, 255, 0.05) !important;
-        }
-        .ant-modal-content {
-          background: transparent !important;
-          box-shadow: none !important;
-          padding: 0 !important;
-        }
-      `,
-				}}
-			/>
 		</Modal>
 	);
 }

@@ -16,6 +16,8 @@ import { Dropdown, MenuProps } from "antd";
 import { supabase } from "@/lib/supabase";
 import { AuthMode } from "@/types/auth";
 import AuthModal from "../auth/components/AuthModal";
+import { getAccountById } from "@/services/mt5";
+import { MT5 } from "@/types/mt5";
 
 export default function Navbar() {
 	const pathname = usePathname();
@@ -23,6 +25,7 @@ export default function Navbar() {
 	const [user, setUser] = useState<any>(null);
 	const [openModal, setOpenModal] = useState(false);
 	const [authMode, setAuthMode] = useState<AuthMode>("signin");
+	const [accounts, setAccounts] = useState<MT5[]>([]);
 
 	// 1. Check User Session on Mount
 	useEffect(() => {
@@ -44,7 +47,24 @@ export default function Navbar() {
 		return () => subscription.unsubscribe();
 	}, []);
 
-	// 2. Logout Function
+	// 2. Fetch Accounts when user is available
+	useEffect(() => {
+		const fetchAccounts = async () => {
+			if (user?.id) {
+				try {
+					const res = await getAccountById(user.id);
+					setAccounts(res.data);
+				} catch (error) {
+					console.error("Failed to fetch accounts in Navbar:", error);
+				}
+			} else {
+				setAccounts([]);
+			}
+		};
+		fetchAccounts();
+	}, [user]);
+
+	// 3. Logout Function
 	const handleLogout = async () => {
 		await supabase.auth.signOut();
 		router.push("/");
@@ -61,15 +81,8 @@ export default function Navbar() {
 			: `${base} text-gray-400`;
 	};
 
-	// Mock Data for Accounts
-	const mockAccounts = [
-		{ id: "acc_1", name: "Main Trading Account", balance: "$12,450.00" },
-		{ id: "acc_2", name: "Prop Firm Challenge", balance: "$50,000.00" },
-		{ id: "acc_3", name: "Scalping Bot Acc", balance: "$3,210.50" },
-	];
-
-	const accountMenuItems: MenuProps["items"] = mockAccounts.map((acc) => ({
-		key: acc.id,
+	const accountMenuItems: MenuProps["items"] = accounts.map((acc) => ({
+		key: acc.mt5_id,
 		label: (
 			<div
 				className="flex items-center py-1"
@@ -177,10 +190,25 @@ export default function Navbar() {
 						<p className="text-[10px] text-gray-500 uppercase tracking-widest mb-0.5">
 							MT5 Status
 						</p>
-						<div className="text-xs flex items-center gap-1 justify-end font-bold text-[#00FFA3]">
-							<Activity className="w-3 h-3 animate-pulse" />
-							Connected
-						</div>
+						{(() => {
+							const connectedCount = accounts.filter(
+								(acc) => acc.status,
+							).length;
+							return (
+								<div
+									className={`text-xs flex items-center gap-1 justify-end font-bold transition-colors ${
+										connectedCount > 0 ? "text-[#00FFA3]" : "text-red-500"
+									}`}
+								>
+									<Activity
+										className={`w-3 h-3 ${connectedCount > 0 ? "animate-pulse" : ""}`}
+									/>
+									{connectedCount > 0
+										? `${connectedCount} Connected`
+										: "Disconnected"}
+								</div>
+							);
+						})()}
 					</div>
 
 					{/* PROFILE DROPDOWN AREA */}
