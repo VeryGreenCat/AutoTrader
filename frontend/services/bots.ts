@@ -7,7 +7,13 @@ export const deployBot = async (mt5Id: string, modelId: string) => {
 	});
 	return response.data;
 };
+
 export const getBotsByMt5Id = async (mt5Id: string) => {
 	const response = await api.get(`/bots/${mt5Id}`);
+	return response.data;
+};
+
+export const deleteBot = async (botId: string) => {
+	const response = await api.delete(`/bots/${botId}`);
 	return response.data;
 };

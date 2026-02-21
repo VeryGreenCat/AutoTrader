@@ -175,6 +175,7 @@ export default function AccountCard({
 							key={bot.bot_id}
 							botId={bot.bot_id}
 							accountStatus={account.status}
+							onDelete={fetchBots}
 						/>
 					))
 				)}

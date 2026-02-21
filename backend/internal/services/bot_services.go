@@ -28,3 +28,10 @@ func GetBotsByMt5Id(mt5Id string) ([]models.Bot, error) {
 	}
 	return bots, nil
 }
+
+func DeleteBot(botId string) error {
+	if err := config.DB.Where("bot_id = ?", botId).Delete(&models.Bot{}).Error; err != nil {
+		return err
+	}
+	return nil
+}

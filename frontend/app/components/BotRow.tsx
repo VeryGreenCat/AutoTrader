@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Switch } from "antd";
+import { Switch, Modal, message } from "antd";
+import { Trash2 } from "lucide-react";
+import { deleteBot } from "@/services/bots";
 
 // --- Types ---
 interface BotDetail {
@@ -31,9 +33,14 @@ const getBotById = async (botId: string): Promise<BotDetail> => {
 interface BotRowProps {
 	botId: string;
 	accountStatus: boolean; // Helps determine overarching disconnects
+	onDelete?: () => void;
 }
 
-export default function BotRow({ botId, accountStatus }: BotRowProps) {
+export default function BotRow({
+	botId,
+	accountStatus,
+	onDelete,
+}: BotRowProps) {
 	const [botData, setBotData] = useState<BotDetail | null>(null);
 	const [switchState, setSwitchState] = useState(false);
 
@@ -43,6 +50,28 @@ export default function BotRow({ botId, accountStatus }: BotRowProps) {
 			setSwitchState(data.isActive);
 		});
 	}, [botId]);
+
+	const handleDeleteBot = () => {
+		Modal.confirm({
+			title: "Delete Bot",
+			content:
+				"Are you sure you want to delete this bot? This action cannot be undone.",
+			okText: "Delete",
+			okType: "danger",
+			cancelText: "Cancel",
+			centered: true,
+			onOk: async () => {
+				try {
+					await deleteBot(botId);
+					message.success("Bot deleted successfully");
+					if (onDelete) onDelete();
+				} catch (error) {
+					console.error("Failed to delete bot:", error);
+					message.error("Failed to delete bot");
+				}
+			},
+		});
+	};
 
 	if (!botData) {
 		return (
@@ -117,6 +146,12 @@ export default function BotRow({ botId, accountStatus }: BotRowProps) {
 							: "#333",
 					}}
 				/>
+				<button
+					onClick={handleDeleteBot}
+					className="ml-4 p-1.5 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all cursor-pointer"
+				>
+					<Trash2 className="w-3.5 h-3.5" />
+				</button>
 			</div>
 		</div>
 	);

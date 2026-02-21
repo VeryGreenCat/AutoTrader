@@ -45,3 +45,17 @@ func GetBotsByMt5Id(c *fiber.Ctx) error {
 		"data":    bots,
 	})
 }
+
+func DeleteBot(c *fiber.Ctx) error {
+	botId := c.Params("bot_id")
+
+	if err := services.DeleteBot(botId); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete bot",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Bot deleted successfully",
+	})
+}
