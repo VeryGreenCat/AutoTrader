@@ -1,15 +1,37 @@
+"use client";
+
 import { Pie } from "@ant-design/charts";
+import { useEffect, useState } from "react";
+import { getAccountById } from "@/services/mt5";
+import { MT5 } from "@/types/mt5";
 
-type Account = {
-	name: string;
-	value: number;
+// Mock equity per account until the real equity API is ready
+const getMockEquity = (mt5Id: string): number => {
+	// Deterministic mock value based on mt5_id characters so it's stable per account
+	const seed = mt5Id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+	return Math.round(((seed % 9000) + 1000) * 1.37);
 };
 
-type PortfolioProps = {
-	accounts: Account[];
-};
+export default function Portfolio() {
+	const [accounts, setAccounts] = useState<MT5[]>([]);
+	const [loading, setLoading] = useState(true);
 
-export default function Portfolio({ accounts }: PortfolioProps) {
+	useEffect(() => {
+		const fetchAccounts = async () => {
+			try {
+				const userId = localStorage.getItem("user_id");
+				if (!userId) return;
+				const res = await getAccountById(userId);
+				setAccounts(res.data || []);
+			} catch (error) {
+				console.error("Portfolio: failed to fetch accounts", error);
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchAccounts();
+	}, []);
+
 	const chartColors = [
 		"#00FFA3", // Emerald
 		"#FF4D4F", // Rose
@@ -20,9 +42,10 @@ export default function Portfolio({ accounts }: PortfolioProps) {
 		"#FA8C16", // Orange
 	];
 
+	// Build chart data using account name + mock equity
 	const data = accounts.map((acc) => ({
 		type: acc.name,
-		value: Math.abs(acc.value),
+		value: getMockEquity(acc.mt5_id),
 	}));
 
 	const config = {
@@ -41,16 +64,11 @@ export default function Portfolio({ accounts }: PortfolioProps) {
 					const val = data.find((d) => d.type === item.value)?.value;
 					return val ? ` $${val.toLocaleString()}` : "";
 				},
-				style: {
-					fill: "#999",
-				},
+				style: { fill: "#999" },
 			},
 		},
-		tooltip: {
-			showTitle: false,
-			showMarkers: false,
-		},
-		padding: [20, 0, 40, 0],
+		tooltip: false,
+		padding: [20, 0, 40, 0] as [number, number, number, number],
 		autoFit: true,
 	};
 
@@ -59,49 +77,61 @@ export default function Portfolio({ accounts }: PortfolioProps) {
 			{/* Header */}
 			<div className="px-5 py-4 border-b border-white/10 bg-white/[0.03] flex items-center justify-between">
 				<h3 className="text-[11px] font-bold uppercase tracking-[0.25em] text-white">
-					Portfolio Distribution
+					Portfolio Distribution (Equity)
 				</h3>
 				<div className="w-2 h-2 rounded-full bg-[#00FFA3] animate-pulse" />
 			</div>
 
 			{/* Chart Section */}
 			<div className="flex-1 overflow-y-auto custom-scrollbar">
-				<div className="h-[240px] w-full pt-4">
-					<Pie {...config} />
-				</div>
-
-				{/* Custom List */}
-				<div className="px-5 pb-5 space-y-2">
-					<p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-3">
-						Account Breakdown
-					</p>
-					{accounts.map((item, index) => (
-						<div
-							key={index}
-							className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition-colors group"
-						>
-							<div className="flex items-center gap-3">
-								<div
-									className="w-1.5 h-1.5 rounded-full"
-									style={{
-										backgroundColor: chartColors[index % chartColors.length],
-									}}
-								/>
-								<span className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">
-									{item.name}
-								</span>
-							</div>
-							<span
-								className={`text-xs font-mono font-bold ${
-									item.value >= 0 ? "text-[#00FFA3]" : "text-[#FF4D4F]"
-								}`}
-							>
-								{item.value >= 0 ? "+" : "-"}$
-								{Math.abs(item.value).toLocaleString()}
-							</span>
+				{loading ? (
+					<div className="flex items-center justify-center h-full text-gray-500 text-sm">
+						Loading...
+					</div>
+				) : accounts.length === 0 ? (
+					<div className="flex items-center justify-center h-full text-gray-500 text-sm">
+						No accounts found.
+					</div>
+				) : (
+					<>
+						<div className="h-[240px] w-full">
+							<Pie {...config} />
 						</div>
-					))}
-				</div>
+
+						{/* Account Breakdown List */}
+						<div className="px-5 pb-5 space-y-2">
+							<p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-3">
+								Account Breakdown
+							</p>
+							{accounts.map((acc, index) => {
+								const equity = getMockEquity(acc.mt5_id);
+								return (
+									<div
+										key={acc.mt5_id}
+										className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition-colors group"
+									>
+										<div className="flex items-center gap-3">
+											<div
+												className="w-1.5 h-1.5 rounded-full"
+												style={{
+													backgroundColor:
+														chartColors[index % chartColors.length],
+												}}
+											/>
+											<span className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">
+												{acc.name}
+											</span>
+										</div>
+										{/* Mock equity value — replace with real equity API later */}
+										<span className="text-xs font-mono font-bold text-[#00FFA3]">
+											${equity.toLocaleString()}
+										</span>
+									</div>
+								);
+							})}
+						</div>
+					</>
+				)}
 			</div>
 		</div>
 	);

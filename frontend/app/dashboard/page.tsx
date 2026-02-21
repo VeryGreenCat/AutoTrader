@@ -79,18 +79,7 @@ const DashboardContent = () => {
 						onReady={initTradingView}
 					/>
 				</div>
-				{account ? (
-					<LlmLogic />
-				) : (
-					<Portfolio
-						accounts={[
-							{ name: "Account_1", value: 1248 },
-							{ name: "Account_2", value: -100.68 },
-							{ name: "Account_3", value: 500 },
-							{ name: "Account_4", value: -200 },
-						]}
-					/>
-				)}
+				{account ? <LlmLogic /> : <Portfolio />}
 			</div>
 			{/* below will be 1 card */}
 			{!account ? (
