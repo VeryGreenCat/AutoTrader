@@ -188,7 +188,7 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 				onClose={() => setIsDeployModalOpen(false)}
 				onSuccess={fetchBots}
 				mt5Id={account.mt5_id}
-				deployedModelIds={bots.map((b) => b.model_id)}
+				deployedCurrencies={bots.map((b) => b.currency)}
 			/>
 		</div>
 	);

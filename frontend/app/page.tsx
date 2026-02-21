@@ -149,7 +149,7 @@ export default function Home() {
 							<h3 className="text-xl font-bold mb-2 text-white">
 								Performance Fee
 							</h3>
-							<p className="text-5xl font-bold text-[#00FFA3] mb-4">10%</p>
+							<p className="text-5xl font-bold text-[#00FFA3] mb-4">5%</p>
 							<p className="text-gray-400 text-xs uppercase tracking-widest mb-6">
 								of realized profit
 							</p>

@@ -58,7 +58,7 @@ export default function BillingPage() {
 							<div className="bg-[#00FFA3]/5 p-4 rounded-2xl border border-[#00FFA3]/20 mt-4">
 								<div className="flex justify-between items-center mb-2">
 									<span className="text-xs font-bold uppercase tracking-tighter text-white">
-										10% Performance Fee
+										5% Performance Fee
 									</span>
 									<span className="text-lg font-bold text-[#00FFA3]">
 										${SETTLEMENT_AMOUNT}

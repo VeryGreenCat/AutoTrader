@@ -14,7 +14,7 @@ export interface DeployModalProps {
 	onClose: () => void;
 	onSuccess?: () => void;
 	mt5Id: string;
-	deployedModelIds?: string[];
+	deployedCurrencies?: string[];
 }
 
 export interface BotRowProps {

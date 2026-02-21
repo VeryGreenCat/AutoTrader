@@ -121,7 +121,7 @@ export default function AdminPage() {
 
 				<div className="glass-card p-6 border-white/5 bg-white/5 rounded-2xl border">
 					<p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-1">
-						Performance Fees (10%)
+						Performance Fees (5%)
 					</p>
 					<p className="text-2xl font-mono font-bold text-cyan-400">
 						$12,490.12
@@ -183,7 +183,9 @@ export default function AdminPage() {
 					</p>
 					<div className="flex items-end gap-2">
 						<p className="text-3xl font-bold font-mono text-white">1,024</p>
-						<p className="text-sm text-gray-500 pb-1">/ 1,500 Accounts Online</p>
+						<p className="text-sm text-gray-500 pb-1">
+							/ 1,500 Accounts Online
+						</p>
 					</div>
 					<div className="w-full bg-white/5 h-1.5 rounded-full mt-4 overflow-hidden">
 						<div className="bg-[#00FFA3] h-full" style={{ width: "68%" }}></div>

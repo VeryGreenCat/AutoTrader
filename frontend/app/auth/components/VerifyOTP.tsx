@@ -166,6 +166,11 @@ export default function VerifyOTP({
 							type="text"
 							value={code}
 							onChange={(e) => setCode(e.target.value)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" && code.length === 6 && !loading) {
+									handleVerify();
+								}
+							}}
 							placeholder="000 000"
 							maxLength={6}
 							className="w-full bg-black/50 border border-white/10 text-white text-center text-2xl font-mono font-bold py-4 pl-10 pr-4 rounded-xl focus:outline-none focus:border-[#00FFA3] focus:bg-[#00FFA3]/5 focus:shadow-[0_0_20px_rgba(0,255,163,0.1)] transition-all duration-300 tracking-[0.5em] placeholder-gray-700"

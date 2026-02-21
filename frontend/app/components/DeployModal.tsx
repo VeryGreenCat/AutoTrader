@@ -9,7 +9,13 @@ import { deployBot } from "@/services/bots";
 import { getAvailableModels } from "@/services/model";
 
 export default function DeployModal(deployData: DeployModalProps) {
-	const { open, onClose, mt5Id, onSuccess, deployedModelIds = [] } = deployData;
+	const {
+		open,
+		onClose,
+		mt5Id,
+		onSuccess,
+		deployedCurrencies = [],
+	} = deployData;
 	const { message } = App.useApp();
 	const [loading, setLoading] = useState(false);
 	const [selectedPair, setSelectedPair] = useState<string | null>(null);
@@ -21,11 +27,19 @@ export default function DeployModal(deployData: DeployModalProps) {
 
 	const currencyOptions = useMemo(() => {
 		const uniqueCurrencies = Array.from(new Set(models.map((m) => m.currency)));
-		return uniqueCurrencies.map((c) => ({
-			label: c.length === 6 ? `${c.slice(0, 3)}/${c.slice(3)}` : c,
-			value: c,
-		}));
-	}, [models]);
+		return uniqueCurrencies.map((c) => {
+			const isDeployed = deployedCurrencies.includes(c);
+			return {
+				label: isDeployed
+					? `${c.length === 6 ? `${c.slice(0, 3)}/${c.slice(3)}` : c} — Already Deployed`
+					: c.length === 6
+						? `${c.slice(0, 3)}/${c.slice(3)}`
+						: c,
+				value: c,
+				disabled: isDeployed,
+			};
+		});
+	}, [models, deployedCurrencies]);
 
 	useEffect(() => {
 		const fetchModels = async () => {
@@ -51,22 +65,16 @@ export default function DeployModal(deployData: DeployModalProps) {
 	// Load bots when pair is selected
 	useEffect(() => {
 		if (selectedPair) {
-			setSelectedBot(null); // Reset bot selection on pair change
+			setSelectedBot(null);
 			const options = models
 				.filter((m) => m.currency === selectedPair)
-				.map((m) => {
-					const isDeployed = deployedModelIds.includes(m.model_id);
-					return {
-						label: isDeployed
-							? `${m.name} (${m.version}) — Already Deployed`
-							: `${m.name} (${m.version})`,
-						value: m.model_id,
-						disabled: isDeployed,
-					};
-				});
+				.map((m) => ({
+					label: `${m.name} (${m.version})`,
+					value: m.model_id,
+				}));
 			setBotOptions(options);
 		}
-	}, [selectedPair, models, deployedModelIds]);
+	}, [selectedPair, models]);
 
 	const handleExecute = async () => {
 		if (!selectedBot) return;
