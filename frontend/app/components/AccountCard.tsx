@@ -2,155 +2,148 @@
 
 import { useEffect, useState } from "react";
 import BotRow from "./BotRow";
+import DeployModal from "./DeployModal";
+import { Server, Plus } from "lucide-react";
+import { MT5 } from "@/types/mt5";
+import { Bot } from "@/types/bot";
+import { getBotsByMt5Id } from "@/services/bots";
 
-interface AccountData {
-	accountName: string;
-	equity: number;
-	botsRunning: number;
-	balance: number;
-	connected: boolean;
-	bots: any[];
-}
-
-export default function AccountCard({ accountId }: { accountId: string }) {
-	const [data, setData] = useState<AccountData | null>(null);
+export default function AccountCard({ account }: { account: MT5 }) {
+	const [bots, setBots] = useState<Bot[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+
+	const fetchBots = async () => {
+		if (account?.mt5_id) {
+			try {
+				const res = await getBotsByMt5Id(account.mt5_id);
+				setBots(res.data);
+			} catch (error) {
+				console.error("Failed to fetch bots:", error);
+			} finally {
+				setLoading(false);
+			}
+		}
+	};
 
 	useEffect(() => {
-		// ---- Simulate API Call ----
-		// TODO: Replace with real API:
-		// GET /api/accounts/{accountId}
+		fetchBots();
+	}, [account]);
 
-		setTimeout(() => {
-			const mockData: AccountData = {
-				accountName: "MT5_account_" + accountId,
-				equity: 14205,
-				botsRunning: 3,
-				balance: 568,
-				connected: true,
-				bots: [
-					{
-						id: "1",
-						name: "Bot_name01",
-						pair: "EURUSD",
-						status: "active",
-						profit: 12.4,
-						canRun: true,
-					},
-					{
-						id: "2",
-						name: "Bot_name02",
-						pair: "THAJPY",
-						status: "force_stop",
-						profit: -56.32,
-						canRun: false,
-					},
-					{
-						id: "3",
-						name: "Bot_name03",
-						pair: "GBPUSD",
-						status: "disconnected",
-						profit: 12.4,
-						disabled: true,
-						canRun: false,
-					},
-					{
-						id: "4",
-						name: "Bot_name04",
-						pair: "EURUSD",
-						status: "active",
-						profit: 12.4,
-						canRun: true,
-					},
-					{
-						id: "5",
-						name: "Bot_name05",
-						pair: "THAJPY",
-						status: "force_stop",
-						profit: -56.32,
-						canRun: false,
-					},
-					{
-						id: "6",
-						name: "Bot_name06",
-						pair: "GBPUSD",
-						status: "disconnected",
-						profit: 12.4,
-						disabled: true,
-						canRun: false,
-					},
-				],
-			};
+	if (!account) return null;
 
-			setData(mockData);
-			setLoading(false);
-		}, 800);
-	}, [accountId]);
-
-	if (loading) {
-		return (
-			<div className="bg-[#0b1117] border border-[#1e293b] rounded-2xl p-6">
-				<p className="text-gray-400 text-sm">Loading account...</p>
-			</div>
-		);
-	}
-
-	if (!data) return null;
+	// Mocking equity and active bot counts since they aren't in the MT5 interface
+	const activeBotsCount = bots.filter((b) => b.status).length;
+	const totalBotsCount = bots.length;
+	const mockEquity = account.balance * 1.05; // Just for display purposes
 
 	return (
-		<div className="bg-[#0b1117] border border-[#1e293b] rounded-2xl p-6 space-y-6">
-			{/* Header */}
-			<div className="flex justify-between items-center">
-				<div>
-					<p className="text-white text-sm font-medium">{data.accountName}</p>
-					<p className="text-xs text-gray-500">Account ID: {accountId}</p>
+		<div className="w-full bg-[#0a0a0a] rounded-2xl border border-gray-800 p-1 font-sans text-white mb-6">
+			{/* Top Header Card */}
+			<div className="bg-[#141414] rounded-xl border border-gray-800 p-4 flex flex-wrap lg:flex-nowrap items-center justify-between gap-6 mb-4">
+				{/* Account Info */}
+				<div className="flex items-center gap-4 min-w-[250px]">
+					<div className="w-14 h-14 rounded-xl bg-[#00FFA3]/10 border border-[#00FFA3]/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,163,0.1)]">
+						<Server className="w-6 h-6 text-[#00FFA3]" />
+					</div>
+					<div className="flex flex-col">
+						<h3 className="font-bold text-lg leading-tight">{account.name}</h3>
+						<span className="text-gray-500 text-xs">
+							Token: {account.token}
+						</span>
+						<span className="text-gray-500 text-xs">
+							mt5ID: {account.mt5_id}
+						</span>
+					</div>
 				</div>
 
-				<div
-					className={`text-xs px-3 py-1 rounded-full ${
-						data.connected
-							? "bg-emerald-500/15 text-emerald-400"
-							: "bg-red-500/15 text-red-400"
-					}`}
-				>
-					{data.connected ? "connected" : "disconnected"}
+				{/* Stats Section */}
+				<div className="flex gap-8 lg:gap-16 flex-1 px-4 border-l border-r border-gray-800">
+					<div className="flex flex-col">
+						<span className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">
+							Equity
+						</span>
+						<span className="text-2xl font-bold">
+							$
+							{mockEquity.toLocaleString(undefined, {
+								minimumFractionDigits: 0,
+								maximumFractionDigits: 0,
+							})}
+						</span>
+					</div>
+					<div className="flex flex-col">
+						<span className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">
+							Bots Running
+						</span>
+						<span className="text-2xl font-bold text-[#00FFA3]">
+							{activeBotsCount}
+							<span className="text-gray-500 text-lg">/{totalBotsCount}</span>
+						</span>
+					</div>
+					<div className="flex flex-col">
+						<span className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">
+							Balance
+						</span>
+						<span className="text-2xl font-bold">
+							{account.balance.toLocaleString(undefined, {
+								minimumFractionDigits: 2,
+							})}
+						</span>
+					</div>
+				</div>
+
+				{/* Action & Status Indicator */}
+				<div className="flex flex-col items-end justify-center min-w-[150px] gap-3">
+					<div
+						className={`px-4 py-1.5 rounded-full border flex items-center gap-2 text-sm font-medium capitalize
+            ${
+							account.status
+								? "border-[#00FFA3]/30 text-[#00FFA3]"
+								: "border-red-500/30 text-red-500"
+						}`}
+					>
+						<div
+							className={`w-2 h-2 rounded-full ${account.status ? "bg-[#00FFA3] shadow-[0_0_8px_rgba(0,255,163,0.8)] animate-pulse" : "bg-red-500 shadow-[0_0_8px_rgba(255,0,0,0.8)]"}`}
+						></div>
+						{account.status ? "connected" : "disconnected"}
+					</div>
+					<button
+						onClick={() => setIsDeployModalOpen(true)}
+						className="text-[10px] font-bold uppercase tracking-wider bg-[#00FFA3] text-black px-3 py-1.5 rounded-md flex items-center gap-1 hover:shadow-[0_0_15px_rgba(0,255,163,0.4)] transition-all w-max cursor-pointer"
+					>
+						<Plus className="w-3 h-3" /> Deploy New Bot
+					</button>
 				</div>
 			</div>
 
-			{/* Stats */}
-			<div className="grid grid-cols-3 gap-4">
-				<div className="bg-[#11161c] p-4 rounded-xl">
-					<p className="text-xs text-gray-500">EQUITY</p>
-					<p className="text-white text-base font-medium">
-						${data.equity.toLocaleString()}
-					</p>
-				</div>
-
-				<div className="bg-[#11161c] p-4 rounded-xl">
-					<p className="text-xs text-gray-500">BOTS RUNNING</p>
-					<p className="text-emerald-400 text-base font-medium">
-						{data.botsRunning}
-					</p>
-				</div>
-
-				<div className="bg-[#11161c] p-4 rounded-xl">
-					<p className="text-xs text-gray-500">BALANCE</p>
-					<p className="text-white text-base font-medium">
-						${data.balance.toLocaleString()}
-					</p>
-				</div>
+			{/* Bot List (Scrollable if > 5 items) */}
+			<div className="px-2 pb-2 max-h-[400px] overflow-y-auto space-y-2 custom-scrollbar">
+				{loading ? (
+					<div className="text-center py-8 text-gray-500 text-sm">
+						Loading Bots...
+					</div>
+				) : bots.length === 0 ? (
+					<div className="text-center py-8 text-gray-500 text-sm">
+						No bots deployed yet.
+					</div>
+				) : (
+					bots.map((bot) => (
+						<BotRow
+							key={bot.bot_id}
+							botId={bot.bot_id}
+							accountStatus={account.status}
+						/>
+					))
+				)}
 			</div>
 
-			{/* Bots List */}
-			<div
-				className={`space-y-3 ${
-					data.bots.length > 5 ? "max-h-[350px] overflow-y-auto pr-2" : ""
-				}`}
-			>
-				{data.bots.map((bot) => (
-					<BotRow key={bot.id} bot={bot} />
-				))}
-			</div>
+			{/* Deployment Modal */}
+			<DeployModal
+				open={isDeployModalOpen}
+				onClose={() => setIsDeployModalOpen(false)}
+				onSuccess={fetchBots}
+				mt5Id={account.mt5_id}
+			/>
 		</div>
 	);
 }

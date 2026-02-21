@@ -5,10 +5,10 @@ import AccountCard from "../components/AccountCard";
 import ConnectMT5 from "../components/ConnectMT5";
 import { getAccountById } from "@/services/mt5";
 import { Spin } from "antd";
-import { MT5NamesResponse } from "@/types/mt5";
+import { MT5 } from "@/types/mt5";
 
 export default function Bots() {
-	const [accounts, setAccounts] = useState<MT5NamesResponse[]>([]);
+	const [accounts, setAccounts] = useState<MT5[]>([]);
 	const [openModal, setOpenModal] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const userId = localStorage.getItem("user_id");
@@ -57,7 +57,7 @@ export default function Bots() {
 					</div>
 				) : (
 					accounts.map((account) => (
-						<AccountCard key={account.mt5_id} accountId={account.mt5_id} />
+						<AccountCard key={account.mt5_id} account={account} />
 					))
 				)}
 

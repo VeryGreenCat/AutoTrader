@@ -1,127 +1,115 @@
 "use client";
 
-import { useState } from "react";
-import { Switch, message } from "antd";
+import { useEffect, useState } from "react";
+import { Switch } from "antd";
 
-interface Bot {
+// --- Types ---
+interface BotDetail {
 	id: string;
 	name: string;
+	isActive: boolean;
 	pair: string;
-	status: "active" | "force_stop" | "disconnected";
-	profit: number;
-	canRun?: boolean;
-	disabled?: boolean;
+	pnl: number;
 }
 
-interface Props {
-	bot: Bot;
-}
-
-export default function BotRow({ bot }: Props) {
-	const isForceStop = bot.status === "force_stop";
-
-	// Internal state to manage the bot's running status independently
-	// Automatically force to 'false' if it's a force stop
-	const [isRunning, setIsRunning] = useState(
-		isForceStop ? false : (bot.canRun ?? true),
-	);
-	const [isUpdating, setIsUpdating] = useState(false);
-
-	const handleToggle = async (checked: boolean) => {
-		setIsUpdating(true);
-		try {
-			// ---- Placeholder API Call ----
-			console.log(`Sending API request: POST /api/bots/${bot.id}/toggle`, {
-				enabled: checked,
+// --- Mock API ---
+const getBotById = async (botId: string): Promise<BotDetail> => {
+	return new Promise((resolve) => {
+		// Simulating variations based on ID for demonstration
+		setTimeout(() => {
+			resolve({
+				id: botId,
+				name: "Bot_name01",
+				isActive: botId === "b1",
+				pair: botId === "b1" ? "EURUSD" : botId === "b2" ? "tha/jpy" : "gbpusd",
+				pnl: botId === "b2" ? -656.32 : 12.4,
 			});
+		}, 300);
+	});
+};
 
-			await new Promise((resolve) => setTimeout(resolve, 600));
+interface BotRowProps {
+	botId: string;
+	accountStatus: boolean; // Helps determine overarching disconnects
+}
 
-			setIsRunning(checked);
-			message.success(`${bot.name} ${checked ? "started" : "stopped"}`);
-		} catch (error) {
-			message.error("Failed to update bot status");
-		} finally {
-			setIsUpdating(false);
-		}
-	};
+export default function BotRow({ botId, accountStatus }: BotRowProps) {
+	const [botData, setBotData] = useState<BotDetail | null>(null);
+	const [switchState, setSwitchState] = useState(false);
 
-	const statusColor = {
-		active: "text-emerald-400 border-emerald-400 bg-emerald-400/5",
-		force_stop: "text-red-500 border-red-500 bg-red-500/5", // Changed to red for the warning
-		disconnected: "text-gray-400 border-gray-400 bg-gray-400/5",
-	};
+	useEffect(() => {
+		getBotById(botId).then((data) => {
+			setBotData(data);
+			setSwitchState(data.isActive);
+		});
+	}, [botId]);
 
-	// Determine UI State
-	const isRowInactive = !isRunning || isForceStop;
-
-	// Determine Display Status Text
-	let displayStatus = bot.status.replace("_", " ");
-	let displayColor = statusColor[bot.status] || statusColor.disconnected;
-
-	if (isForceStop) {
-		displayStatus = "! unpaid bill / ran out of ticket !";
-		displayColor = statusColor.force_stop;
-	} else if (!isRunning) {
-		displayStatus = "disconnected";
-		displayColor = statusColor.disconnected;
+	if (!botData) {
+		return (
+			<div className="w-full h-16 bg-[#141414] animate-pulse rounded-xl border border-gray-800"></div>
+		);
 	}
 
+	// Determine if row should be grayed out (bot is inactive or account is disconnected)
+	const isRowDisabled = !switchState || !accountStatus;
+
 	return (
-		<div
-			className={`grid grid-cols-5 items-center bg-[#0f141a] border border-[#1e293b] rounded-xl px-5 py-3 transition-all duration-300 ${
-				isForceStop ? "opacity-40 cursor-not-allowed" : ""
-			}`}
-		>
-			{/* Data Columns - Grayed out if inactive/force_stop */}
-			<div
-				className={`contents transition-opacity duration-300 ${
-					isRowInactive ? "opacity-50 grayscale-[0.5]" : "opacity-100"
-				}`}
-			>
-				{/* Name & ID */}
-				<div className="col-span-1">
-					<p className="text-sm text-white font-semibold truncate">
-						{bot.name}
-					</p>
-					<p className="text-[10px] text-gray-500 font-mono uppercase tracking-wider">
-						ID: {bot.id}
-					</p>
-				</div>
-
-				{/* Status - Dynamic based on logic */}
-				<div className="col-span-1 justify-self-start">
-					<span
-						className={`text-[9px] px-2 py-0.5 rounded border font-bold uppercase tracking-tight ${displayColor}`}
-					>
-						{displayStatus}
-					</span>
-				</div>
-
-				{/* Pair */}
-				<div className="col-span-1 text-sm text-gray-400 font-medium">
-					{bot.pair}
-				</div>
-
-				{/* Profit */}
-				<div
-					className={`col-span-1 text-sm font-bold ${
-						bot.profit >= 0 ? "text-emerald-400" : "text-red-400"
-					}`}
+		<div className="flex items-center justify-between p-4 bg-[#141414] rounded-xl border border-gray-800/60 hover:border-gray-700 transition-colors">
+			{/* Name and Status Badge */}
+			<div className="flex items-center gap-6 w-1/3">
+				<span
+					className={`font-semibold ${isRowDisabled ? "text-gray-600" : "text-gray-200"}`}
 				>
-					{bot.profit >= 0 ? "+" : ""}${bot.profit.toFixed(2)}
+					{botData.name}
+				</span>
+				<div
+					className={`px-3 py-0.5 rounded-full border text-xs font-bold uppercase tracking-wider
+          ${
+						switchState
+							? "border-[#00FFA3]/30 text-[#00FFA3] bg-[#00FFA3]/5"
+							: "border-red-500/30 text-red-500 bg-red-500/5"
+					}
+          ${isRowDisabled && switchState ? "opacity-50" : ""}`} // Drops opacity slightly if disabled by account status but switch is on
+				>
+					{switchState ? "active" : "inactive"}
 				</div>
 			</div>
 
-			{/* Toggle Column - Stays bright unless force_stop */}
-			<div className="col-span-1 justify-self-end">
+			{/* Currency Pair */}
+			<div className="w-1/4">
+				<span
+					className={`uppercase font-medium tracking-wider ${isRowDisabled ? "text-gray-700" : "text-gray-400"}`}
+				>
+					{botData.pair}
+				</span>
+			</div>
+
+			{/* PnL */}
+			<div className="w-1/4 flex items-center gap-2">
+				<span
+					className={`text-sm ${isRowDisabled ? "text-gray-600" : "text-gray-500"}`}
+				>
+					Profit / Loss :
+				</span>
+				<span
+					className={`font-bold ${
+						isRowDisabled
+							? "text-gray-700"
+							: botData.pnl >= 0
+								? "text-[#00FFA3]"
+								: "text-red-500"
+					}`}
+				>
+					{botData.pnl >= 0 ? "+" : ""}${Math.abs(botData.pnl).toFixed(2)}
+				</span>
+			</div>
+
+			{/* Toggle - Stays fully styled to avoid user confusion */}
+			<div className="w-[10%] flex justify-end">
 				<Switch
-					checked={isRunning}
-					onChange={handleToggle}
-					loading={isUpdating}
-					disabled={isForceStop}
-					size="small"
-					className={isRunning && !isForceStop ? "!bg-emerald-500" : ""}
+					checked={switchState}
+					onChange={(checked) => setSwitchState(checked)}
+					style={{ background: switchState ? "#00FFA3" : "#333" }}
 				/>
 			</div>
 		</div>

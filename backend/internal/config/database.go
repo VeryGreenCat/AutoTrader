@@ -23,7 +23,10 @@ func ConnectDB() {
     )
 
     var err error
-    DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    DB, err = gorm.Open(postgres.New(postgres.Config{
+        DSN: dsn,
+        PreferSimpleProtocol: true, // Fixes "prepared statement already exists" errors
+    }), &gorm.Config{})
     if err != nil {
         log.Fatal("Failed to connect database")
     }

@@ -5,7 +5,11 @@ export interface addAccountProps {
 	token: string;
 }
 
-export interface MT5NamesResponse {
+export interface MT5 {
 	mt5_id: string;
+	user_id: string;
 	name: string;
+	token: string;
+	status: boolean;
+	balance: number;
 }

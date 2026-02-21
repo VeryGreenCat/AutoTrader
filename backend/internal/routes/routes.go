@@ -14,5 +14,6 @@ func RegisterAllRoutes(app *fiber.App) {
     api := app.Group("/api", middleware.AuthMiddleware)
     UserRoute(api)
     MT5Routes(api)
-
+    ModelRoutes(api)
+    BotRoutes(api)
 }
