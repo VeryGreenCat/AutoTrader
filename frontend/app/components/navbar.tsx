@@ -18,6 +18,8 @@ import { AuthMode } from "@/types/auth";
 import AuthModal from "../auth/components/AuthModal";
 import { getAccountById } from "@/services/mt5";
 import { MT5 } from "@/types/mt5";
+import { getProfileById } from "@/services/profile";
+import { UserProfile } from "@/types/user";
 
 export default function Navbar() {
 	const pathname = usePathname();
@@ -26,6 +28,9 @@ export default function Navbar() {
 	const [openModal, setOpenModal] = useState(false);
 	const [authMode, setAuthMode] = useState<AuthMode>("signin");
 	const [accounts, setAccounts] = useState<MT5[]>([]);
+
+	const [profile, setProfile] = useState<UserProfile | null>(null);
+	const [displaySeconds, setDisplaySeconds] = useState<number>(0);
 
 	// 1. Check User Session on Mount
 	useEffect(() => {
@@ -37,7 +42,6 @@ export default function Navbar() {
 		};
 		getUser();
 
-		// Optional: Listen for auth changes (login/logout) to update UI instantly
 		const {
 			data: { subscription },
 		} = supabase.auth.onAuthStateChange((_event, session) => {
@@ -47,28 +51,82 @@ export default function Navbar() {
 		return () => subscription.unsubscribe();
 	}, []);
 
-	// 2. Fetch Accounts when user is available
+	// 2. Fetch Accounts and Profile
 	useEffect(() => {
-		const fetchAccounts = async () => {
+		const fetchData = async () => {
 			if (user?.id) {
 				try {
-					const res = await getAccountById(user.id);
-					setAccounts(res.data);
+					const [accRes, profileRes] = await Promise.all([
+						getAccountById(user.id),
+						getProfileById(user.id),
+					]);
+					setAccounts(accRes.data);
+					setProfile(profileRes.data);
 				} catch (error) {
-					console.error("Failed to fetch accounts in Navbar:", error);
+					console.error("Failed to fetch data in Navbar:", error);
 				}
 			} else {
 				setAccounts([]);
+				setProfile(null);
 			}
 		};
-		fetchAccounts();
+
+		fetchData();
+
+		// Fetch only when status is updated elsewhere
+		window.addEventListener("BOT_STATUS_UPDATED", fetchData);
+
+		return () => {
+			window.removeEventListener("BOT_STATUS_UPDATED", fetchData);
+		};
 	}, [user]);
 
-	// 3. Logout Function
+	// 3. Handle Real-time Ticket Countdown
+	useEffect(() => {
+		if (!profile) {
+			setDisplaySeconds(0);
+			console.log("no profile");
+			return;
+		}
+
+		if (!profile.bot_started_at) {
+			setDisplaySeconds(profile.remaining_seconds);
+			console.log("no bot started at");
+			return;
+		}
+
+		console.log("bot started at", profile.bot_started_at);
+		const startTime = new Date(profile.bot_started_at).getTime() / 1000;
+		console.log("start time", startTime);
+		const expirationTimestamp = startTime + profile.remaining_seconds;
+		console.log("expiration timestamp", expirationTimestamp);
+
+		const updateDisplay = () => {
+			const now = Date.now() / 1000;
+			const left = Math.max(0, expirationTimestamp - now);
+			setDisplaySeconds(left);
+		};
+
+		updateDisplay();
+		const countdownInterval = setInterval(updateDisplay, 1000);
+
+		return () => clearInterval(countdownInterval);
+	}, [profile]);
+
+	// 4. Logout Function
 	const handleLogout = async () => {
 		await supabase.auth.signOut();
 		router.push("/");
 		sessionStorage.removeItem("otp_verified");
+	};
+
+	const formatTime = (seconds: number) => {
+		const hrs = Math.floor(seconds / 3600);
+		const mins = Math.floor((seconds % 3600) / 60);
+		const secs = Math.floor(seconds % 60);
+		return `${hrs.toString().padStart(2, "0")}:${mins
+			.toString()
+			.padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 	};
 
 	const isActive = (path: string) => pathname === path;
@@ -168,10 +226,21 @@ export default function Navbar() {
 							<div className="flex items-center gap-3">
 								<div className="flex flex-col items-end">
 									<span className="text-xs font-bold text-white">
-										<span className="text-[#00FFA3]">4.5</span> Tickets
+										<span className="text-[#00FFA3]">
+											{(displaySeconds / 43200).toFixed(2)}
+										</span>{" "}
+										Tickets
+										<span className="text-[10px] text-gray-500 ml-2 font-mono">
+											({formatTime(displaySeconds)})
+										</span>
 									</span>
-									<div className="w-24 h-1 bg-white/10 rounded-full mt-1 overflow-hidden border border-white/5">
-										<div className="bg-linear-to-r from-[#00FFA3] to-emerald-500 h-full w-[45%] shadow-[0_0_10px_rgba(0,255,163,0.5)]"></div>
+									<div className="w-32 h-1 bg-white/10 rounded-full mt-1 overflow-hidden border border-white/5">
+										<div
+											className="bg-linear-to-r from-[#00FFA3] to-emerald-500 h-full shadow-[0_0_10px_rgba(0,255,163,0.5)] transition-all duration-1000 ease-linear"
+											style={{
+												width: `${((displaySeconds % 43200) / 43200) * 100}%`,
+											}}
+										></div>
 									</div>
 								</div>
 

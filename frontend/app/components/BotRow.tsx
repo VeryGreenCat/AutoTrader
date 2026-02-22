@@ -45,6 +45,10 @@ export default function BotRow({
 		try {
 			await updateBotStatus(bot.bot_id, checked);
 			setSwitchState(checked);
+
+			// Notify other components (like Navbar) to refresh profile data
+			window.dispatchEvent(new CustomEvent("BOT_STATUS_UPDATED"));
+
 			message.success(
 				`Bot ${checked ? "activated" : "deactivated"} successfully`,
 			);

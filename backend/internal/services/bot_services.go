@@ -5,6 +5,7 @@ import (
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/handlers/dto"
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/models"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func DeployBot(req *dto.DeployBotRequest) error {
@@ -44,8 +45,66 @@ func DeleteBot(botId string) error {
 }
 
 func UpdateBotStatus(botId string, status bool) error {
-	if err := config.DB.Model(&models.Bot{}).Where("bot_id = ?", botId).Update("status", status).Error; err != nil {
-		return err
+	return config.DB.Transaction(func(tx *gorm.DB) error {
+
+		userId, err := getUserIdByBotId(botId)
+		if err != nil {
+			return err
+		}
+
+		// update bot
+		if err := tx.Model(&models.Bot{}).
+			Where("bot_id = ?", botId).
+			Update("status", status).Error; err != nil {
+			return err
+		}
+
+		// count active bots
+		var activeCount int64
+		err = tx.Table(`"Bot"`).
+			Joins(`JOIN "MT5" ON "Bot".mt5_id = "MT5".mt5_id`).
+			Where(`"MT5".user_id = ? AND "Bot".status = true`, userId).
+			Count(&activeCount).Error
+		if err != nil {
+			return err
+		}
+
+		// update user
+		if activeCount == 1 && status {
+			return tx.Model(&models.User{}).
+				Where("user_id = ?", userId).
+				Update("bot_started_at", gorm.Expr("NOW()")).Error
+		}
+
+		if activeCount == 0 && !status {
+			return tx.Model(&models.User{}).
+			Where("user_id = ? AND bot_started_at IS NOT NULL", userId).
+			Updates(map[string]interface{}{
+				"remaining_seconds": gorm.Expr(
+					"remaining_seconds - EXTRACT(EPOCH FROM (NOW() - bot_started_at))",
+				),
+				"bot_started_at": nil,
+			}).Error
+		}
+
+		return nil
+	})
+}
+
+
+func getUserIdByBotId(botId string) (string, error) {
+	var userId string
+
+	err := config.DB.
+		Table(`"Bot"`).
+		Select(`"MT5".user_id`).
+		Joins(`JOIN "MT5" ON "Bot".mt5_id = "MT5".mt5_id`).
+		Where(`"Bot".bot_id = ?`, botId).
+		Scan(&userId).Error
+
+	if err != nil {
+		return "", err
 	}
-	return nil
+
+	return userId, nil
 }

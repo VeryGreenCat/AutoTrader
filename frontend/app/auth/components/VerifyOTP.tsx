@@ -124,6 +124,7 @@ export default function VerifyOTP({
 			loading={loading}
 			footer={null}
 			centered
+			mask={{ closable: false }}
 			keyboard={false}
 			closable={false}
 			closeIcon={null}
