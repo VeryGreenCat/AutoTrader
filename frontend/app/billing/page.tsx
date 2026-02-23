@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Gift, ChevronDown, Download } from "lucide-react";
-import PaymentMethodSelector from "../components/PaymentMethodSelector"; // Adjust path as needed
+import CompletePayment from "../components/CompletePayment";
 
 export default function BillingPage() {
 	const [paymentMethod, setPaymentMethod] = useState<"card" | "qr">("card");
@@ -81,29 +81,11 @@ export default function BillingPage() {
 				</div>
 
 				{/* Right: Payment */}
-				<div className="col-span-12 lg:col-span-5">
-					<div className="glass-card p-8 border border-[#00FFA3]/20 bg-black/40 backdrop-blur-md rounded-2xl shadow-[0_0_30px_rgba(0,255,163,0.05)]">
-						<h3 className="text-xl font-bold mb-6 italic text-white">
-							Complete <span className="text-[#00FFA3]">Payment</span>
-						</h3>
-
-						{/* Reusable Payment Component */}
-						<PaymentMethodSelector
-							method={paymentMethod}
-							setMethod={setPaymentMethod}
-							amount={SETTLEMENT_AMOUNT}
-						/>
-
-						<button className="w-full bg-[#00FFA3] text-black font-black py-4 rounded-xl mt-8 shadow-[0_10px_20px_rgba(0,255,163,0.2)] hover:scale-[1.02] transition uppercase tracking-wide">
-							Settle ${SETTLEMENT_AMOUNT} Now
-						</button>
-
-						<p className="text-[9px] text-gray-600 mt-4 text-center px-6">
-							By clicking settle, your free tickets will be instantly credited
-							to your Fuel Tank.
-						</p>
-					</div>
-				</div>
+				<CompletePayment
+					type="settlement"
+					subtotal={SETTLEMENT_AMOUNT}
+					transFee={0}
+				/>
 			</div>
 
 			{/* Transaction History (Collapsed) */}

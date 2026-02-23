@@ -10,7 +10,7 @@ import {
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { message, Modal } from "antd";
+import { App, Modal } from "antd";
 
 export default function VerifyOTP({
 	open,
@@ -19,6 +19,7 @@ export default function VerifyOTP({
 	open: boolean;
 	setOpen: (open: boolean) => void;
 }) {
+	const { message } = App.useApp();
 	const [code, setCode] = useState("");
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);

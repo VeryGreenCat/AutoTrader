@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { UserProfile } from "@/types/user";
-import { Mail, CreditCard as CreditCardIcon, Plus } from "lucide-react";
-import PaymentCard, { CardData } from "../components/PaymentCard";
+import { Mail, Info } from "lucide-react";
 import { getProfileById } from "@/services/profile";
 
 export default function ProfilePage() {
 	const [loading, setLoading] = useState(true);
 	const [profile, setProfile] = useState<UserProfile | null>(null);
-	const [cards, setCards] = useState<CardData[]>([]);
 	const userId = localStorage.getItem("user_id");
 
 	useEffect(() => {
@@ -21,28 +19,7 @@ export default function ProfilePage() {
 				const userRes = await getProfileById(userId!);
 				console.log("ProfilePage | userRes:", userRes);
 
-				//! API Call: Get Payment Methods
-				// const cardRes = await fetch('/api/v1/user/cards');
-				// const cardData = await cardRes.json();
-
-				// MOCK DATA
-				const mockCards: CardData[] = [
-					{
-						id: "card_1",
-						last4: "4242",
-						holderName: "John Doe",
-						expiry: "12/26",
-					},
-					{
-						id: "card_2",
-						last4: "8899",
-						holderName: "John Doe",
-						expiry: "09/25",
-					},
-				];
-
 				setProfile(userRes.data);
-				setCards(mockCards);
 			} catch (error) {
 				console.error("Failed to fetch profile data", error);
 			} finally {
@@ -56,12 +33,6 @@ export default function ProfilePage() {
 	const handleRemoveCard = async (cardId: string) => {
 		if (!confirm("Are you sure you want to remove this payment method?"))
 			return;
-
-		//! API Call to remove card
-		// await fetch(`/api/v1/user/cards/${cardId}`, { method: 'DELETE' });
-
-		// Update UI locally
-		setCards((prev) => prev.filter((c) => c.id !== cardId));
 	};
 
 	if (loading)
@@ -167,40 +138,15 @@ export default function ProfilePage() {
 
 				{/* RIGHT COLUMN: Payment Methods */}
 				<div className="col-span-12 lg:col-span-8">
-					<div className="p-8 min-h-[500px] border border-white/5 bg-black/40 backdrop-blur-md rounded-2xl shadow-[0_0_30px_rgba(0,255,163,0.05)]">
+					<div className="p-8 min-h-[500px] border border-white/5 bg-white/5 backdrop-blur-md rounded-2xl shadow-[0_0_30px_rgba(0,255,163,0.05)]">
 						<div className="flex justify-between items-center mb-8">
 							<div className="flex items-center gap-3">
-								<CreditCardIcon className="text-[#00FFA3] w-6 h-6" />
+								<Info className="text-[#00FFA3] w-6 h-6" />
 								<h3 className="text-xl font-bold uppercase italic tracking-tighter text-white">
-									Payment Methods
+									How to use AutoTrader
 								</h3>
 							</div>
-							<button
-								onClick={() => alert("Open Add Card Modal")} // Replace with your modal logic
-								className="bg-white/5 border border-white/10 hover:bg-[#00FFA3] hover:text-black hover:border-[#00FFA3] px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2"
-							>
-								<Plus className="w-4 h-4" /> Add New Card
-							</button>
 						</div>
-
-						{/* Cards Grid */}
-						{cards.length > 0 ? (
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								{cards.map((card) => (
-									<PaymentCard
-										key={card.id}
-										data={card}
-										onRemove={handleRemoveCard}
-									/>
-								))}
-							</div>
-						) : (
-							<div className="text-center py-20 border border-dashed border-white/10 rounded-2xl">
-								<p className="text-gray-500 text-sm">
-									No payment methods configured.
-								</p>
-							</div>
-						)}
 					</div>
 				</div>
 			</div>

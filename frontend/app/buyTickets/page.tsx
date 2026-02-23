@@ -2,15 +2,18 @@
 
 import React, { useState } from "react";
 import { Zap, Clock } from "lucide-react";
-import PaymentMethodSelector from "../components/PaymentMethodSelector"; // Adjust path
+import CompletePayment from "../components/CompletePayment";
 
 export default function BuyTicketsPage() {
-	const [selectedPackage, setSelectedPackage] = useState<1 | 10>(1); // Default to 1 ticket
-	const [paymentMethod, setPaymentMethod] = useState<"card" | "qr">("card");
+	const [selectedPackage, setSelectedPackage] = useState<1 | 10>(1);
 
 	// Pricing Logic
 	const price = selectedPackage === 1 ? 1.0 : 9.0;
 	const hours = selectedPackage === 1 ? 12 : 120;
+
+	const purchaseTicket = () => {
+		console.log(`Purchasing ticket... Price: $${price}, Hours: ${hours}`);
+	};
 
 	return (
 		<section className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 max-w-7xl mx-auto px-4">
@@ -82,7 +85,7 @@ export default function BuyTicketsPage() {
 						</div>
 					</div>
 
-					{/* Estimation Summary */}
+					{/* Estimation mmary */}
 					<div className="glass-card p-6 border border-white/5 bg-white/10 rounded-2xl">
 						<div className="flex items-center gap-3 mb-2">
 							<Clock className="w-4 h-4 text-[#00FFA3]" />
@@ -101,46 +104,7 @@ export default function BuyTicketsPage() {
 				</div>
 
 				{/* Right: Checkout */}
-				<div className="col-span-12 lg:col-span-5">
-					<div className="glass-card p-8 border border-[#00FFA3]/20 bg-black/40 backdrop-blur-md rounded-2xl shadow-[0_0_30px_rgba(0,255,163,0.05)]">
-						<h3 className="text-xl font-bold mb-6 italic text-white">
-							Secure <span className="text-[#00FFA3]">Checkout</span>
-						</h3>
-
-						{/* Reusable Payment Component */}
-						<PaymentMethodSelector
-							method={paymentMethod}
-							setMethod={setPaymentMethod}
-							amount={price}
-						/>
-
-						{/* Order Summary */}
-						<div className="mt-8 pt-6 border-t border-white/10">
-							<div className="flex justify-between items-center mb-1">
-								<span className="text-gray-500 text-xs">Subtotal</span>
-								<span className="font-mono text-sm text-white">
-									${price.toFixed(2)}
-								</span>
-							</div>
-							<div className="flex justify-between items-center mb-4">
-								<span className="text-gray-500 text-xs">Transaction Fee</span>
-								<span className="font-mono text-sm text-white">$0.00</span>
-							</div>
-							<div className="flex justify-between items-center mb-6">
-								<span className="text-lg font-bold text-white">
-									Total Amount
-								</span>
-								<span className="text-2xl font-bold text-[#00FFA3] font-mono">
-									${price.toFixed(2)}
-								</span>
-							</div>
-						</div>
-
-						<button className="w-full bg-[#00FFA3] text-black font-black py-4 rounded-xl shadow-[0_10px_20px_rgba(0,255,163,0.2)] hover:scale-[1.02] transition uppercase tracking-tighter">
-							Confirm Refuel
-						</button>
-					</div>
-				</div>
+				<CompletePayment type="ticket" subtotal={price} transFee={0} />
 			</div>
 		</section>
 	);
