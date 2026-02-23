@@ -1,14 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Gift, ChevronDown, Download } from "lucide-react";
 import CompletePayment from "../components/CompletePayment";
+import { getAccountById } from "@/services/mt5";
+import { MT5 } from "@/types/mt5";
 
 export default function BillingPage() {
-	const [paymentMethod, setPaymentMethod] = useState<"card" | "qr">("card");
 	const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+	const [accounts, setAccounts] = useState<MT5[]>([]);
+	const [loading, setLoading] = useState(true);
 
-	const SETTLEMENT_AMOUNT = 71.97;
+	useEffect(() => {
+		const fetchAccounts = async () => {
+			try {
+				const userId = localStorage.getItem("user_id");
+				if (!userId) return;
+				const res = await getAccountById(userId);
+				setAccounts(res.data || []);
+			} catch (error) {
+				console.error("Failed to fetch accounts:", error);
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchAccounts();
+	}, []);
+
+	const SETTLEMENT_AMOUNT = 710.97;
 
 	return (
 		<section className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 max-w-7xl mx-auto px-4">
@@ -18,7 +37,7 @@ export default function BillingPage() {
 					Weekly <span className="text-[#00FFA3]">Settlement</span>
 				</h2>
 				<p className="text-gray-500 text-sm mt-1">
-					Invoice Period: Oct 20 - Oct 27, 2025
+					Settle your weekly performance fee to keep your bots running.
 				</p>
 			</div>
 
@@ -26,23 +45,44 @@ export default function BillingPage() {
 				{/* Left: Performance Log */}
 				<div className="col-span-12 lg:col-span-7 space-y-6">
 					<div className="glass-card p-6 border border-white/5 bg-white/5 rounded-2xl">
-						<h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">
-							Accout Performance Log
-						</h3>
+						<div className="flex justify-between items-center mb-6">
+							<h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+								Account Performance Log
+							</h3>
+							<h3 className="text-xs font-bold text-orange-400 tracking-widest">
+								Invoice Period: Oct 20 - Oct 27, 2025
+							</h3>
+						</div>
 
 						<div className="space-y-3">
-							<div className="flex justify-between items-center p-4 bg-white/5 rounded-xl border-l-2 border-[#00FFA3]">
-								<div>
-									<p className="text-xs font-bold text-white">
-										ICMarkets-Main (Account_1)
-									</p>
-									<p className="text-[10px] text-gray-500">EURUSD + USDJPY</p>
+							{loading ? (
+								<div className="text-center py-4 text-gray-500 text-xs">
+									Loading accounts...
 								</div>
-								<div className="text-right">
-									<p className="text-sm font-mono text-[#00FFA3]">+$840.20</p>
-									<p className="text-[9px] text-gray-500">Realized P/L</p>
+							) : accounts.length === 0 ? (
+								<div className="text-center py-4 text-gray-500 text-xs">
+									No accounts found.
 								</div>
-							</div>
+							) : (
+								accounts.map((account) => (
+									<div
+										key={account.mt5_id}
+										className="flex justify-between items-center p-4 bg-white/5 rounded-xl border-l-2 border-[#00FFA3]"
+									>
+										<div>
+											<p className="text-xs font-bold text-white">
+												{account.name}
+											</p>
+										</div>
+										<div className="text-right">
+											{/* Placeholder PNL */}
+											<p className="text-sm font-mono text-[#00FFA3]">
+												+$840.20
+											</p>
+										</div>
+									</div>
+								))
+							)}
 						</div>
 
 						<div className="mt-8 pt-6 border-t border-white/10">
@@ -51,7 +91,7 @@ export default function BillingPage() {
 									Total Accounts Net Profit:
 								</span>
 								<span className="text-xl font-bold font-mono text-[#00FFA3]">
-									$719.70
+									${SETTLEMENT_AMOUNT}
 								</span>
 							</div>
 
@@ -61,7 +101,7 @@ export default function BillingPage() {
 										5% Performance Fee
 									</span>
 									<span className="text-lg font-bold text-[#00FFA3]">
-										${SETTLEMENT_AMOUNT}
+										${(SETTLEMENT_AMOUNT * 0.05).toFixed(2)}
 									</span>
 								</div>
 								<div className="flex justify-between items-center">
@@ -72,7 +112,7 @@ export default function BillingPage() {
 										</span>
 									</div>
 									<span className="text-xs font-bold text-cyan-400">
-										+35 Free Tickets
+										+{Math.floor((SETTLEMENT_AMOUNT * 0.05) / 20)} Free Tickets
 									</span>
 								</div>
 							</div>
