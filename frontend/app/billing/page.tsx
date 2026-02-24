@@ -87,32 +87,33 @@ export default function BillingPage() {
 						</div>
 
 						<div className="mt-8 pt-6 border-t border-white/10">
-							<div className="flex justify-between mb-2">
+							<div className="flex justify-between items-center mb-4 px-2">
 								<span className="text-gray-400 text-sm">
 									Total Accounts Net Profit:
 								</span>
-								<span className="text-xl font-bold font-mono text-[#00FFA3]">
-									${NET_PROFIT}
+								<span className="text-sm font-medium font-mono text-gray-300">
+									${NET_PROFIT.toFixed(2)}
 								</span>
 							</div>
 
-							<div className="bg-[#00FFA3]/5 p-4 rounded-2xl border border-[#00FFA3]/20 mt-4">
-								<div className="flex justify-between items-center mb-2">
-									<span className="text-xs font-bold uppercase tracking-tighter text-white">
-										5% Performance Fee
+							<div className="bg-[#00FFA3]/10 p-5 rounded-2xl border border-[#00FFA3]/30 mt-4 shadow-[0_0_20px_rgba(0,255,163,0.1)]">
+								<div className="flex justify-between items-center mb-4">
+									<span className="text-sm font-black uppercase text-white tracking-wider">
+										Amount Due (5% Fee)
 									</span>
-									<span className="text-lg font-bold text-[#00FFA3]">
+									<span className="text-3xl font-black text-[#00FFA3] font-mono">
 										${PERFORMANCE_FEE.toFixed(2)}
 									</span>
 								</div>
-								<div className="flex justify-between items-center">
+
+								<div className="flex justify-between items-center pt-4 border-t border-[#00FFA3]/20 mt-2">
 									<div className="flex items-center gap-2">
-										<Gift className="w-3 h-3 text-cyan-400" />
-										<span className="text-[10px] text-gray-400">
+										<Gift className="w-4 h-4 text-cyan-400" />
+										<span className="text-xs text-cyan-400/80">
 											Rebate: 1 Ticket per $20 Profit
 										</span>
 									</div>
-									<span className="text-xs font-bold text-cyan-400">
+									<span className="text-xs font-bold text-black bg-cyan-400 px-3 py-1 rounded-full uppercase tracking-wider">
 										+{Math.floor(PERFORMANCE_FEE / 20)} Free Tickets
 									</span>
 								</div>
