@@ -85,21 +85,21 @@ export default function Navbar() {
 	useEffect(() => {
 		if (!profile) {
 			setDisplaySeconds(0);
-			console.log("no profile");
+			// console.log("no profile");
 			return;
 		}
 
 		if (!profile.bot_started_at) {
 			setDisplaySeconds(profile.remaining_seconds);
-			console.log("no bot started at");
+			// console.log("no bot started at");
 			return;
 		}
 
-		console.log("bot started at", profile.bot_started_at);
+		// console.log("bot started at", profile.bot_started_at);
 		const startTime = new Date(profile.bot_started_at).getTime() / 1000;
-		console.log("start time", startTime);
+		// console.log("start time", startTime);
 		const expirationTimestamp = startTime + profile.remaining_seconds;
-		console.log("expiration timestamp", expirationTimestamp);
+		// console.log("expiration timestamp", expirationTimestamp);
 
 		const updateDisplay = () => {
 			const now = Date.now() / 1000;

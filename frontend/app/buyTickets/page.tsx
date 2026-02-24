@@ -104,7 +104,7 @@ export default function BuyTicketsPage() {
 				</div>
 
 				{/* Right: Checkout */}
-				<CompletePayment type="ticket" subtotal={price} transFee={0} />
+				<CompletePayment subtotal={price} transFee={0} />
 			</div>
 		</section>
 	);

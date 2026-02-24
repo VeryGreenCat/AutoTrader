@@ -16,4 +16,5 @@ func RegisterAllRoutes(app *fiber.App) {
     MT5Routes(api)
     ModelRoutes(api)
     BotRoutes(api)
+    PaymentRoutes(api)
 }

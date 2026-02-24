@@ -27,7 +27,8 @@ export default function BillingPage() {
 		fetchAccounts();
 	}, []);
 
-	const SETTLEMENT_AMOUNT = 710.97;
+	const NET_PROFIT = 710.97;
+	const PERFORMANCE_FEE = NET_PROFIT * 0.05;
 
 	return (
 		<section className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 max-w-7xl mx-auto px-4">
@@ -91,7 +92,7 @@ export default function BillingPage() {
 									Total Accounts Net Profit:
 								</span>
 								<span className="text-xl font-bold font-mono text-[#00FFA3]">
-									${SETTLEMENT_AMOUNT}
+									${NET_PROFIT}
 								</span>
 							</div>
 
@@ -101,7 +102,7 @@ export default function BillingPage() {
 										5% Performance Fee
 									</span>
 									<span className="text-lg font-bold text-[#00FFA3]">
-										${(SETTLEMENT_AMOUNT * 0.05).toFixed(2)}
+										${PERFORMANCE_FEE.toFixed(2)}
 									</span>
 								</div>
 								<div className="flex justify-between items-center">
@@ -112,7 +113,7 @@ export default function BillingPage() {
 										</span>
 									</div>
 									<span className="text-xs font-bold text-cyan-400">
-										+{Math.floor((SETTLEMENT_AMOUNT * 0.05) / 20)} Free Tickets
+										+{Math.floor(PERFORMANCE_FEE / 20)} Free Tickets
 									</span>
 								</div>
 							</div>
@@ -121,11 +122,7 @@ export default function BillingPage() {
 				</div>
 
 				{/* Right: Payment */}
-				<CompletePayment
-					type="settlement"
-					subtotal={SETTLEMENT_AMOUNT}
-					transFee={0}
-				/>
+				<CompletePayment subtotal={PERFORMANCE_FEE} transFee={0} />
 			</div>
 
 			{/* Transaction History (Collapsed) */}
