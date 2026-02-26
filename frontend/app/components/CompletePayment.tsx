@@ -5,11 +5,16 @@ import { createCheckoutSession } from "@/services/payment";
 import { Loader2 } from "lucide-react";
 
 type CompletePaymentProps = {
-	subtotal: number;
-	transFee: number;
+	billId: string;
+	subtotal: number; // for display
+	transFee: number; // for display
 };
 
-const CompletePayment = ({ subtotal, transFee }: CompletePaymentProps) => {
+const CompletePayment = ({
+	subtotal,
+	transFee,
+	billId,
+}: CompletePaymentProps) => {
 	const [loading, setLoading] = useState(false);
 
 	const purchaseTicket = async () => {
@@ -24,7 +29,7 @@ const CompletePayment = ({ subtotal, transFee }: CompletePaymentProps) => {
 			const totalAmount = subtotal + transFee;
 			console.log(`Purchasing... Price: $${totalAmount}`);
 
-			const res = await createCheckoutSession(totalAmount, userId);
+			const res = await createCheckoutSession(billId);
 			if (res && res.url) {
 				window.location.href = res.url;
 			} else {

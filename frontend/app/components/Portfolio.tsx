@@ -5,13 +5,6 @@ import { useEffect, useState } from "react";
 import { getAccountById } from "@/services/mt5";
 import { MT5 } from "@/types/mt5";
 
-// Mock equity per account until the real equity API is ready
-const getMockEquity = (mt5Id: string): number => {
-	// Deterministic mock value based on mt5_id characters so it's stable per account
-	const seed = mt5Id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-	return Math.round(((seed % 9000) + 1000) * 1.37);
-};
-
 export default function Portfolio() {
 	const [accounts, setAccounts] = useState<MT5[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -30,6 +23,7 @@ export default function Portfolio() {
 			}
 		};
 		fetchAccounts();
+		console.log("accounts", accounts);
 	}, []);
 
 	const chartColors = [
@@ -45,7 +39,7 @@ export default function Portfolio() {
 	// Build chart data using account name + mock equity
 	const data = accounts.map((acc) => ({
 		type: acc.name,
-		value: getMockEquity(acc.mt5_id),
+		value: acc.equity,
 	}));
 
 	const config = {
@@ -104,7 +98,7 @@ export default function Portfolio() {
 								Account Breakdown
 							</p>
 							{accounts.map((acc, index) => {
-								const equity = getMockEquity(acc.mt5_id);
+								const equity = acc.equity;
 								return (
 									<div
 										key={acc.mt5_id}
@@ -122,7 +116,7 @@ export default function Portfolio() {
 												{acc.name}
 											</span>
 										</div>
-										{/* Mock equity value — replace with real equity API later */}
+
 										<span className="text-xs font-mono font-bold text-[#00FFA3]">
 											${equity.toLocaleString()}
 										</span>

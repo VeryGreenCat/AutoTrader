@@ -99,3 +99,47 @@
 	background-color: #e74c3c !important;
 	box-shadow: 0 0 12px rgba(231, 76, 60, 0.5) !important;
 }
+
+/* ─── Custom Table & Pagination ────────────────────────────── */
+.custom-table .ant-table {
+	background: transparent !important;
+}
+
+.custom-table .ant-table-thead > tr > th {
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+	font-size: 10px !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.1em !important;
+	font-weight: 900 !important;
+}
+
+.custom-table .ant-table-tbody > tr > td {
+	border-bottom: 1px solid rgba(255, 255, 255, 0.02) !important;
+}
+
+.custom-table .ant-table-tbody > tr:hover > td {
+	background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+.custom-pagination {
+	margin-top: 1.5rem !important;
+}
+
+.custom-pagination .ant-pagination-item a {
+	color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.custom-pagination .ant-pagination-item-active {
+	border-color: #00ffa3 !important;
+	background: rgba(0, 255, 163, 0.1) !important;
+}
+
+.custom-pagination .ant-pagination-item-active a {
+	color: #00ffa3 !important;
+}
+
+.custom-pagination .ant-pagination-prev .ant-pagination-item-link,
+.custom-pagination .ant-pagination-next .ant-pagination-item-link {
+	color: rgba(255, 255, 255, 0.45) !important;
+	background: transparent !important;
+}

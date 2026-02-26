@@ -11,10 +11,17 @@ import (
 )
 
 func RegisterAllRoutes(app *fiber.App) {
-    api := app.Group("/api", middleware.AuthMiddleware)
-    UserRoute(api)
-    MT5Routes(api)
-    ModelRoutes(api)
-    BotRoutes(api)
-    PaymentRoutes(api)
+    // Public routes (no AuthMiddleware)
+    apiPublic := app.Group("/api")
+    WebhookRoute(apiPublic)
+
+    // Private routes (with AuthMiddleware)
+    apiPrivate := app.Group("/api", middleware.AuthMiddleware)
+    UserRoute(apiPrivate)
+    MT5Routes(apiPrivate)
+    ModelRoutes(apiPrivate)
+    BotRoutes(apiPrivate)
+    PaymentRoutes(apiPrivate)
+    BillingRoutes(apiPrivate)
+    TransactionRoute(apiPrivate)
 }

@@ -44,7 +44,7 @@ func GetProfile(id string) (*models.User, error) {
 	if err := config.DB.Where("user_id = ?", id).First(&user).Error; err != nil {
 		return nil, err
 	}
-	
+	 
 	return &user, nil
 }
 

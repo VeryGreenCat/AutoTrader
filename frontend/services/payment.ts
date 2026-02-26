@@ -1,9 +1,9 @@
+// services/payment.ts
 import api from "./api";
 
-export const createCheckoutSession = async (amount: number, userId: string) => {
+export const createCheckoutSession = async (billId: string) => {
 	const res = await api.post(`/payment/create-checkout-session`, {
-		user_id: userId,
-		amount: amount,
+		bill_id: billId,
 	});
 	return res.data;
 };
