@@ -54,12 +54,12 @@ func handlePaymentSuccess(event stripe.Event) error {
 
     now := time.Now()
     result := config.DB.Model(&models.Billing{}).
-        Where("bill_id = ? AND status = ?", billID, "unpaid").
-        Updates(map[string]interface{}{
-            "status":     "paid",
-            "paid_at":    now,
-            "payment_id": sess.ID,
-        })
+	Where("bill_id = ? AND status IN ?", billID, []string{"unpaid", "overdue"}).
+	Updates(map[string]interface{}{
+		"status":     "paid",
+		"paid_at":    now,
+		"payment_id": sess.ID,
+	})
 
     if result.Error != nil {
         return fmt.Errorf("failed to update billing record: %w", result.Error)

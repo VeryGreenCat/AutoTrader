@@ -24,7 +24,7 @@ func CreateCheckoutSession(billID string) (string, error) {
         return "", fmt.Errorf("bill not found: %w", err)
     }
 
-    if bill.Status != "unpaid" {
+    if bill.Status != "unpaid" && bill.Status != "overdue" {
         return "", fmt.Errorf("bill is not payable, current status: %s", bill.Status)
     }
 

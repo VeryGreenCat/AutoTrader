@@ -57,12 +57,6 @@ export default function BillingPage() {
 						start_period: unpaidBill.start_period,
 						end_period: unpaidBill.end_period,
 					});
-					console.log(
-						"req",
-						unpaidBill.user_id,
-						unpaidBill.start_period,
-						unpaidBill.end_period,
-					);
 					setAccounts(res.data || []);
 					console.log("accounts", res.data);
 				} catch (error) {
