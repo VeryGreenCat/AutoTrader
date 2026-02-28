@@ -35,7 +35,11 @@ export default function BillingPage() {
 		const fetchBills = async (userId: string) => {
 			try {
 				const res = await getBillById(userId);
-				setBills(res.data || []);
+				const sortedBills = (res.data || []).sort(
+					(a: Billing, b: Billing) =>
+						new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+				);
+				setBills(sortedBills);
 				console.log("bills", res.data);
 			} catch (error) {
 				console.error("Failed to fetch bills:", error);
@@ -126,13 +130,15 @@ export default function BillingPage() {
 			dataIndex: "due_date",
 			key: "due_date",
 			align: "center" as const,
-			render: (date: string) => (
+			render: (date: string | null) => (
 				<span className="text-sm text-gray-400">
-					{new Date(date).toLocaleDateString("en-US", {
-						month: "short",
-						day: "numeric",
-						year: "numeric",
-					})}
+					{date
+						? new Date(date).toLocaleDateString("en-US", {
+								month: "short",
+								day: "numeric",
+								year: "numeric",
+							})
+						: "- Buy Tickets -"}
 				</span>
 			),
 		},

@@ -5,7 +5,9 @@ import { createCheckoutSession } from "@/services/payment";
 import { Loader2 } from "lucide-react";
 
 type CompletePaymentProps = {
-	billId: string;
+	billId?: string;
+	packageId?: string;
+	type?: "billing" | "ticket";
 	subtotal: number; // for display
 	transFee: number; // for display
 };
@@ -14,6 +16,8 @@ const CompletePayment = ({
 	subtotal,
 	transFee,
 	billId,
+	packageId,
+	type = "billing",
 }: CompletePaymentProps) => {
 	const [loading, setLoading] = useState(false);
 
@@ -29,7 +33,14 @@ const CompletePayment = ({
 			const totalAmount = subtotal + transFee;
 			console.log(`Purchasing... Price: $${totalAmount}`);
 
-			const res = await createCheckoutSession(billId);
+			const id = type === "billing" ? billId : packageId;
+			if (!id) {
+				console.error("No ID provided for payment");
+				setLoading(false);
+				return;
+			}
+
+			const res = await createCheckoutSession(id, type);
 			if (res && res.url) {
 				window.location.href = res.url;
 			} else {

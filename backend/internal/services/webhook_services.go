@@ -47,22 +47,57 @@ func handlePaymentSuccess(event stripe.Event) error {
         return fmt.Errorf("failed to parse session: %w", err)
     }
 
-    billID := sess.Metadata["bill_id"]
-    if billID == "" {
-        return fmt.Errorf("bill_id not found in session metadata")
+    reqType := sess.Metadata["type"]
+    if reqType == "" {
+        // Fallback for older sessions before we added 'type'
+        reqType = "billing"
     }
 
     now := time.Now()
-    result := config.DB.Model(&models.Billing{}).
-	Where("bill_id = ? AND status IN ?", billID, []string{"unpaid", "overdue"}).
-	Updates(map[string]interface{}{
-		"status":     "paid",
-		"paid_at":    now,
-		"payment_id": sess.ID,
-	})
 
-    if result.Error != nil {
-        return fmt.Errorf("failed to update billing record: %w", result.Error)
+    if reqType == "billing" {
+        billID := sess.Metadata["bill_id"]
+        if billID == "" {
+            return fmt.Errorf("bill_id not found in session metadata for billing type")
+        }
+
+        result := config.DB.Model(&models.Billing{}).
+            Where("bill_id = ? AND status IN ?", billID, []string{"unpaid", "overdue"}).
+            Updates(map[string]interface{}{
+                "status":     "paid",
+                "paid_at":    now,
+                "payment_id": sess.ID,
+            })
+
+        if result.Error != nil {
+            return fmt.Errorf("failed to update billing record: %w", result.Error)
+        }
+    } else if reqType == "ticket" {
+        userID := sess.Metadata["user_id"]
+        if userID == "" {
+            return fmt.Errorf("user_id not found in session metadata for ticket type")
+        }
+        
+        // Convert the amount back to a float (amount total is in satangs/cents)
+        var amount float64 = 0
+        if sess.AmountTotal > 0 {
+             amount = float64(sess.AmountTotal) / 100.0
+        }
+
+        newBill := models.Billing{
+            UserID:    userID,
+            Amount:    amount,
+            Status:    "paid",
+            PaymentID: sess.ID,
+            PaidAt:    &now,
+            CreatedAt: now, 
+        }
+
+        if err := config.DB.Create(&newBill).Error; err != nil {
+            return fmt.Errorf("failed to create new billing record for ticket: %w", err)
+        }
+    } else {
+        return fmt.Errorf("unknown session type: %s", reqType)
     }
 
     return nil
@@ -74,14 +109,22 @@ func handlePaymentFailed(event stripe.Event) error {
         return fmt.Errorf("failed to parse session: %w", err)
     }
 
-    billID := sess.Metadata["bill_id"]
-    if billID == "" {
-        return nil
+    reqType := sess.Metadata["type"]
+    if reqType == "" {
+        reqType = "billing"
     }
 
-    config.DB.Model(&models.Billing{}).
-        Where("bill_id = ? AND status = ?", billID, "unpaid").
-        Update("status", "failed")
+    if reqType == "billing" {
+        billID := sess.Metadata["bill_id"]
+        if billID == "" {
+            return nil
+        }
+
+        config.DB.Model(&models.Billing{}).
+            Where("bill_id = ? AND status = ?", billID, "unpaid").
+            Update("status", "failed")
+    }
+    // For tickets, we don't have an existing unpaid record to fail, so we do nothing.
 
     return nil
 }
