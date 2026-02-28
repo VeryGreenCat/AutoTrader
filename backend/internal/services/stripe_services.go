@@ -60,7 +60,8 @@ func CreateCheckoutSession(id string, reqType string, requestUserID string) (str
 	var productName string
 	var internalUserID string
 
-	if reqType == "billing" {
+	switch reqType {
+	case "billing":
 		// id is billID
 		var bill models.Billing
 		if err := config.DB.Where("bill_id = ?", id).First(&bill).Error; err != nil {
@@ -73,15 +74,16 @@ func CreateCheckoutSession(id string, reqType string, requestUserID string) (str
 		usdAmount = bill.Amount
 		productName = "AutoTrader Performance Fee"
 		internalUserID = bill.UserID
-	} else if reqType == "ticket" {
+	case "ticket":
 		// id is packageID
-		if id == "ticket_1" {
+		switch id {
+		case "ticket_1":
 			usdAmount = 1.00
 			productName = "Energy Reserve: 1 Ticket"
-		} else if id == "ticket_10" {
+		case "ticket_10":
 			usdAmount = 9.00
 			productName = "Energy Reserve: 10 Tickets (Best Value)"
-		} else {
+		default:
 			return "", fmt.Errorf("invalid package identifier: %s", id)
 		}
 		// For tickets, we need the user ID from the request (they should be logged in)
@@ -89,7 +91,7 @@ func CreateCheckoutSession(id string, reqType string, requestUserID string) (str
 			return "", fmt.Errorf("user authentication required to purchase tickets")
 		}
 		internalUserID = requestUserID
-	} else {
+	default:
 		return "", fmt.Errorf("invalid request type: %s", reqType)
 	}
 
@@ -169,9 +171,10 @@ func CreateCheckoutSession(id string, reqType string, requestUserID string) (str
 	params.AddMetadata("type", reqType)
     params.AddMetadata("user_id", user.UserID)
     
-    if reqType == "billing" {
+    switch reqType {
+		case "billing":
 		params.AddMetadata("bill_id", id)
-	} else if reqType == "ticket" {
+		case "ticket":
 		params.AddMetadata("package_id", id)
         // Pass original amounts in metadata just in case
         params.AddMetadata("usd_amount", fmt.Sprintf("%.2f", usdAmount))

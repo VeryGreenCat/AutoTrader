@@ -55,7 +55,8 @@ func handlePaymentSuccess(event stripe.Event) error {
 
     now := time.Now()
 
-    if reqType == "billing" {
+    switch reqType {
+    case "billing":
         billID := sess.Metadata["bill_id"]
         if billID == "" {
             return fmt.Errorf("bill_id not found in session metadata for billing type")
@@ -72,8 +73,9 @@ func handlePaymentSuccess(event stripe.Event) error {
         if result.Error != nil {
             return fmt.Errorf("failed to update billing record: %w", result.Error)
         }
-    } else if reqType == "ticket" {
+    case "ticket":
         userID := sess.Metadata["user_id"]
+        packageID := sess.Metadata["package_id"]
         if userID == "" {
             return fmt.Errorf("user_id not found in session metadata for ticket type")
         }
@@ -96,7 +98,27 @@ func handlePaymentSuccess(event stripe.Event) error {
         if err := config.DB.Create(&newBill).Error; err != nil {
             return fmt.Errorf("failed to create new billing record for ticket: %w", err)
         }
-    } else {
+
+        // Calculate seconds to add based on package
+        var secondsToAdd int64
+        switch packageID {
+        case "ticket_1":
+            secondsToAdd = 12 * 3600 // 12 hours
+        case "ticket_10":
+            secondsToAdd = 120 * 3600 // 120 hours
+        default:
+            return fmt.Errorf("unknown package ID: %s", packageID)
+        }
+
+        // Update User's remaining seconds
+        var user models.User
+        if err := config.DB.Where("user_id = ?", userID).First(&user).Error; err == nil {
+            // Add the purchased time to the user's balance
+            user.RemainingSeconds += secondsToAdd
+
+            config.DB.Save(&user)
+        }
+    default:
         return fmt.Errorf("unknown session type: %s", reqType)
     }
 

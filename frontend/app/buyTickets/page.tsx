@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Zap, Clock } from "lucide-react";
 import CompletePayment from "../components/CompletePayment";
+import TransHist from "../components/TransHist";
 
 export default function BuyTicketsPage() {
 	const [selectedPackage, setSelectedPackage] = useState<1 | 10>(1);
@@ -111,6 +112,8 @@ export default function BuyTicketsPage() {
 					packageId={`ticket_${selectedPackage}`}
 				/>
 			</div>
+
+			<TransHist />
 		</section>
 	);
 }

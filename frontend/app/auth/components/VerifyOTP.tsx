@@ -63,6 +63,7 @@ export default function VerifyOTP({
 		if (!canResend) return;
 
 		setError("");
+		setCode("");
 		setCanResend(false);
 		setTimeLeft(60); // Reset timer to 60s
 
@@ -102,6 +103,7 @@ export default function VerifyOTP({
 
 		if (error) {
 			setError("Incorrect code. Please try again.");
+			setCode("");
 			setLoading(false);
 		} else {
 			if (typeof window !== "undefined") {
