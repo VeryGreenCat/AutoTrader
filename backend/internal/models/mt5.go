@@ -6,9 +6,6 @@ type MT5 struct {
 	Name     string  `json:"name" gorm:"column:name"`
 	Token    string  `json:"token" gorm:"column:token"`
 	Status   bool    `json:"status" gorm:"column:status"`
-	Balance  float64 `json:"balance" gorm:"column:balance"`
-	Equity   float64 `json:"equity" gorm:"column:equity"`
-	TodayPnL float64 `json:"today_pnl" gorm:"column:today_pnl"`
 }
 
 func (MT5) TableName() string {

@@ -11,7 +11,4 @@ export interface MT5 {
 	name: string;
 	token: string;
 	status: boolean;
-	balance: number;
-	equity: number;
-	today_pnl: number;
 }

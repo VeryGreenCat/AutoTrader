@@ -64,7 +64,8 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 	// Mocking equity and active bot counts since they aren't in the MT5 interface
 	const activeBotsCount = (bots || []).filter((b) => b.status).length;
 	const totalBotsCount = (bots || []).length;
-	const mockEquity = account.balance * 1.05; // Just for display purposes
+	const mockEquity = 555; // Just for display purposes
+	const mockBalance = 666; // Just for display purposes
 
 	return (
 		<div className="w-full bg-[#0a0a0a] rounded-2xl border border-gray-800 p-1 font-sans text-white mb-6">
@@ -114,7 +115,7 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 							Balance
 						</span>
 						<span className="text-2xl font-bold">
-							{account.balance.toLocaleString(undefined, {
+							{mockBalance.toLocaleString(undefined, {
 								minimumFractionDigits: 2,
 							})}
 						</span>

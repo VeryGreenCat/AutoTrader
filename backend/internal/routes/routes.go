@@ -14,6 +14,7 @@ func RegisterAllRoutes(app *fiber.App) {
     // Public routes (no AuthMiddleware)
     apiPublic := app.Group("/api")
     WebhookRoute(apiPublic)
+    MetatraderRoutes(apiPublic)
 
     // Private routes (with AuthMiddleware)
     apiPrivate := app.Group("/api", middleware.AuthMiddleware)
