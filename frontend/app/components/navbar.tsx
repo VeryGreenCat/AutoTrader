@@ -139,17 +139,29 @@ export default function Navbar() {
 			: `${base} text-gray-400`;
 	};
 
-	const accountMenuItems: MenuProps["items"] = accounts.map((acc) => ({
+	const sortedAccounts = [...accounts].sort((a, b) => {
+		if (a.status === b.status) return 0;
+		return a.status ? -1 : 1;
+	});
+
+	const accountMenuItems: MenuProps["items"] = sortedAccounts.map((acc) => ({
 		key: acc.mt5_id,
+		disabled: !acc.status,
 		label: (
 			<div
-				className="flex items-center py-1"
-				onClick={() => router.push(`/dashboard?account=${acc.name}`)}
+				className={`flex items-center py-1 ${!acc.status ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
+				onClick={() => {
+					if (acc.status) {
+						router.push(`/dashboard?account=${acc.name}`);
+					}
+				}}
 			>
 				<span className="font-medium text-white">{acc.name}</span>
 			</div>
 		),
 	}));
+
+	const hasConnectedAccount = accounts.some((acc) => acc.status);
 
 	return (
 		<>
@@ -180,10 +192,16 @@ export default function Navbar() {
 							menu={{ items: accountMenuItems }}
 							placement="bottom"
 							classNames={{ root: "account-dropdown" }}
+							disabled={!hasConnectedAccount}
 						>
 							<button
-								onClick={() => router.push("/dashboard")}
-								className={getLinkClass("/dashboard")}
+								onClick={() => {
+									if (hasConnectedAccount) {
+										router.push("/dashboard");
+									}
+								}}
+								className={`${getLinkClass("/dashboard")} ${!hasConnectedAccount ? "opacity-30 cursor-not-allowed grayscale" : ""}`}
+								disabled={!hasConnectedAccount}
 							>
 								Dashboard
 								<ChevronDown className="w-3 h-3 opacity-50" />
@@ -191,12 +209,18 @@ export default function Navbar() {
 						</Dropdown>
 					) : (
 						<button
-							onClick={() => router.push("/dashboard")}
-							className={getLinkClass("/dashboard")}
+							onClick={() => {
+								if (hasConnectedAccount) {
+									router.push("/dashboard");
+								}
+							}}
+							className={`${getLinkClass("/dashboard")} ${!hasConnectedAccount ? "opacity-30 cursor-not-allowed grayscale" : ""}`}
+							disabled={!hasConnectedAccount}
 						>
 							Dashboard
 						</button>
 					)}
+
 					<button
 						onClick={() => router.push("/bots")}
 						className={getLinkClass("/bots")}
