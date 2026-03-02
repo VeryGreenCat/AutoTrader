@@ -16,5 +16,7 @@ export interface MT5 {
 export interface MT5AccountCardStats {
 	equity: number;
 	balance: number;
+	realized_today: number;
+	realized_week: number;
 	is_connected: boolean;
 }

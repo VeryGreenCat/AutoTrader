@@ -60,8 +60,8 @@ void PushData() {
     datetime todayStart = StringToTime(TimeToString(TimeCurrent(), TIME_DATE));
     HistorySelect(todayStart, TimeCurrent());
     double realizedToday = 0;
-    int totalDeals = HistoryDealsTotal();
-    for (int i = 0; i < totalDeals; i++) {
+    int totalDealsCount = HistoryDealsTotal();
+    for (int i = 0; i < totalDealsCount; i++) {
         ulong ticket = HistoryDealGetTicket(i);
         if (HistoryDealGetInteger(ticket, DEAL_ENTRY) == DEAL_ENTRY_OUT) {
             realizedToday += HistoryDealGetDouble(ticket, DEAL_PROFIT);
@@ -70,11 +70,30 @@ void PushData() {
         }
     }
 
+    // Weekly realized P&L (Starting Monday)
+    MqlDateTime dt;
+    TimeToStruct(TimeCurrent(), dt);
+    int daysToMonday = (dt.day_of_week == 0) ? 6 : (dt.day_of_week - 1);
+    datetime weekStart = StringToTime(TimeToString(TimeCurrent() - daysToMonday * 86400, TIME_DATE));
+    
+    HistorySelect(weekStart, TimeCurrent());
+    double realizedWeek = 0;
+    int weekDealsCount = HistoryDealsTotal();
+    for (int i = 0; i < weekDealsCount; i++) {
+        ulong ticket = HistoryDealGetTicket(i);
+        if (HistoryDealGetInteger(ticket, DEAL_ENTRY) == DEAL_ENTRY_OUT) {
+            realizedWeek += HistoryDealGetDouble(ticket, DEAL_PROFIT);
+            realizedWeek += HistoryDealGetDouble(ticket, DEAL_SWAP);
+            realizedWeek += HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+        }
+    }
+
     string json = StringFormat(
-        "{\"token\":\"%s\",\"mt5_id\":\"%I64d\",\"balance\":%.2f,\"equity\":%.2f,\"realized_today\":%.2f}",
-        Token, mt5_id, balance, equity, realizedToday
+        "{\"token\":\"%s\",\"mt5_id\":\"%I64d\",\"balance\":%.2f,\"equity\":%.2f,\"realized_today\":%.2f,\"realized_week\":%.2f}",
+        Token, mt5_id, balance, equity, realizedToday, realizedWeek
     );
     PostToServer("/metatrader/push", json);
+
 }
 
 //+------------------------------------------------------------------+
@@ -97,6 +116,8 @@ void ConnectToServer() {
     
     if (res == 200 || res == 201) {
         Print("✅ Connected to AutoTrader server successfully.");
+        PushData();
+        FetchSignals();
     } else {
         Print("❌ Failed to connect to AutoTrader server. Code: ", res);
     }

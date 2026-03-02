@@ -13,6 +13,7 @@ type MT5PushRequest struct {
 	Balance       float64 `json:"balance"`
 	Equity        float64 `json:"equity"`
 	RealizedToday float64 `json:"realized_today"`
+	RealizedWeek  float64 `json:"realized_week"`
 }
 
 type MT5Stats struct {
@@ -20,6 +21,8 @@ type MT5Stats struct {
 	Balance       float64   `json:"balance"`
 	Equity        float64   `json:"equity"`
 	RealizedToday float64   `json:"realized_today"`
+	RealizedWeek  float64   `json:"realized_week"`
 	LastSeen      time.Time `json:"last_seen"`
 }
+
 

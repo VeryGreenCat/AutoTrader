@@ -23,7 +23,6 @@ export default function Portfolio() {
 			}
 		};
 		fetchAccounts();
-		console.log("accounts", accounts);
 	}, []);
 
 	const chartColors = [

@@ -149,9 +149,11 @@ func MT5Push(c *fiber.Ctx) error {
 		Balance:       req.Balance,
 		Equity:        req.Equity,
 		RealizedToday: req.RealizedToday,
+		RealizedWeek:  req.RealizedWeek,
 		LastSeen:      time.Now(),
 	}
 	mu.Unlock()
+
 
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

@@ -1,14 +1,19 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-import DashboardCard from "../components/DashboardCard";
 import Script from "next/script";
+import { Suspense } from "react";
+import { Bot } from "@/types/bot";
+import { useEffect, useState } from "react";
 import LlmLogic from "../components/LlmLogic";
 import Portfolio from "../components/Portfolio";
-import All_ActivePosition from "../components/All_ActivePosition";
-import OpenedPosition from "../components/OpenedPosition";
+import { getBotsByMt5Id } from "@/services/bots";
+import { useSearchParams } from "next/navigation";
+import { MT5, MT5AccountCardStats } from "@/types/mt5";
+import DashboardCard from "../components/DashboardCard";
 import ClosedPosition from "../components/ClosedPosition";
+import OpenedPosition from "../components/OpenedPosition";
+import { getAccountById, getMt5Stats } from "@/services/mt5";
+import All_ActivePosition from "../components/All_ActivePosition";
 
 declare global {
 	interface Window {
@@ -18,7 +23,113 @@ declare global {
 
 const DashboardContent = () => {
 	const searchParams = useSearchParams();
-	const account = searchParams.get("account");
+	const accountParam = searchParams.get("account");
+	const [accounts, setAccounts] = useState<MT5[]>([]);
+	const [accountsStats, setAccountsStats] = useState<
+		Record<string, MT5AccountCardStats>
+	>({});
+	const [accountsBots, setAccountsBots] = useState<Record<string, Bot[]>>({});
+	const [loading, setLoading] = useState(true);
+
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const userId = localStorage.getItem("user_id");
+				if (!userId) return;
+
+				// 1. Get all accounts
+				const accRes = await getAccountById(userId);
+				// console.log("accRes", accRes);
+				const userAccounts: MT5[] = accRes.data || [];
+				// console.log("userAccounts", userAccounts);
+				setAccounts(userAccounts);
+
+				// 2. Fetch stats and bots for each account in parallel
+				const statsPromises = userAccounts.map(async (acc) => {
+					try {
+						const [statsRes, botsRes] = await Promise.all([
+							acc.status
+								? getMt5Stats(acc.mt5_id)
+								: Promise.resolve({ data: null, is_connected: false }),
+							getBotsByMt5Id(acc.mt5_id),
+						]);
+						return {
+							mt5_id: acc.mt5_id,
+							stats: statsRes.data || null,
+							is_connected: statsRes.is_connected,
+							bots: botsRes.data || [],
+						};
+					} catch (e) {
+						return {
+							mt5_id: acc.mt5_id,
+							stats: null,
+							is_connected: false,
+							bots: [],
+						};
+					}
+				});
+
+				const results = await Promise.all(statsPromises);
+				// console.log("results", results);
+
+				const statsMap: Record<string, MT5AccountCardStats> = {};
+				const botsMap: Record<string, Bot[]> = {};
+
+				results.forEach((res) => {
+					if (res.stats) {
+						statsMap[res.mt5_id] = {
+							...res.stats,
+							is_connected: res.is_connected,
+						};
+					}
+					botsMap[res.mt5_id] = res.bots;
+				});
+
+				setAccountsStats(statsMap);
+				setAccountsBots(botsMap);
+			} catch (error) {
+				console.error("Dashboard: failed to fetch data", error);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchData();
+		const interval = setInterval(fetchData, 300000); // Poll every 5 minutes
+		return () => clearInterval(interval);
+	}, []);
+
+	// Aggregations
+	const activeAccounts = accounts.filter(
+		(acc) => accountsStats[acc.mt5_id]?.is_connected,
+	);
+
+	const totalEquity = activeAccounts.reduce(
+		(sum, acc) => sum + (accountsStats[acc.mt5_id]?.equity || 0),
+		0,
+	);
+	const totalTodayPL = activeAccounts.reduce(
+		(sum, acc) => sum + (accountsStats[acc.mt5_id]?.realized_today || 0),
+		0,
+	);
+	const totalWeekPL = activeAccounts.reduce(
+		(sum, acc) => sum + (accountsStats[acc.mt5_id]?.realized_week || 0),
+		0,
+	);
+	const totalActiveBots = accounts.reduce((sum, acc) => {
+		const bots = accountsBots[acc.mt5_id] || [];
+		return sum + bots.filter((b) => b.status).length;
+	}, 0);
+
+	// Specific account view
+	const selectedAccount = accounts.find((acc) => acc.name === accountParam);
+	const selectedStats = selectedAccount
+		? accountsStats[selectedAccount.mt5_id]
+		: null;
+	const selectedBots = selectedAccount
+		? accountsBots[selectedAccount.mt5_id]
+		: [];
+	const activeBotsForSelected = selectedBots.filter((b) => b.status).length;
 
 	const initTradingView = () => {
 		if (typeof window !== "undefined" && window.TradingView) {
@@ -46,31 +157,34 @@ const DashboardContent = () => {
 			{/* Header */}
 			<div className="mb-10">
 				<h2 className="text-4xl font-bold tracking-tighter uppercase text-white">
-					Dashboard - {account || "Overview"}
+					Dashboard - {accountParam || "Overview"}
 				</h2>
+
 				<p className="text-gray-500 text-sm mt-1">
 					This page aggregates financial and trading data from every connected
 					account.
 				</p>
 			</div>
 			{/* below will be a 4 cards */}
-			{!account ? (
+			{!accountParam ? (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-					<DashboardCard type={"TT_equity"} />
-					<DashboardCard type={"TT_pl"} />
-					<DashboardCard type={"TT_bots"} />
-					<DashboardCard type={"TT_week_pl"} />
+					<DashboardCard type={"TT_equity"} value={totalEquity} />
+					<DashboardCard type={"TT_pl"} value={totalTodayPL} />
+					<DashboardCard type={"TT_bots"} value={totalActiveBots} />
+					<DashboardCard type={"TT_week_pl"} value={totalWeekPL} />
 				</div>
 			) : (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-					<DashboardCard type={"equity"} />
-					<DashboardCard type={"pl"} />
-					<DashboardCard type={"bots"} />
-					<DashboardCard type={"balance"} />
+					<DashboardCard type={"equity"} value={selectedStats?.equity || 0} />
+					<DashboardCard
+						type={"pl"}
+						value={selectedStats?.realized_today || 0}
+					/>
+					<DashboardCard type={"bots"} value={activeBotsForSelected} />
+					<DashboardCard type={"balance"} value={selectedStats?.balance || 0} />
 				</div>
 			)}
 
-			{/* below will be a 2 cards */}
 			<div className="grid grid-cols-3 gap-6 mb-6">
 				<div className="col-span-2 flex items-center justify-center relative overflow-hidden h-[450px]">
 					<div id="tradingview_chart" className="w-full h-full" />
@@ -79,71 +193,15 @@ const DashboardContent = () => {
 						onReady={initTradingView}
 					/>
 				</div>
-				{account ? <LlmLogic /> : <Portfolio />}
+				{accountParam ? <LlmLogic /> : <Portfolio />}
 			</div>
 			{/* below will be 1 card */}
-			{!account ? (
+			{!accountParam ? (
 				<All_ActivePosition data={[]} />
 			) : (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
-					<ClosedPosition
-						positions={[
-							{
-								pair: "EURUSD",
-								type: "Buy",
-								entry: 1.12345,
-								lot: 0.1,
-								tp: 1.125,
-								profit: 15.5,
-							},
-							{
-								pair: "GBPUSD",
-								type: "Sell",
-								entry: 1.34567,
-								lot: 0.05,
-								tp: 1.34,
-								profit: -10.2,
-							},
-							{
-								pair: "EURUSD",
-								type: "Buy",
-								entry: 1.12345,
-								lot: 0.1,
-								tp: 1.125,
-								profit: 15.5,
-							},
-							{
-								pair: "GBPUSD",
-								type: "Sell",
-								entry: 1.34567,
-								lot: 0.05,
-								tp: 1.34,
-								profit: -10.2,
-							},
-						]}
-					/>
-					<OpenedPosition
-						positions={[
-							{
-								pair: "EURUSD",
-								type: "Buy",
-								entry: 1.12345,
-								lot: 0.1,
-								tp: 1.125,
-								sl: 1.122,
-								profit: 15.5,
-							},
-							{
-								pair: "GBPUSD",
-								type: "Sell",
-								entry: 1.34567,
-								lot: 0.05,
-								tp: 1.34,
-								sl: 1.348,
-								profit: -10.2,
-							},
-						]}
-					/>
+					<ClosedPosition positions={[]} />
+					<OpenedPosition positions={[]} />
 				</div>
 			)}
 		</section>
