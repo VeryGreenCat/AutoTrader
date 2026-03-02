@@ -39,7 +39,7 @@ export default function Portfolio() {
 	// Build chart data using account name + mock equity
 	const data = accounts.map((acc) => ({
 		type: acc.name,
-		value: acc.equity,
+		value: 555,
 	}));
 
 	const config = {
@@ -98,7 +98,7 @@ export default function Portfolio() {
 								Account Breakdown
 							</p>
 							{accounts.map((acc, index) => {
-								const equity = acc.equity;
+								const equity = 666;
 								return (
 									<div
 										key={acc.mt5_id}

@@ -35,17 +35,22 @@ func AddMT5Account(c *fiber.Ctx) error {
 
 func GetAccountById(c *fiber.Ctx) error {
 	userId := c.Params("user_id")
-	account, err := services.GetAccountsById(userId)
+	accounts, err := services.GetAccountsById(userId)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to get MT5 account",
 		})
 	}
+
+	// Dynamic check: update DB status if heartbeat is stale
+	RefreshAccountsStatus(accounts)
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "MT5 account fetched successfully",
-		"data":    account,
+		"data":    accounts,
 	})
 }
+
 
 func DeleteAccount(c *fiber.Ctx) error {
 	mt5Id := c.Params("mt5_id")

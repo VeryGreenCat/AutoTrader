@@ -1,93 +1,123 @@
-//+------------------------------------------------------------------+
-//|                                        MT5_Connection_Test.mq5   |
-//|                                      Copyright 2024, AutoTrader  |
-//|                                             https://www.mql5.com |
-//+------------------------------------------------------------------+
 #property copyright "Copyright 2024, AutoTrader"
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 #property strict
 
-// Input parameters for the user to configure
-input string   Token  = "PASTE_YOUR_TOKEN_HERE"; // Connection Token from Website
-input string   ServerURL = "http://localhost:5000/api/metatrader/connect"; // Go Backend URL
+input string Token     = "PASTE_YOUR_TOKEN_HERE";
+input string ServerURL = "http://127.0.0.1:5000/api";
+input int    PushEvery = 60; // seconds
 
 //+------------------------------------------------------------------+
-//| Expert initialization function                                   |
+//| Send a POST request to the given endpoint with a JSON body       |
 //+------------------------------------------------------------------+
-int OnInit()
-  {
-   Print("Initializing MT5 Connection Test EA...");
+int PostToServer(string endpoint, string json_payload) {
+    char post[], result[];
+    string headers = "Content-Type: application/json\r\n";
 
-   // Get the MT5 Account ID (Login number)
-   long mt5_id = AccountInfoInteger(ACCOUNT_LOGIN);
-   
-   // Format the JSON payload 
-   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
-   double equity = AccountInfoDouble(ACCOUNT_EQUITY);
-   double today_pnl = AccountInfoDouble(ACCOUNT_PROFIT); // Simplified profit
-   
-   string json_payload = StringFormat("{\"mt5_id\":\"%I64d\",\"token\":\"%s\",\"balance\":%.2f,\"equity\":%.2f,\"today_pnl\":%.2f}", mt5_id, Token, balance, equity, today_pnl);
-   
-   // Prepare WebRequest parameters
-   char post[], result[];
-   string headers = "Content-Type: application/json\r\n";
-   int res;
-   
-   // Convert JSON string to char array for the body
-   int str_len = StringLen(json_payload);
-   StringToCharArray(json_payload, post, 0, str_len, CP_UTF8);
-   
-   // Send POST request to the Go backend
-   Print("Sending connection test to: ", ServerURL);
-   Print("Payload: ", json_payload);
-   
-   res = WebRequest("POST", ServerURL, headers, 5000, post, result, headers);
-   
-   if(res == -1)
-     {
-      int last_error = GetLastError();
-      Print("Error in WebRequest. Error code =", last_error);
-      
-      if(last_error == 4060) // ERR_FUNCTION_NOT_ALLOWED
-        {
-         Print("IMPORTANT: You must enable 'Allow WebRequest for listed URL' and add 'http://localhost:5000' in MT5 Options -> Expert Advisors.");
-         MessageBox("Please add 'http://localhost:5000' to the allowed WebRequest URLs in MT5 (Ctrl+O -> Expert Advisors).", "WebRequest Not Allowed", MB_ICONERROR);
+    StringToCharArray(json_payload, post, 0, StringLen(json_payload), CP_UTF8);
+
+    int res = WebRequest("POST", ServerURL + endpoint, headers, 5000, post, result, headers);
+
+    if (res == -1) {
+        int err = GetLastError();
+        Print("WebRequest failed. Error: ", err);
+        if (err == 4060)
+            Print("Add ", ServerURL, " to MT5 Options → Expert Advisors → Allow WebRequest");
+        return -1;
+    }
+
+    string response = CharArrayToString(result, 0, WHOLE_ARRAY, CP_UTF8);
+    Print("Response [", res, "]: ", response);
+    return res;
+}
+
+//+------------------------------------------------------------------+
+//| Send a GET request and return response body                      |
+//+------------------------------------------------------------------+
+string GetFromServer(string endpoint) {
+    char post[], result[];
+    string headers;
+
+    int res = WebRequest("GET", ServerURL + endpoint + "?token=" + Token, "", 5000, post, result, headers);
+
+    if (res == -1) {
+        Print("GET failed. Error: ", GetLastError());
+        return "";
+    }
+
+    return CharArrayToString(result, 0, WHOLE_ARRAY, CP_UTF8);
+}
+
+//+------------------------------------------------------------------+
+//| Push live account data to backend                                |
+//+------------------------------------------------------------------+
+void PushData() {
+    long   mt5_id  = AccountInfoInteger(ACCOUNT_LOGIN);
+    double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+    double equity  = AccountInfoDouble(ACCOUNT_EQUITY);
+
+    // Today's realized P&L from closed deals
+    datetime todayStart = StringToTime(TimeToString(TimeCurrent(), TIME_DATE));
+    HistorySelect(todayStart, TimeCurrent());
+    double realizedToday = 0;
+    int totalDeals = HistoryDealsTotal();
+    for (int i = 0; i < totalDeals; i++) {
+        ulong ticket = HistoryDealGetTicket(i);
+        if (HistoryDealGetInteger(ticket, DEAL_ENTRY) == DEAL_ENTRY_OUT) {
+            realizedToday += HistoryDealGetDouble(ticket, DEAL_PROFIT);
+            realizedToday += HistoryDealGetDouble(ticket, DEAL_SWAP);
+            realizedToday += HistoryDealGetDouble(ticket, DEAL_COMMISSION);
         }
-     }
-   else
-     {
-      // Convert response char array to string
-      string response = CharArrayToString(result, 0, WHOLE_ARRAY, CP_UTF8);
-      Print("Server Response Code: ", res);
-      Print("Server Response Body: ", response);
-      
-      if(res == 200 || res == 201)
-        {
-         Print("✅ Connection to AI Server Successful!");
-        }
-      else
-        {
-         Print("❌ Server returned error status.");
-        }
-     }
-     
-   return(INIT_SUCCEEDED);
-  }
+    }
+
+    string json = StringFormat(
+        "{\"token\":\"%s\",\"mt5_id\":\"%I64d\",\"balance\":%.2f,\"equity\":%.2f,\"realized_today\":%.2f}",
+        Token, mt5_id, balance, equity, realizedToday
+    );
+    PostToServer("/metatrader/push", json);
+}
 
 //+------------------------------------------------------------------+
-//| Expert deinitialization function                                 |
+//| Ask backend if there's a pending trade signal                    |
 //+------------------------------------------------------------------+
-void OnDeinit(const int reason)
-  {
-   Print("Connection Test EA Removed.");
-  }
+void FetchSignals() {
+    string response = GetFromServer("/metatrader/signal");
+    if (response == "") return;
+
+    // TODO: parse response and execute trade
+    Print("Fetched Signal received: ", response);
+}
+//+------------------------------------------------------------------+
+//| Function                                                         |
+//+------------------------------------------------------------------+
+void ConnectToServer() {
+    long mt5_id = AccountInfoInteger(ACCOUNT_LOGIN);
+    string json = StringFormat("{\"mt5_id\":\"%I64d\",\"token\":\"%s\"}", mt5_id, Token);
+    int res = PostToServer("/metatrader/connect", json);
+    
+    if (res == 200 || res == 201) {
+        Print("✅ Connected to AutoTrader server successfully.");
+    } else {
+        Print("❌ Failed to connect to AutoTrader server. Code: ", res);
+    }
+}
 
 //+------------------------------------------------------------------+
-//| Expert tick function                                             |
-//+------------------------------------------------------------------+
-void OnTick()
-  {
-   // We only need this to run once on init for testing connection
-  }
-//+------------------------------------------------------------------+
+int OnInit() { //runs once when the EA starts
+    Print("Connecting to AutoTrader's Server...");
+    EventSetTimer(PushEvery);
+    ConnectToServer();
+    return INIT_SUCCEEDED;
+}
+
+void OnTimer() {
+    PushData();
+    FetchSignals();
+}
+
+void OnDeinit(const int reason) {
+    EventKillTimer();
+    Print("AutoTrader EA stopped.");
+}
+
+void OnTick() {}

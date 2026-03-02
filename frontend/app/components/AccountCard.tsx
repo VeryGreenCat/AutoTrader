@@ -5,15 +5,17 @@ import BotRow from "./BotRow";
 import DeployModal from "./DeployModal";
 import { Server, Plus, Trash2 } from "lucide-react";
 import { App } from "antd";
-import { deleteAccount } from "@/services/mt5";
+import { deleteAccount, getMt5Stats } from "@/services/mt5";
 import { Bot, AccountCardProps } from "@/types/bot";
 import { getBotsByMt5Id } from "@/services/bots";
+import { MT5AccountCardStats } from "@/types/mt5";
 
 export default function AccountCard({ account, onDelete }: AccountCardProps) {
 	const { message, modal } = App.useApp();
 	const [bots, setBots] = useState<Bot[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+	const [stats, setStats] = useState<MT5AccountCardStats | null>(null);
 
 	const handleDelete = () => {
 		modal.confirm({
@@ -55,8 +57,30 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 		}
 	};
 
+	const fetchStats = async () => {
+		if (account?.status && account?.mt5_id) {
+			try {
+				const res = await getMt5Stats(account.mt5_id);
+				if (res?.data) {
+					setStats({
+						equity: res.data.equity,
+						balance: res.data.balance,
+						is_connected: res.is_connected,
+					});
+				}
+			} catch (error) {
+				console.error("Failed to fetch account stats:", error);
+			}
+		}
+	};
+
 	useEffect(() => {
 		fetchBots();
+		fetchStats();
+
+		// Poll for stats/heartbeat every 30 seconds
+		const interval = setInterval(fetchStats, 30000);
+		return () => clearInterval(interval);
 	}, [account]);
 
 	if (!account) return null;
@@ -64,8 +88,8 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 	// Mocking equity and active bot counts since they aren't in the MT5 interface
 	const activeBotsCount = (bots || []).filter((b) => b.status).length;
 	const totalBotsCount = (bots || []).length;
-	const mockEquity = 555; // Just for display purposes
-	const mockBalance = 666; // Just for display purposes
+
+	const $isLiveConnected = account.status && stats?.is_connected;
 
 	return (
 		<div className="w-full bg-[#0a0a0a] rounded-2xl border border-gray-800 p-1 font-sans text-white mb-6">
@@ -94,11 +118,17 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 							Equity
 						</span>
 						<span className="text-2xl font-bold">
-							$
-							{mockEquity.toLocaleString(undefined, {
-								minimumFractionDigits: 0,
-								maximumFractionDigits: 0,
-							})}
+							{$isLiveConnected ? (
+								<>
+									$
+									{stats?.equity.toLocaleString(undefined, {
+										minimumFractionDigits: 0,
+										maximumFractionDigits: 0,
+									})}
+								</>
+							) : (
+								"-"
+							)}
 						</span>
 					</div>
 					<div className="flex flex-col">
@@ -115,9 +145,11 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 							Balance
 						</span>
 						<span className="text-2xl font-bold">
-							{mockBalance.toLocaleString(undefined, {
-								minimumFractionDigits: 2,
-							})}
+							{$isLiveConnected
+								? stats?.balance.toLocaleString(undefined, {
+										minimumFractionDigits: 2,
+									})
+								: "-"}
 						</span>
 					</div>
 				</div>
@@ -127,16 +159,17 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 					<div
 						className={`px-4 py-1.5 rounded-full border flex items-center gap-2 text-sm font-medium capitalize
             ${
-							account.status
+							$isLiveConnected
 								? "border-[#00FFA3]/30 text-[#00FFA3]"
 								: "border-red-500/30 text-red-500"
 						}`}
 					>
 						<div
-							className={`w-2 h-2 rounded-full ${account.status ? "bg-[#00FFA3] shadow-[0_0_8px_rgba(0,255,163,0.8)] animate-pulse" : "bg-red-500 shadow-[0_0_8px_rgba(255,0,0,0.8)]"}`}
+							className={`w-2 h-2 rounded-full ${$isLiveConnected ? "bg-[#00FFA3] shadow-[0_0_8px_rgba(0,255,163,0.1)] animate-pulse" : "bg-red-500 shadow-[0_0_8px_rgba(255,0,0,0.8)]"}`}
 						></div>
-						{account.status ? "connected" : "disconnected"}
+						{$isLiveConnected ? "connected" : "disconnected"}
 					</div>
+
 					<div className="flex gap-2">
 						<button
 							onClick={handleDelete}
@@ -146,10 +179,10 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 						</button>
 						<button
 							onClick={() => setIsDeployModalOpen(true)}
-							disabled={!account.status}
+							disabled={!$isLiveConnected}
 							className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-md flex items-center gap-1 transition-all w-max
                 ${
-									account.status
+									$isLiveConnected
 										? "bg-[#00FFA3] text-black hover:shadow-[0_0_15px_rgba(0,255,163,0.4)] cursor-pointer"
 										: "bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700"
 								}`}

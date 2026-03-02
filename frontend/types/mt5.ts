@@ -12,3 +12,9 @@ export interface MT5 {
 	token: string;
 	status: boolean;
 }
+
+export interface MT5AccountCardStats {
+	equity: number;
+	balance: number;
+	is_connected: boolean;
+}
