@@ -1,30 +1,19 @@
 "use client";
 
 import { Pie } from "@ant-design/charts";
-import { useEffect, useState } from "react";
-import { getAccountById } from "@/services/mt5";
-import { MT5 } from "@/types/mt5";
+import { MT5, MT5AccountCardStats } from "@/types/mt5";
 
-export default function Portfolio() {
-	const [accounts, setAccounts] = useState<MT5[]>([]);
-	const [loading, setLoading] = useState(true);
+interface PortfolioProps {
+	accounts: MT5[];
+	accountsStats: Record<string, MT5AccountCardStats>;
+	loading: boolean;
+}
 
-	useEffect(() => {
-		const fetchAccounts = async () => {
-			try {
-				const userId = localStorage.getItem("user_id");
-				if (!userId) return;
-				const res = await getAccountById(userId);
-				setAccounts(res.data || []);
-			} catch (error) {
-				console.error("Portfolio: failed to fetch accounts", error);
-			} finally {
-				setLoading(false);
-			}
-		};
-		fetchAccounts();
-	}, []);
-
+export default function Portfolio({
+	accounts,
+	accountsStats,
+	loading,
+}: PortfolioProps) {
 	const chartColors = [
 		"#00FFA3", // Emerald
 		"#FF4D4F", // Rose
@@ -35,11 +24,20 @@ export default function Portfolio() {
 		"#FA8C16", // Orange
 	];
 
-	// Build chart data using account name + mock equity
-	const data = accounts.map((acc) => ({
-		type: acc.name,
-		value: 555,
-	}));
+	// Sort accounts: connected ones first
+	const sortedAccounts = [...accounts].sort((a, b) => {
+		const aConn = accountsStats[a.mt5_id]?.is_connected ? 1 : 0;
+		const bConn = accountsStats[b.mt5_id]?.is_connected ? 1 : 0;
+		return bConn - aConn;
+	});
+
+	// Build chart data using real equity of connected accounts only
+	const data = sortedAccounts
+		.filter((acc) => accountsStats[acc.mt5_id]?.is_connected)
+		.map((acc) => ({
+			type: acc.name,
+			value: accountsStats[acc.mt5_id]?.equity || 0,
+		}));
 
 	const config = {
 		data,
@@ -60,7 +58,11 @@ export default function Portfolio() {
 				style: { fill: "#999" },
 			},
 		},
-		tooltip: false,
+		tooltip: {
+			formatter: (datum: any) => {
+				return { name: datum.type, value: `$${datum.value.toLocaleString()}` };
+			},
+		},
 		padding: [20, 0, 40, 0] as [number, number, number, number],
 		autoFit: true,
 	};
@@ -96,28 +98,38 @@ export default function Portfolio() {
 							<p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-3">
 								Account Breakdown
 							</p>
-							{accounts.map((acc, index) => {
-								const equity = 666;
+							{sortedAccounts.map((acc, index) => {
+								const stats = accountsStats[acc.mt5_id];
+								const isConnected = stats?.is_connected;
+								const equity = stats?.equity || 0;
+
 								return (
 									<div
 										key={acc.mt5_id}
-										className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition-colors group"
+										className={`flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5 transition-colors group ${!isConnected ? "opacity-30 grayscale filter" : "hover:bg-white/[0.05]"}`}
 									>
 										<div className="flex items-center gap-3">
 											<div
 												className="w-1.5 h-1.5 rounded-full"
 												style={{
-													backgroundColor:
-														chartColors[index % chartColors.length],
+													backgroundColor: isConnected
+														? chartColors[index % chartColors.length]
+														: "#444",
 												}}
 											/>
-											<span className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">
+											<span
+												className={`text-sm font-medium transition-colors ${isConnected ? "text-gray-300 group-hover:text-white" : "text-gray-500"}`}
+											>
 												{acc.name}
 											</span>
 										</div>
 
-										<span className="text-xs font-mono font-bold text-[#00FFA3]">
-											${equity.toLocaleString()}
+										<span
+											className={`text-xs font-mono font-bold ${isConnected ? "text-[#00FFA3]" : "text-gray-600"}`}
+										>
+											{isConnected
+												? `$${equity.toLocaleString()}`
+												: "Disconnected"}
 										</span>
 									</div>
 								);

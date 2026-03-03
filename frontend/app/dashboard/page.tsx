@@ -208,7 +208,15 @@ const DashboardContent = () => {
 						onReady={initTradingView}
 					/>
 				</div>
-				{accountParam ? <LlmLogic /> : <Portfolio />}
+				{accountParam ? (
+					<LlmLogic />
+				) : (
+					<Portfolio
+						accounts={accounts}
+						accountsStats={accountsStats}
+						loading={loading}
+					/>
+				)}
 			</div>
 			{/* below will be 1 card */}
 			{!accountParam ? (
