@@ -70,6 +70,10 @@ export default function ConnectMT5({
 
 			console.log("ConnectMT5 | userRes:", userRes.message);
 			message.success("Account added successfully");
+
+			// Notify other components (like Navbar) to refresh accounts data
+			window.dispatchEvent(new CustomEvent("MT5_ACCOUNTS_UPDATED"));
+
 			if (onSuccess) onSuccess();
 		} catch (error) {
 			console.error("Failed to fetch accounts data", error);

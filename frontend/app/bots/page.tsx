@@ -42,6 +42,11 @@ export default function Bots() {
 
 	useEffect(() => {
 		fetchData();
+
+		window.addEventListener("MT5_ACCOUNTS_UPDATED", fetchData);
+		return () => {
+			window.removeEventListener("MT5_ACCOUNTS_UPDATED", fetchData);
+		};
 	}, []);
 
 	return (

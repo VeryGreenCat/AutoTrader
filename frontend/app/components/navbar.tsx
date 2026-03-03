@@ -75,9 +75,11 @@ export default function Navbar() {
 
 		// Fetch only when status is updated elsewhere
 		window.addEventListener("BOT_STATUS_UPDATED", fetchData);
+		window.addEventListener("MT5_ACCOUNTS_UPDATED", fetchData);
 
 		return () => {
 			window.removeEventListener("BOT_STATUS_UPDATED", fetchData);
+			window.removeEventListener("MT5_ACCOUNTS_UPDATED", fetchData);
 		};
 	}, [user]);
 

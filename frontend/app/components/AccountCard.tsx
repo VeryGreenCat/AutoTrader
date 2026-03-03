@@ -29,6 +29,10 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 				try {
 					await deleteAccount(account.mt5_id);
 					message.success("Account deleted successfully");
+
+					// Notify other components (like Navbar) to refresh accounts data
+					window.dispatchEvent(new CustomEvent("MT5_ACCOUNTS_UPDATED"));
+
 					if (onDelete) onDelete();
 				} catch (error) {
 					console.error("Failed to delete account:", error);
@@ -62,9 +66,16 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 			try {
 				const res = await getMt5Stats(account.mt5_id);
 				if (res?.data) {
+					// Notify other components if status has changed in DB (backend updates status in GetMT5Stats)
+					if (account.status && !res.is_connected) {
+						window.dispatchEvent(new CustomEvent("MT5_ACCOUNTS_UPDATED"));
+					}
+
 					setStats({
 						equity: res.data.equity,
 						balance: res.data.balance,
+						realized_today: res.data.realized_today,
+						realized_week: res.data.realized_week,
 						is_connected: res.is_connected,
 					});
 				}
@@ -78,8 +89,8 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 		fetchBots();
 		fetchStats();
 
-		// Poll for stats/heartbeat every 30 seconds
-		const interval = setInterval(fetchStats, 30000);
+		// Poll for stats/heartbeat every 5 minutes
+		const interval = setInterval(fetchStats, 300000);
 		return () => clearInterval(interval);
 	}, [account]);
 
@@ -103,10 +114,12 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 					<div className="flex flex-col">
 						<h3 className="font-bold text-lg leading-tight">{account.name}</h3>
 						<span className="text-gray-500 text-xs">
-							Token: {account.token}
+							<span className="select-none">mt5ID: </span>
+							{account.mt5_id}
 						</span>
 						<span className="text-gray-500 text-xs">
-							mt5ID: {account.mt5_id}
+							<span className="select-none">Token: </span>
+							{account.token}
 						</span>
 					</div>
 				</div>

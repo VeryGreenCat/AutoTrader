@@ -39,10 +39,25 @@ const DashboardContent = () => {
 
 				// 1. Get all accounts
 				const accRes = await getAccountById(userId);
-				// console.log("accRes", accRes);
 				const userAccounts: MT5[] = accRes.data || [];
-				// console.log("userAccounts", userAccounts);
-				setAccounts(userAccounts);
+
+				// Check for status changes or account count changes to notify Navbar
+				// We use accounts state from closure - it will be the value from the last render
+				setAccounts((prevAccounts) => {
+					const hasChanged =
+						userAccounts.length !== prevAccounts.length ||
+						userAccounts.some((acc) => {
+							const existing = prevAccounts.find(
+								(a) => a.mt5_id === acc.mt5_id,
+							);
+							return existing && existing.status !== acc.status;
+						});
+
+					if (hasChanged && prevAccounts.length > 0) {
+						window.dispatchEvent(new CustomEvent("MT5_ACCOUNTS_UPDATED"));
+					}
+					return userAccounts;
+				});
 
 				// 2. Fetch stats and bots for each account in parallel
 				const statsPromises = userAccounts.map(async (acc) => {
@@ -95,7 +110,7 @@ const DashboardContent = () => {
 		};
 
 		fetchData();
-		const interval = setInterval(fetchData, 300000); // Poll every 5 minutes
+		const interval = setInterval(fetchData, 10000); // Poll every 10 seconds
 		return () => clearInterval(interval);
 	}, []);
 
