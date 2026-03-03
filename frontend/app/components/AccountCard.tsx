@@ -135,8 +135,8 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 								<>
 									$
 									{stats?.equity.toLocaleString(undefined, {
-										minimumFractionDigits: 0,
-										maximumFractionDigits: 0,
+										minimumFractionDigits: 2,
+										maximumFractionDigits: 2,
 									})}
 								</>
 							) : (
