@@ -145,12 +145,14 @@ func MT5Push(c *fiber.Ctx) error {
 	// 3. Store in-memory with timestamp
 	mu.Lock()
 	mt5StatsMap[req.MT5ID] = dto.MT5Stats{
-		MT5ID:         req.MT5ID,
-		Balance:       req.Balance,
-		Equity:        req.Equity,
-		RealizedToday: req.RealizedToday,
-		RealizedWeek:  req.RealizedWeek,
-		LastSeen:      time.Now(),
+		MT5ID:           req.MT5ID,
+		Balance:         req.Balance,
+		Equity:          req.Equity,
+		RealizedToday:   req.RealizedToday,
+		RealizedWeek:    req.RealizedWeek,
+		LastSeen:        time.Now(),
+		OpenPositions:   req.OpenPositions,
+		ClosedPositions: req.ClosedPositions,
 	}
 	mu.Unlock()
 

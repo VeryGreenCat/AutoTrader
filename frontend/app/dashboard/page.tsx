@@ -146,6 +146,23 @@ const DashboardContent = () => {
 		: [];
 	const activeBotsForSelected = selectedBots.filter((b) => b.status).length;
 
+	// Aggregate all active open positions for the All_ActivePosition component
+	const allActivePositions = accounts.flatMap((acc) => {
+		const stats = accountsStats[acc.mt5_id];
+		if (!stats || !stats.open_positions) return [];
+		return stats.open_positions.map((pos, idx) => ({
+			key: `${acc.mt5_id}-${idx}`,
+			pair: pos.pair,
+			account: acc.name,
+			type: pos.type as "BUY" | "SELL",
+			lot: pos.lot,
+			entry: pos.entry,
+			current: pos.current,
+			pl: pos.profit,
+			bot: "Manual",
+		}));
+	});
+
 	const initTradingView = () => {
 		if (typeof window !== "undefined" && window.TradingView) {
 			new window.TradingView.widget({
@@ -220,11 +237,11 @@ const DashboardContent = () => {
 			</div>
 			{/* below will be 1 card */}
 			{!accountParam ? (
-				<All_ActivePosition data={[]} />
+				<All_ActivePosition data={allActivePositions} />
 			) : (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
-					<ClosedPosition positions={[]} />
-					<OpenedPosition positions={[]} />
+					<ClosedPosition positions={selectedStats?.closed_positions || []} />
+					<OpenedPosition positions={selectedStats?.open_positions || []} />
 				</div>
 			)}
 		</section>

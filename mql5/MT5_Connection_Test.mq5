@@ -88,9 +88,57 @@ void PushData() {
         }
     }
 
+    // Last 10 Closed Deals
+    HistorySelect(0, TimeCurrent());
+    string json_closed = "[";
+    int count_closed = 0;
+    int total_deals = HistoryDealsTotal();
+    for (int i = total_deals - 1; i >= 0 && count_closed < 10; i--) {
+        ulong tick = HistoryDealGetTicket(i);
+        if (tick > 0 && HistoryDealGetInteger(tick, DEAL_ENTRY) == DEAL_ENTRY_OUT) {
+            string pair = HistoryDealGetString(tick, DEAL_SYMBOL);
+            string type = (HistoryDealGetInteger(tick, DEAL_TYPE) == DEAL_TYPE_BUY) ? "BUY" : "SELL";
+            double entry = HistoryDealGetDouble(tick, DEAL_PRICE);
+            double lot = HistoryDealGetDouble(tick, DEAL_VOLUME);
+            double profit = HistoryDealGetDouble(tick, DEAL_PROFIT) + HistoryDealGetDouble(tick, DEAL_SWAP) + HistoryDealGetDouble(tick, DEAL_COMMISSION);
+
+            if (count_closed > 0) json_closed += ",";
+            json_closed += StringFormat(
+                "{\"pair\":\"%s\",\"type\":\"%s\",\"entry\":%.5f,\"lot\":%.2f,\"profit\":%.2f}",
+                pair, type, entry, lot, profit
+            );
+            count_closed++;
+        }
+    }
+    json_closed += "]";
+
+    // Last 10 Open Positions
+    string json_open = "[";
+    int count_open = 0;
+    int total_open = PositionsTotal();
+    for (int i = total_open - 1; i >= 0 && count_open < 10; i--) {
+        ulong pkticket = PositionGetTicket(i);
+        if (pkticket > 0) {
+            string pair = PositionGetString(POSITION_SYMBOL);
+            string type = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY) ? "BUY" : "SELL";
+            double entry = PositionGetDouble(POSITION_PRICE_OPEN);
+            double current = PositionGetDouble(POSITION_PRICE_CURRENT);
+            double lot = PositionGetDouble(POSITION_VOLUME);
+            double profit = PositionGetDouble(POSITION_PROFIT);
+
+            if (count_open > 0) json_open += ",";
+            json_open += StringFormat(
+                "{\"pair\":\"%s\",\"type\":\"%s\",\"entry\":%.5f,\"current\":%.5f,\"lot\":%.2f,\"profit\":%.2f}",
+                pair, type, entry, current, lot, profit
+            );
+            count_open++;
+        }
+    }
+    json_open += "]";
+
     string json = StringFormat(
-        "{\"token\":\"%s\",\"mt5_id\":\"%I64d\",\"balance\":%.2f,\"equity\":%.2f,\"realized_today\":%.2f,\"realized_week\":%.2f}",
-        Token, mt5_id, balance, equity, realizedToday, realizedWeek
+        "{\"token\":\"%s\",\"mt5_id\":\"%I64d\",\"balance\":%.2f,\"equity\":%.2f,\"realized_today\":%.2f,\"realized_week\":%.2f,\"open_positions\":%s,\"closed_positions\":%s}",
+        Token, mt5_id, balance, equity, realizedToday, realizedWeek, json_open, json_closed
     );
     PostToServer("/metatrader/push", json);
 
