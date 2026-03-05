@@ -142,7 +142,7 @@ const DashboardContent = () => {
 		? accountsStats[selectedAccount.mt5_id]
 		: null;
 	const selectedBots = selectedAccount
-		? accountsBots[selectedAccount.mt5_id]
+		? accountsBots[selectedAccount.mt5_id] || []
 		: [];
 	const activeBotsForSelected = selectedBots.filter((b) => b.status).length;
 
@@ -226,7 +226,7 @@ const DashboardContent = () => {
 					/>
 				</div>
 				{accountParam ? (
-					<LlmLogic />
+					<LlmLogic bots={selectedBots} accountName={accountParam} />
 				) : (
 					<Portfolio
 						accounts={accounts}

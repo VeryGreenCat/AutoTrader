@@ -1,45 +1,59 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Clock } from "lucide-react";
+import { Select } from "antd";
+import { Bot } from "@/types/bot";
+import { getLLMTrans } from "@/services/llmTrans";
 
 interface FeedItem {
-	time: string;
-	message: string;
+	created: string;
+	logic: string;
 }
 
-const MOCK_DATA: FeedItem[] = [
-	{
-		time: "14:41",
-		message:
-			"Market sentiment analysis complete. Hawkish signal detected in recent central bank communications. Adjusting risk parameters for USD pairs.",
-	},
-	{
-		time: "15:02",
-		message:
-			"Technical pattern recognition identified potential RSI divergence on EUR/USD 1H timeframe. Monitoring for reversal confirmation.",
-	},
-	{
-		time: "15:45",
-		message:
-			"Correlation matrix updated. High sensitivity noted between JPY crosses and treasury yields. Optimization pass scheduled.",
-	},
-];
-
-const LlmLogic = ({ model_Id }: { model_Id?: string }) => {
+const LlmLogic = ({
+	bots = [],
+	accountName,
+}: {
+	bots?: Bot[];
+	accountName?: string;
+}) => {
 	const [feed, setFeed] = useState<FeedItem[]>([]);
-	const [loading, setLoading] = useState(true);
+	const [loading, setLoading] = useState(false);
+	const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null);
 
 	const VERSION = "v2.5.0";
-	const MODEL_NAME = model_Id || "Aura-Alpha-V2";
+
+	const activeBots = useMemo(() => bots.filter((b) => b.status), [bots]);
+
+	const currencyOptions = useMemo(() => {
+		const uniqueCurrencies = Array.from(
+			new Set(activeBots.map((b) => b.currency)),
+		);
+		return uniqueCurrencies.map((c) => ({
+			label: c.length === 6 ? `${c.slice(0, 3)}/${c.slice(3)}` : c,
+			value: c,
+		}));
+	}, [activeBots]);
+
+	useEffect(() => {
+		if (currencyOptions.length > 0 && !selectedCurrency) {
+			setSelectedCurrency(currencyOptions[0].value);
+		} else if (currencyOptions.length === 0) {
+			setSelectedCurrency(null);
+		}
+	}, [currencyOptions, selectedCurrency]);
 
 	useEffect(() => {
 		const fetchFeed = async () => {
+			if (!selectedCurrency) {
+				setFeed([]);
+				return;
+			}
 			setLoading(true);
 			try {
-				// Simulating API call
-				await new Promise((resolve) => setTimeout(resolve, 500));
-				setFeed(MOCK_DATA);
+				const result = await getLLMTrans(selectedCurrency);
+				setFeed(result.data || []);
 			} catch (error) {
 				console.error("Failed to fetch LLM logic:", error);
 			} finally {
@@ -48,37 +62,70 @@ const LlmLogic = ({ model_Id }: { model_Id?: string }) => {
 		};
 
 		fetchFeed();
-	}, [model_Id]);
+	}, [selectedCurrency]);
+
+	const selectDropdownStyle = {
+		backgroundColor: "#1a1a1a",
+		border: "1px solid #333",
+		color: "white",
+	};
 
 	return (
 		<div className="flex flex-col h-[450px] bg-[var(--color-card-background)] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
 			{/* Header */}
-			<div className="px-5 py-4 border-b border-white/10 bg-white/[0.03]">
+			<div className="px-5 py-4 border-b border-white/10 bg-white/[0.03] flex justify-between items-center">
 				<h3 className="text-[11px] font-bold uppercase tracking-[0.25em] text-white">
 					LLM Logic Feed
 				</h3>
+				{currencyOptions.length > 0 && (
+					<Select
+						className="w-32 h-8"
+						placeholder="Currency"
+						value={selectedCurrency}
+						onChange={(val) => setSelectedCurrency(val)}
+						options={currencyOptions}
+						classNames={{ popup: { root: "dark-select-dropdown" } }}
+						styles={{ popup: { root: selectDropdownStyle } }}
+					/>
+				)}
 			</div>
 
 			{/* Main Content */}
 			<div className="flex-1 overflow-y-auto p-5 space-y-7">
-				{loading ? (
+				{activeBots.length === 0 ? (
+					<div className="h-full flex items-center justify-center">
+						<span className="text-gray-500 font-mono text-sm tracking-widest uppercase">
+							no bot is working..
+						</span>
+					</div>
+				) : loading ? (
 					<div className="h-full flex items-center justify-center">
 						<div className="w-5 h-5 border-2 border-white/10 border-t-[#00FFA3] rounded-full animate-spin"></div>
 					</div>
+				) : feed.length === 0 ? (
+					<div className="h-full flex items-center justify-center">
+						<span className="text-gray-500 font-mono text-sm tracking-widest uppercase">
+							No logic updates yet
+						</span>
+					</div>
 				) : (
-					feed.map((item, i) => (
-						<div key={i} className="flex gap-4 items-start group">
-							<div className="flex items-center gap-1.5 text-gray-300 mt-1 shrink-0">
-								<Clock className="w-3.5 h-3.5 opacity-60" />
-								<span className="text-[11px] font-mono tabular-nums tracking-tight font-bold">
-									{item.time}
-								</span>
+					feed.map((item, i) => {
+						const date = new Date(item.created);
+						const timeString = `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+						return (
+							<div key={i} className="flex gap-4 items-start group">
+								<div className="flex items-center gap-1.5 text-gray-300 mt-1 shrink-0">
+									<Clock className="w-3.5 h-3.5 opacity-60" />
+									<span className="text-[11px] font-mono tabular-nums tracking-tight font-bold">
+										{timeString}
+									</span>
+								</div>
+								<p className="text-[14px] leading-relaxed text-white font-medium group-hover:text-[#00FFA3] transition-colors">
+									{item.logic}
+								</p>
 							</div>
-							<p className="text-[14px] leading-relaxed text-white font-medium group-hover:text-[#00FFA3] transition-colors">
-								{item.message}
-							</p>
-						</div>
-					))
+						);
+					})
 				)}
 			</div>
 
@@ -90,7 +137,9 @@ const LlmLogic = ({ model_Id }: { model_Id?: string }) => {
 							Processing Model
 						</span>
 						<span className="text-[11px] text-[#00FFA3] font-semibold tracking-wide">
-							{MODEL_NAME}
+							{selectedCurrency
+								? `Aura-Alpha-V2 (${selectedCurrency})`
+								: "Aura-Alpha-V2"}
 						</span>
 					</div>
 				</div>
