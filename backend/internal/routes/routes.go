@@ -26,4 +26,5 @@ func RegisterAllRoutes(app *fiber.App) {
     BillingRoutes(apiPrivate)
     TransactionRoute(apiPrivate)
     LLMTransRoutes(apiPrivate)
+    TradeRoutes(apiPrivate)
 }

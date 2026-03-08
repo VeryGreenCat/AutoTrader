@@ -13,3 +13,7 @@ func GetLLMTrans(currency string) ([]models.LLMTrans, error) {
 	}
 	return trans, nil
 }
+
+func SaveLLMTrans(trans *models.LLMTrans) error {
+	return config.DB.Create(trans).Error
+}

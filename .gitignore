@@ -28,5 +28,7 @@ tmp/
 .DS_Store
 .vscode/
 .idea/
+# temporary disable the bot commit
+backend/bot 
 
 README.md

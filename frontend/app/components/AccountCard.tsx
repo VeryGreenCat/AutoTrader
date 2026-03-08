@@ -77,6 +77,8 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 						realized_today: res.data.realized_today,
 						realized_week: res.data.realized_week,
 						is_connected: res.is_connected,
+						open_positions: res.data.open_positions || [],
+						closed_positions: res.data.closed_positions || [],
 					});
 				}
 			} catch (error) {

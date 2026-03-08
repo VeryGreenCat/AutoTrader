@@ -13,6 +13,7 @@ import (
 	"github.com/stripe/stripe-go/v76/webhook"
 )
 
+// stripe listen --forward-to localhost:5000/api/webhook
 func StripeWebhookHandler(c *fiber.Ctx) error {
     webhookSecret := os.Getenv("STRIPE_WEBHOOK_SECRET")
 
