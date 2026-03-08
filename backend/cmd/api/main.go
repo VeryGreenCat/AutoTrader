@@ -25,7 +25,7 @@ func main() {
 	
 	// sets up security rules 
 	app.Use(cors.New(cors.Config{
-    AllowOrigins:     "http://localhost:3000", // add your prod URL later e.g. "https://yourapp.com"
+    AllowOrigins:     "https://autotrader-vd84.onrender.com", // add your prod URL later e.g. "https://yourapp.com"
     AllowCredentials: false,
     AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
     AllowMethods:     "GET, POST, PUT, DELETE, PATCH, OPTIONS",

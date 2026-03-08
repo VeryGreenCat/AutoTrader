@@ -26,6 +26,9 @@ const AuthModal = ({ open, setOpen, mode, setMode }: AuthModalProps) => {
 			provider: "google",
 			options: {
 				redirectTo: `${window.location.origin}/auth/callback`,
+				queryParams: {
+					prompt: "select_account",
+				},
 			},
 		});
 
