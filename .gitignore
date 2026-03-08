@@ -23,12 +23,29 @@ vendor/
 # Go Air (hot reload) temporary files
 tmp/
 
+# --- MQL5 ---
+mql5/*.ex5
+mql5/*.ex4
+
+# --- Python Bot ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+backend/bot/venv/
+backend/bot/models/
+backend/bot/tuned_embed_visual_model/
+backend/bot/pattern_embeddings.npz
+.ipynb_checkpoints/
+*.log
+
 # --- General ---
 .env
 .DS_Store
 .vscode/
 .idea/
-# temporary disable the bot commit
-backend/bot 
-
+*.swp
+*.bak
 README.md

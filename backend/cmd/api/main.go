@@ -6,6 +6,8 @@ package main
 import (
 	"log"
 
+	"os"
+
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/config"
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/middleware"
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/routes"
@@ -23,13 +25,18 @@ func main() {
 
 	app := fiber.New()
 	
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:3000"
+	}
+
 	// sets up security rules 
 	app.Use(cors.New(cors.Config{
-    AllowOrigins:     "https://autotrader-vd84.onrender.com", // add your prod URL later e.g. "https://yourapp.com"
-    AllowCredentials: false,
-    AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-    AllowMethods:     "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-}))
+		AllowOrigins:     frontendURL,
+		AllowCredentials: true,
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowMethods:     "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+	}))
 	
 	config.ConnectDB()
 

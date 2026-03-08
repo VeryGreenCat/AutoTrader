@@ -5,8 +5,8 @@ import (
 )
 
 type LLMTrans struct {
-    LLMID          string     `json:"llm_id" gorm:"primaryKey;column:llm_id"`
-    Created        time.Time  `json:"created" gorm:"column:created"`
+    LLMID          string     `json:"llm_id" gorm:"primaryKey;column:llm_id;default:uuid_generate_v4()"`
+    Created        time.Time  `json:"created" gorm:"column:created;default:now();autoCreateTime"`
     Logic          string     `json:"logic" gorm:"column:logic"`
     Currency       string     `json:"currency" gorm:"column:currency"`
     BiasScore      float64   `json:"bias_score" gorm:"column:bias_score"`

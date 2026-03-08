@@ -65,7 +65,7 @@ export default function VerifyOTP({
 		setError("");
 		setCode("");
 		setCanResend(false);
-		setTimeLeft(60); // Reset timer to 60s
+		setTimeLeft(30); // Reset timer to 30s
 
 		const {
 			data: { user },

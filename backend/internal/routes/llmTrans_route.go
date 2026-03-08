@@ -8,6 +8,6 @@ import (
 func LLMTransRoutes(router fiber.Router) {
 	llmTransRoutes := router.Group("/llmTrans")
 
-	llmTransRoutes.Get("/", handlers.GetLLMTrans)
-	llmTransRoutes.Post("/", handlers.PostLLMTrans)
+	llmTransRoutes.Get("/getLLMTrans", handlers.GetLLMTrans)
+	llmTransRoutes.Post("/postLLMTrans", handlers.PostLLMTrans)
 }
