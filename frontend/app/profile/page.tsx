@@ -82,7 +82,7 @@ export default function ProfilePage() {
 							</div>
 							<div>
 								<p className="text-[10px] text-gray-500 uppercase tracking-widest">
-									Last Login
+									Created On
 								</p>
 								<p className="font-mono text-sm text-gray-300">
 									{profile.last_sign_in

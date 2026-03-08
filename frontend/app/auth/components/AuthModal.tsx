@@ -64,7 +64,7 @@ const AuthModal = ({ open, setOpen, mode, setMode }: AuthModalProps) => {
 					password: formData.password,
 				});
 				if (error) throw error;
-				message.success("Account Initialized");
+				message.success("Account created");
 			}
 			window.location.href = `${window.location.origin}/auth/callback`;
 			handleCancel();
@@ -163,7 +163,7 @@ const AuthModal = ({ open, setOpen, mode, setMode }: AuthModalProps) => {
 								onClick={() => setMode("signup")}
 								className="text-[#00FFA3] font-bold hover:underline ml-1 outline-none cursor-pointer"
 							>
-								Claim Tickets
+								Sign Up Now
 							</button>
 						</p>
 					</div>
@@ -266,7 +266,7 @@ const AuthModal = ({ open, setOpen, mode, setMode }: AuthModalProps) => {
 							{loading ? (
 								<span className="animate-pulse">Processing...</span>
 							) : (
-								"Initialize Account"
+								"Create Account"
 							)}
 						</button>
 

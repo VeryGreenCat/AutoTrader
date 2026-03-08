@@ -201,7 +201,7 @@ export default function Home() {
 							onClick={() => setOpenModal(true)}
 							className="bg-[#00FFA3] text-black font-bold px-8 py-4 rounded-xl hover:scale-105 transition shadow-[0_0_30px_rgba(0,255,163,0.3)] hover:shadow-[0_0_50px_rgba(0,255,163,0.5)] flex items-center gap-2 uppercase tracking-wide cursor-pointer"
 						>
-							Claim 10 Free Tickets
+							Sign Up for 10 Free Tickets
 							<ArrowRight className="w-5 h-5" />
 						</button>
 					</div>
