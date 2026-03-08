@@ -309,7 +309,9 @@ export default function Navbar() {
 					{/* PROFILE DROPDOWN AREA */}
 					<div className="relative group">
 						{/* Avatar Trigger */}
-						<div className="w-10 h-10 rounded-full bg-linear-to-tr from-emerald-400 to-blue-500 border-2 border-white/10 cursor-pointer hover:scale-105 transition shadow-[0_0_15px_rgba(0,255,163,0.2)]"></div>
+						<div className="w-10 h-10 rounded-full bg-linear-to-tr from-emerald-400 to-blue-500 border-2 border-white/10 cursor-pointer hover:scale-105 transition shadow-[0_0_15px_rgba(0,255,163,0.2)] flex items-center justify-center">
+							<User className="w-5 h-5 text-white/90" />
+						</div>
 
 						{/* Dropdown Menu (Visible on Group Hover) */}
 						<div className="absolute right-0 top-full pt-4 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2">

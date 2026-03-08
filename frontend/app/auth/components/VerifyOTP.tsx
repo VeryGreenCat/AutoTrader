@@ -110,7 +110,7 @@ export default function VerifyOTP({
 				sessionStorage.setItem("otp_verified", "true");
 				localStorage.setItem("user_id", user.id);
 			}
-			router.push("/dashboard");
+			router.push("/bots");
 			router.refresh();
 			setOpen(false);
 		}
