@@ -14,36 +14,30 @@ def load_model(model_path):
         print(f"Error loading PPO model: {e}")
         return None
 
-def predict_action(model, features_df):
+def predict_action(model, features_df, window_size=60):
     """
-    Predict an action given the engineered features.
-    
-    Returns:
-        action: The predicted action (e.g., 0=Hold, 1=Buy, 2=Sell)
-        confidence: A placeholder for confidence (SB3 PPO doesn't provide it directly without extra steps)
+    Predict an action given the last 'window_size' bars of features.
     """
     if model is None:
         return 0, 0.0
 
-    # Ensure we only use the last row for the latest prediction
-    latest_features = features_df.iloc[-1:].values
+    # Ensure we have enough data for the window
+    if len(features_df) < window_size:
+        print(f"Not enough data for prediction (have {len(features_df)}, need {window_size})")
+        return 0, 0.0
+
+    # Extract the window (e.g. 60, 17)
+    window_features = features_df.iloc[-window_size:].values
     
-    action, _states = model.predict(latest_features, deterministic=True)
+    # SB3 needs (window_size, num_features)
+    action, _states = model.predict(window_features, deterministic=True)
     
-    # SB3 PPO returns an array/scalar depending on the number of envs. 
-    # Usually it's a numpy array with one element if flattened.
-    if isinstance(action, (np.ndarray, list)):
-        action = int(action[0])
-    else:
-        action = int(action)
+    # SB3 predict returns either a scalar or an array depending on environment/input
+    # Using np.asarray(action).flatten() handles any nesting or scalar types
+    action = int(np.asarray(action).flatten()[0])
 
     return action, 1.0  # Returning 1.0 confidence as a placeholder
 
-# model = PPO.load("ppo.zip")
 
 
-if __name__ == "__main__":
-    model = load_model("ppo.zip")
-    print(model.observation_space)   # tells you shape and bounds
-    print(model.action_space)        # tells you output format
-    print(model.policy)              # full policy architecture
+  

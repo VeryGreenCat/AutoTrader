@@ -10,3 +10,9 @@ func ModelRoutes(router fiber.Router) {
 
 	modelRoutes.Get("/available-models", handlers.GetAvailableModels)
 }
+
+func InternalModelRoutes(router fiber.Router) {
+	modelRoutes := router.Group("/models")
+
+	modelRoutes.Post("/register", handlers.RegisterModel)
+}

@@ -6,12 +6,11 @@ import (
 )
 
 func MetatraderRoutes(router fiber.Router) {
-	metatraderRoutes := router.Group("/metatrader")
+	metatrader := router.Group("/metatrader")
 
-	metatraderRoutes.Post("/connect", handlers.MT5Connect)
-	metatraderRoutes.Post("/push", handlers.MT5Push)
-	metatraderRoutes.Get("/stats/:mt5_id", handlers.GetMT5Stats)
-	metatraderRoutes.Get("/signal", func(c *fiber.Ctx) error {
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{"signal": "none"})
-	})
+	metatrader.Post("/connect", handlers.MT5Connect)
+	metatrader.Post("/push", handlers.MT5Push)
+	metatrader.Get("/signal", handlers.GetMT5Signal)
+	metatrader.Get("/stats/:mt5_id", handlers.GetMT5Stats)
+	metatrader.Get("/bot-states", handlers.GetActiveBotStates) // New internal state fetcher
 }

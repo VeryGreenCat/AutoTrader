@@ -17,9 +17,10 @@ func RegisterAllRoutes(app *fiber.App) {
     MetatraderRoutes(apiPublic)
 
     // Bot/Internal routes (Auth via Secret Key)
-    apiInternal := app.Group("/api", middleware.InternalAuthMiddleware)
-    LLMTransRoutes(apiInternal)
+    apiInternal := app.Group("/api/internal", middleware.InternalAuthMiddleware)
+    LLMTransInternalRoutes(apiInternal)
     TradeRoutes(apiInternal)
+    InternalModelRoutes(apiInternal)
 
     // Private routes (with AuthMiddleware)
     apiPrivate := app.Group("/api", middleware.AuthMiddleware)
@@ -30,4 +31,5 @@ func RegisterAllRoutes(app *fiber.App) {
     PaymentRoutes(apiPrivate)
     BillingRoutes(apiPrivate)
     TransactionRoute(apiPrivate)
+    LLMTransPrivateRoutes(apiPrivate)
 }

@@ -209,16 +209,21 @@ NEUTRAL_DEFAULTS = {
 
 
 def validate_llm_output(data: dict) -> dict:
+  required_keys = ["bias_score", "confidence", "volatility", "trend_strength", "momentum", "skip_flag", "reasoning"]
+  for key in required_keys:
+    if key not in data:
+      raise ValueError(f"Missing required field: {key}")
+
   return {
-    "bias_score": max(-1.0, min(1.0, float(data.get("bias_score", 0.0)))),
-    "confidence": max(0.0, min(100.0, float(data.get("confidence", 50.0)))),
+    "bias_score": max(-1.0, min(1.0, float(data["bias_score"]))),
+    "confidence": max(0.0, min(100.0, float(data["confidence"]))),
     "volatility": (
-      int(data.get("volatility", 1)) if data.get("volatility") in [0, 1, 2] else 1
+      int(data["volatility"]) if data["volatility"] in [0, 1, 2] else 1
     ),
-    "trend_strength": max(0.0, min(1.0, float(data.get("trend_strength", 0.5)))),
-    "momentum": max(-1.0, min(1.0, float(data.get("momentum", 0.0)))),
-    "skip_flag": int(bool(data.get("skip_flag", 0))),
-    "reasoning": str(data.get("reasoning", "No reasoning provided.")),
+    "trend_strength": max(0.0, min(1.0, float(data["trend_strength"]))),
+    "momentum": max(-1.0, min(1.0, float(data["momentum"]))),
+    "skip_flag": int(bool(data["skip_flag"])),
+    "reasoning": str(data["reasoning"]),
   }
 
 
@@ -238,7 +243,7 @@ def build_prompt(info: str) -> str:
     "volatility":     <int 0=low 1=medium 2=high | based on candle body sizes and wick lengths>,
     "trend_strength": <float 0.0 to 1.0 | 0=choppy/ranging, 1=strong clean trend>,
     "momentum":       <float -1.0 to 1.0 | -1=strong selling pressure, 1=strong buying pressure>,
-    "skip_flag":      <int 0=tradeable, 1=avoid this window>
+    "skip_flag":      <int 0=tradeable, 1=avoid this window>,
     "reasoning":      <string | explain your reasoning in 1-2 sentences>
   }}
 

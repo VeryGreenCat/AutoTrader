@@ -38,7 +38,10 @@ string GetFromServer(string endpoint) {
     char post[], result[];
     string headers;
 
-    int res = WebRequest("GET", ServerURL + endpoint + "?token=" + Token, "", 5000, post, result, headers);
+    string separator = (StringFind(endpoint, "?") >= 0) ? "&" : "?";
+    string url = ServerURL + endpoint + separator + "token=" + Token;
+
+    int res = WebRequest("GET", url, "", 5000, post, result, headers);
 
     if (res == -1) {
         Print("GET failed. Error: ", GetLastError());
@@ -47,6 +50,10 @@ string GetFromServer(string endpoint) {
 
     return CharArrayToString(result, 0, WHOLE_ARRAY, CP_UTF8);
 }
+
+#include <Trade\Trade.mqh>
+
+CTrade ExtTrade;
 
 //+------------------------------------------------------------------+
 //| Push live account data to backend                                |
@@ -96,6 +103,7 @@ void PushData() {
     for (int i = total_deals - 1; i >= 0 && count_closed < 10; i--) {
         ulong tick = HistoryDealGetTicket(i);
         if (tick > 0 && HistoryDealGetInteger(tick, DEAL_ENTRY) == DEAL_ENTRY_OUT) {
+            long ticket_id = HistoryDealGetInteger(tick, DEAL_POSITION_ID); // Use position ID as common link
             string pair = HistoryDealGetString(tick, DEAL_SYMBOL);
             string type = (HistoryDealGetInteger(tick, DEAL_TYPE) == DEAL_TYPE_BUY) ? "BUY" : "SELL";
             double entry = HistoryDealGetDouble(tick, DEAL_PRICE);
@@ -104,8 +112,8 @@ void PushData() {
 
             if (count_closed > 0) json_closed += ",";
             json_closed += StringFormat(
-                "{\"pair\":\"%s\",\"type\":\"%s\",\"entry\":%.5f,\"lot\":%.2f,\"profit\":%.2f}",
-                pair, type, entry, lot, profit
+                "{\"ticket\":%I64d,\"pair\":\"%s\",\"type\":\"%s\",\"entry\":%.5f,\"lot\":%.2f,\"profit\":%.2f}",
+                ticket_id, pair, type, entry, lot, profit
             );
             count_closed++;
         }
@@ -119,6 +127,7 @@ void PushData() {
     for (int i = total_open - 1; i >= 0 && count_open < 10; i--) {
         ulong pkticket = PositionGetTicket(i);
         if (pkticket > 0) {
+            long ticket_id = PositionGetInteger(POSITION_TICKET);
             string pair = PositionGetString(POSITION_SYMBOL);
             string type = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY) ? "BUY" : "SELL";
             double entry = PositionGetDouble(POSITION_PRICE_OPEN);
@@ -128,8 +137,8 @@ void PushData() {
 
             if (count_open > 0) json_open += ",";
             json_open += StringFormat(
-                "{\"pair\":\"%s\",\"type\":\"%s\",\"entry\":%.5f,\"current\":%.5f,\"lot\":%.2f,\"profit\":%.2f}",
-                pair, type, entry, current, lot, profit
+                "{\"ticket\":%I64d,\"pair\":\"%s\",\"type\":\"%s\",\"entry\":%.5f,\"current\":%.5f,\"lot\":%.2f,\"profit\":%.2f}",
+                ticket_id, pair, type, entry, current, lot, profit
             );
             count_open++;
         }
@@ -145,14 +154,66 @@ void PushData() {
 }
 
 //+------------------------------------------------------------------+
+//| Close all positions for current symbol                           |
+//+------------------------------------------------------------------+
+void CloseAllPositions() {
+    for (int i = PositionsTotal() - 1; i >= 0; i--) {
+        if (PositionGetSymbol(i) == _Symbol) {
+            ulong ticket = PositionGetTicket(i);
+            ExtTrade.PositionClose(ticket);
+        }
+    }
+}
+
+//+------------------------------------------------------------------+
+//| Close all positions for current symbol that are NOT of certain type |
+//+------------------------------------------------------------------+
+void CloseOppositePositions(ENUM_POSITION_TYPE typeToKeep) {
+    for (int i = PositionsTotal() - 1; i >= 0; i--) {
+        if (PositionGetSymbol(i) == _Symbol) {
+            if (PositionGetInteger(POSITION_TYPE) != typeToKeep) {
+                ulong ticket = PositionGetTicket(i);
+                ExtTrade.PositionClose(ticket);
+            }
+        }
+    }
+}
+
+//+------------------------------------------------------------------+
 //| Ask backend if there's a pending trade signal                    |
 //+------------------------------------------------------------------+
 void FetchSignals() {
-    string response = GetFromServer("/metatrader/signal");
-    if (response == "") return;
+    long mt5_id = AccountInfoInteger(ACCOUNT_LOGIN);
+    string endpoint = StringFormat("/metatrader/signal?mt5_id=%I64d", mt5_id);
+    string response = GetFromServer(endpoint);
+    if (response == "" || StringFind(response, "\"signal\":\"HOLD\"") >= 0) return;
 
-    // TODO: parse response and execute trade
-    Print("Fetched Signal received: ", response);
+    Print("Fetched Signal response: ", response);
+    
+    if (StringFind(response, "\"signal\":\"BUY\"") >= 0) {
+        Print("🚀 SIGNAL RECEIVED: BUY. Closing opposite and opening Long...");
+        CloseOppositePositions(POSITION_TYPE_BUY);
+        
+        // Only open if we don't have a buy already
+        if (PositionsTotal() == 0 || (PositionSelect(_Symbol) && PositionGetInteger(POSITION_TYPE) != POSITION_TYPE_BUY)) {
+            double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+            ExtTrade.Buy(0.1, _Symbol, ask, 0, 0, "AutoTrader PPO Buy");
+        }
+    } 
+    else if (StringFind(response, "\"signal\":\"SELL\"") >= 0) {
+        Print("🚀 SIGNAL RECEIVED: SELL. Closing opposite and opening Short...");
+        CloseOppositePositions(POSITION_TYPE_SELL);
+        
+        // Only open if we don't have a sell already
+        if (PositionsTotal() == 0 || (PositionSelect(_Symbol) && PositionGetInteger(POSITION_TYPE) != POSITION_TYPE_SELL)) {
+            double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+            ExtTrade.Sell(0.1, _Symbol, bid, 0, 0, "AutoTrader PPO Sell");
+        }
+    }
+    else if (StringFind(response, "\"signal\":\"CLOSE\"") >= 0) {
+        Print("🚀 SIGNAL RECEIVED: CLOSE. Closing all to stay neutral...");
+        CloseAllPositions();
+    }
 }
 //+------------------------------------------------------------------+
 //| Function                                                         |

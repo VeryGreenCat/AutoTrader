@@ -33,7 +33,7 @@ func main() {
 	// sets up security rules 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     frontendURL,
-		AllowCredentials: true,
+		AllowCredentials: false,
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowMethods:     "GET, POST, PUT, DELETE, PATCH, OPTIONS",
 	}))

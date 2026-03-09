@@ -1,3 +1,7 @@
+import pandas as pd
+import numpy as np
+import pandas_ta as ta
+
 # ── PRICE ACTION ─────────────────────────────────────────────────────────────
 def add_price_features(df):
     df = df.copy()
@@ -188,41 +192,102 @@ def add_llm_features(df):
         ]
     )
     return df
-
+# above func is not used in currnet pipeline
 # ── PIPELINE ──────────────────────────────────────────────────────────────────
 def run_feature_pipeline(df):
-    print("Adding price features...")
-    df = add_price_features(df)
+    # Ensure any trailing spaces in headers are stripped
+    df.columns = df.columns.str.strip()
 
-    print("Adding trend features...")
-    df = add_trend_features(df)
+    # If 'datetime' exists (from mt5_connector), ensure it's the index
+    if "datetime" in df.columns:
+        if not isinstance(df.index, pd.DatetimeIndex):
+            df["datetime"] = pd.to_datetime(df["datetime"])
+            df = df.set_index("datetime")
+    elif "Time (EET)" in df.columns: # Support for CSV fallback if needed
+        df = df.set_index("Time (EET)")
+    
+    df.sort_index(inplace=True)
 
-    print("Adding momentum features...")
-    df = add_momentum_features(df)
+    # Ensure numeric for indicators
+    for col in ["Open", "High", "Low", "Close", "Volume"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    print("Adding volatility features...")
-    df = add_volatility_features(df)
+    # ---- Technicals ----
+    # RSI and ATR (already scale-invariant-ish)
+    df["rsi_14"] = ta.rsi(df["Close"], length=14)
+    df["atr_14"] = ta.atr(df["High"], df["Low"], df["Close"], length=14)
 
-    print("Adding volume features...")
-    df = add_volume_features(df)
+    # Moving averages
+    df["ma_20"] = ta.sma(df["Close"], length=20)
+    df["ma_50"] = ta.sma(df["Close"], length=50)
 
-    print("Adding market structure features...")
-    df = add_structure_features(df)
+    # Slopes of the MAs
+    df["ma_20_slope"] = df["ma_20"].diff()
+    df["ma_50_slope"] = df["ma_50"].diff()
 
-    print("Adding session features...")
-    df = add_session_features(df)
+    # Distance of price from each MA (relative level)
+    df["close_ma20_diff"] = df["Close"] - df["ma_20"]
+    df["close_ma50_diff"] = df["Close"] - df["ma_50"]
 
-    print("Normalising LLM features...")
-    df = add_llm_features(df)
+    # MA divergence: MA20 vs MA50
+    df["ma_spread"] = df["ma_20"] - df["ma_50"]
+    df["ma_spread_slope"] = df["ma_spread"].diff()
 
-    # drop helper columns not needed in observation space
-    df = df.drop(columns=["ema_8", "ema_21", "ema_50", "ema_200", "atr_14", "atr_6"])
+    # Drop initial NaNs from indicators
+    df.dropna(inplace=True)
 
-    # drop warmup rows (ema_200 needs 200 bars to stabilise)
-    df = df.iloc[200:].reset_index(drop=True)
+    # Columns the AGENT should see (no raw price levels / raw MAs)
+    feature_cols = [
+        "rsi_14",
+        "atr_14",
+        "ma_20_slope",
+        "ma_50_slope",
+        "close_ma20_diff",
+        "close_ma50_diff",
+        "ma_spread",
+        "ma_spread_slope",
+        "bias_score",
+        "confidence",
+        "volatility",
+        "trend_strength",
+        "momentum",
+        "skip_flag",
+    ]
 
-    df = df.replace([np.inf, -np.inf], np.nan)
-    df = df.ffill().fillna(0)
+    return df, feature_cols
+    # print("Adding price features...")
+    # df = add_price_features(df)
 
-    print(f"\nDone! Shape: {df.shape}")
-    return df    
+    # print("Adding trend features...")
+    # df = add_trend_features(df)
+
+    # print("Adding momentum features...")
+    # df = add_momentum_features(df)
+
+    # print("Adding volatility features...")
+    # df = add_volatility_features(df)
+
+    # print("Adding volume features...")
+    # df = add_volume_features(df)
+
+    # print("Adding market structure features...")
+    # df = add_structure_features(df)
+
+    # print("Adding session features...")
+    # df = add_session_features(df)
+
+    # print("Normalising LLM features...")
+    # df = add_llm_features(df)
+
+    # # drop helper columns not needed in observation space
+    # df = df.drop(columns=["ema_8", "ema_21", "ema_50", "ema_200", "atr_14", "atr_6"])
+
+    # # drop warmup rows (ema_200 needs 200 bars to stabilise)
+    # df = df.iloc[200:].reset_index(drop=True)
+
+    # df = df.replace([np.inf, -np.inf], np.nan)
+    # df = df.ffill().fillna(0)
+
+    # print(f"\nDone! Shape: {df.shape}")
+    # return df    

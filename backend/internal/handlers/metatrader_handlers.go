@@ -14,6 +14,39 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// GetMT5Signal checks if there is a pending signal for the MT5 account
+func GetMT5Signal(c *fiber.Ctx) error {
+	mt5Id := c.Query("mt5_id")
+	token := c.Query("token")
+
+	if mt5Id == "" || token == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "mt5_id and token are required",
+		})
+	}
+
+	// 1. Verify account and token
+	account, err := services.GetAccountByMT5Id(mt5Id)
+	if err != nil || account.Token != token {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Invalid credentials",
+		})
+	}
+
+	// 2. Get pending signal
+	action, exists := services.GetPendingSignal(mt5Id)
+	
+	if !exists {
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"signal": "HOLD",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"signal": action,
+	})
+}
+
 // In-memory stats storage as requested (temporary, not in DB)
 var (
 	mt5StatsMap = make(map[string]dto.MT5Stats)
@@ -158,8 +191,55 @@ func MT5Push(c *fiber.Ctx) error {
 
 
 
+	// 4. Update Transactions in DB
+	for _, pos := range req.OpenPositions {
+		var trans models.Transaction
+		// Use ticket as transaction ID (string)
+		transID := fmt.Sprintf("%d", pos.Ticket)
+		
+		if err := config.DB.Where("transaction_id = ?", transID).First(&trans).Error; err != nil {
+			// Transaction doesn't exist, create it
+			// 1. Find the bot responsible for this pair
+			var bot models.Bot
+			// This query joins Bot and Model to find the bot that matches MT5ID and Currency
+			err := config.DB.Table("Bot").
+				Select("Bot.bot_id").
+				Joins("JOIN Model ON Bot.model_id = Model.model_id").
+				Where("Bot.mt5_id = ? AND Model.currency = ?", req.MT5ID, pos.Pair).
+				First(&bot).Error
+			
+			if err == nil {
+				now := time.Now()
+				newTrans := models.Transaction{
+					TransactionID: transID,
+					MT5ID:         req.MT5ID,
+					Created:       &now,
+					PNL:           0,
+					BotID:         bot.BotID,
+					TradeType:     &pos.Type,
+					UserID:        account.UserID,
+				}
+				config.DB.Create(&newTrans)
+				fmt.Printf("Created new transaction %s for MT5 %s\n", transID, req.MT5ID)
+			}
+		}
+	}
+
+	for _, pos := range req.ClosedPositions {
+		var trans models.Transaction
+		transID := fmt.Sprintf("%d", pos.Ticket)
+		if err := config.DB.Where("transaction_id = ?", transID).First(&trans).Error; err == nil {
+			// Update PNL if it's currently 0 or different
+			if trans.PNL == 0 && pos.Profit != 0 {
+				trans.PNL = pos.Profit
+				config.DB.Save(&trans)
+				fmt.Printf("Updated transaction %s with PNL %.2f\n", transID, pos.Profit)
+			}
+		}
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Stats updated successfully",
+		"message": "Stats and transactions updated successfully",
 	})
 }
 
@@ -217,3 +297,49 @@ func RefreshAccountsStatus(accounts []models.MT5) {
 
 
 
+// GetActiveBotStates returns the latest states of all online accounts using a specific bot model.
+// This is used by the Python bot to perform personalized RL predictions.
+func GetActiveBotStates(c *fiber.Ctx) error {
+	currency := c.Query("currency")
+	version := c.Query("version")
+
+	if currency == "" || version == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "currency and version are required",
+		})
+	}
+
+	// 1. Find all active bots (in DB) using this model
+	var bots []models.Bot
+	// Using GORM's Model() to handle table names and Joins correctly
+	err := config.DB.Model(&models.Bot{}).
+		Joins(`JOIN "Model" ON "Bot".model_id = "Model".model_id`).
+		Where(`"Model".currency = ? AND "Model".version = ? AND "Bot".status = ?`, currency, version, true).
+		Find(&bots).Error
+
+	if err != nil {
+		fmt.Printf("[ERROR] GetActiveBotStates DB Query: %v\n", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Database query failed",
+			"details": err.Error(),
+		})
+	}
+
+	fmt.Printf("[INFO] GetActiveBotStates: Found %d active bots in DB for %s %s\n", len(bots), currency, version)
+
+	// 2. Filter by online status (in memory) and build list
+	results := []dto.MT5Stats{}
+	mu.RLock()
+	for _, b := range bots {
+		stats, exists := mt5StatsMap[b.MT5ID]
+		// Threshold for online: 5 minutes
+		if exists && time.Since(stats.LastSeen) < 5*time.Minute {
+			results = append(results, stats)
+		}
+	}
+	mu.RUnlock()
+
+	return c.JSON(fiber.Map{
+		"data": results,
+	})
+}

@@ -3,6 +3,7 @@ package dto
 import "time"
 
 type OpenPositionDTO struct {
+	Ticket  int64   `json:"ticket"`
 	Pair    string  `json:"pair"`
 	Type    string  `json:"type"`
 	Entry   float64 `json:"entry"`
@@ -12,6 +13,7 @@ type OpenPositionDTO struct {
 }
 
 type ClosedPositionDTO struct {
+	Ticket  int64   `json:"ticket"`
 	Pair    string  `json:"pair"`
 	Type    string  `json:"type"`
 	Entry   float64 `json:"entry"`

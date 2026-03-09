@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"fmt"
+
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/handlers/dto"
+	"github.com/VeryGreenCat/AutoTrader/backend/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -16,17 +19,22 @@ func HandleBotSignal(c *fiber.Ctx) error {
 	}
 
 	// Basic validation could go here if not using a validator middleware
-	if payload.Action != "BUY" && payload.Action != "SELL" && payload.Action != "HOLD" {
+	if payload.Action != "BUY" && payload.Action != "SELL" && payload.Action != "HOLD" && payload.Action != "CLOSE" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid action, must be BUY, SELL, or HOLD",
+			"error": "Invalid action, must be BUY, SELL, HOLD, or CLOSE",
 		})
 	}
 
-	// TODO: Pass the payload to a trade_services.go function to distribute
-	// the signal to active, connected users.
+	// call trade services
+	count, err := services.ProcessSignalDistribution(payload.Currency, payload.Version, payload.Action, payload.MT5ID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
 	
 	return c.JSON(fiber.Map{
-		"message": "Signal received successfully",
-		"data": payload,
+		"message": fmt.Sprintf("Signal processed for %d active bots", count),
+		"data":    payload,
 	})
 }
