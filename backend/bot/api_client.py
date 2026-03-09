@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv() # Load env vars from .env
 
-GO_BACKEND_URL = os.getenv("GO_BACKEND_URL", "http://localhost:5000") # Match your Go port
+GO_BACKEND_URL = os.getenv("GO_BACKEND_URL") # Match your Go port
 INTERNAL_API_SECRET = os.getenv("INTERNAL_API_SECRET")
 
 # Common headers for all internal requests
@@ -57,7 +57,6 @@ def get_latest_market_context(symbol):
     try:
         response = httpx.get(endpoint, headers=API_HEADERS, timeout=10.0)
         if response.status_code == 200:
-            # print(response.json())
             res_json = response.json()
             data = res_json.get("data", [])
             if isinstance(data, list) and len(data) > 0:
@@ -94,11 +93,11 @@ def send_trade_signal(symbol, version, action_str, mt5_id=None):
     if mt5_id:
         payload["mt5_id"] = str(mt5_id)
     
-    # print(f"Piping Signal ({action_str}) to Go API...")
+    print(f"Piping Signal ({action_str}) to Go API...")
     try:
         response = httpx.post(endpoint, json=payload, headers=API_HEADERS, timeout=10.0)
         if response.status_code == 200:
-            # print("Signal successfully delivered to Go backend.")
+            print("Signal successfully delivered to Go backend.")
             return True
         else:
             print(f"Go API Signal error: {response.status_code}")

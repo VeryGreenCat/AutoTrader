@@ -121,6 +121,41 @@ def run_hourly_step():
         
         final_features = user_df[feature_cols + ["position_state", "time_in_trade_state", "unrealized_pnl_state"]]
         
+        # ── PPO Input State Debug ──────────────────────────────────────
+        last_row = final_features.iloc[-1]
+        print(f"\n{'='*55}")
+        print(f"  PPO INPUT STATE  |  MT5 ID: {mt5_id}")
+        print(f"{'='*55}")
+        print(f"  [Account]")
+        print(f"    Balance         : {user.get('balance', 'N/A'):.2f}")
+        print(f"    Equity          : {user.get('equity', 'N/A'):.2f}")
+        print(f"    Realized Today  : {user.get('realized_today', 'N/A'):.2f}")
+        print(f"    Realized Week   : {user.get('realized_week', 'N/A'):.2f}")
+        print(f"  [Open Position]")
+        if open_positions:
+            pos = open_positions[0]
+            print(f"    Pair            : {pos.get('pair', 'N/A')}")
+            print(f"    Type            : {pos.get('type', 'N/A')}")
+            print(f"    Entry Price     : {pos.get('entry', 'N/A')}")
+            print(f"    Current Price   : {pos.get('current', 'N/A')}")
+            print(f"    Lot Size        : {pos.get('lot', 'N/A')}")
+            print(f"    Raw Profit      : {pos.get('profit', 0.0):.2f}")
+        else:
+            print(f"    (no open positions)")
+        print(f"  [RL State Features]")
+        print(f"    position_state       : {pos_val:+.4f}  (1=BUY, -1=SELL, 0=flat)")
+        print(f"    time_in_trade_state  : {time_val:+.4f}  (0=flat, 0.05=in trade)")
+        print(f"    unrealized_pnl_state : {pnl_val:+.4f}  (scaled profit / 10)")
+        print(f"  [LLM Context  —  last row]")
+        for col in ["bias_score", "confidence", "volatility", "trend_strength", "momentum", "skip_flag"]:
+            if col in last_row.index:
+                print(f"    {col:<22}: {last_row[col]:+.4f}")
+        print(f"  [Technical Features  —  last row  ({len(feature_cols)} cols)]")
+        for col in feature_cols:
+            print(f"    {col:<22}: {last_row[col]:+.6f}")
+        print(f"{'='*55}\n")
+        # ──────────────────────────────────────────────────────────────
+
         # Predict
         action, _ = predict_action(model, final_features, window_size=60)
         

@@ -12,11 +12,13 @@ input int    PushEvery = 60; // seconds
 //+------------------------------------------------------------------+
 int PostToServer(string endpoint, string json_payload) {
     char post[], result[];
-    string headers = "Content-Type: application/json\r\n";
+    string reqHeaders = "Content-Type: application/json\r\n"
+                      + "Authorization: Bearer " + Token + "\r\n";
+    string resultHeaders; // separate buffer — WebRequest writes response headers here
 
     StringToCharArray(json_payload, post, 0, StringLen(json_payload), CP_UTF8);
 
-    int res = WebRequest("POST", ServerURL + endpoint, headers, 5000, post, result, headers);
+    int res = WebRequest("POST", ServerURL + endpoint, reqHeaders, 5000, post, result, resultHeaders);
 
     if (res == -1) {
         int err = GetLastError();
@@ -36,12 +38,13 @@ int PostToServer(string endpoint, string json_payload) {
 //+------------------------------------------------------------------+
 string GetFromServer(string endpoint) {
     char post[], result[];
-    string headers;
+    string reqHeaders = "Authorization: Bearer " + Token + "\r\n";
+    string resultHeaders; // separate buffer for response headers
 
     string separator = (StringFind(endpoint, "?") >= 0) ? "&" : "?";
     string url = ServerURL + endpoint + separator + "token=" + Token;
 
-    int res = WebRequest("GET", url, "", 5000, post, result, headers);
+    int res = WebRequest("GET", url, reqHeaders, 5000, post, result, resultHeaders);
 
     if (res == -1) {
         Print("GET failed. Error: ", GetLastError());
