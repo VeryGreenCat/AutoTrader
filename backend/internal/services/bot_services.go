@@ -11,6 +11,25 @@ import (
 )
 
 func DeployBot(req *dto.DeployBotRequest) error {
+	// Check user status
+	var userId string
+	err := config.DB.Table(`"MT5"`).Select("user_id").Where("mt5_id = ?", req.MT5ID).Scan(&userId).Error
+	if err != nil {
+		return err
+	}
+
+	var user models.User
+	if err := config.DB.Select("ban", "remaining_seconds").Where("user_id = ?", userId).First(&user).Error; err != nil {
+		return err
+	}
+
+	if user.Ban {
+		return errors.New("user is banned")
+	}
+	if user.RemainingSeconds <= 0 {
+		return errors.New("insufficient balance time")
+	}
+
 	bot := models.Bot{
 		BotID:   uuid.New().String(),
 		MT5ID:   req.MT5ID,
@@ -56,12 +75,15 @@ func UpdateBotStatus(botId string, status bool) error {
 
 		if status {
 			var user models.User
-			err := tx.Select("ban").Where("user_id = ?", userId).First(&user).Error
+			err := tx.Select("ban", "remaining_seconds").Where("user_id = ?", userId).First(&user).Error
 			if err != nil {
 				return err
 			}
 			if user.Ban {
 				return errors.New("user is banned")
+			}
+			if user.RemainingSeconds <= 0 {
+				return errors.New("insufficient balance time")
 			}
 		}
 

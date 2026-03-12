@@ -15,6 +15,7 @@ export default function Bots() {
 	const [openModal, setOpenModal] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [isBanned, setIsBanned] = useState(false);
+	const [hasNoTime, setHasNoTime] = useState(false);
 	const userId = localStorage.getItem("user_id");
 
 	const fetchData = async () => {
@@ -30,7 +31,10 @@ export default function Bots() {
 			const userRes = await getAccountById(userId);
 
 			const userIsBanned = !!userRes.is_banned;
+			const userHasNoTime = userRes.remaining_seconds <= 0;
+
 			setIsBanned(userIsBanned);
+			setHasNoTime(userHasNoTime);
 
 			if (userIsBanned) {
 				modal.confirm({
@@ -43,6 +47,19 @@ export default function Bots() {
 					centered: true,
 					onOk: () => {
 						router.push("/billing");
+					},
+				});
+			} else if (userHasNoTime) {
+				modal.confirm({
+					title: "Balance Depleted: Bots Deactivated",
+					content:
+						"Your time balance has reached zero. All trading bots have been automatically deactivated. Please purchase more tickets to resume automated trading. In the meantime, please manage any open positions manually in your MT5 terminal.",
+					okText: "Top Up Now",
+					okType: "danger",
+					cancelText: "Cancel",
+					centered: true,
+					onOk: () => {
+						router.push("/buyTickets");
 					},
 				});
 			}
@@ -92,7 +109,7 @@ export default function Bots() {
 						<AccountCard
 							key={account.mt5_id}
 							account={account}
-							isBanned={isBanned}
+							isBanned={isBanned || hasNoTime}
 							onDelete={fetchData}
 						/>
 					))

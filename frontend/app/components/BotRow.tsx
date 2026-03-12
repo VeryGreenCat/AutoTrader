@@ -53,9 +53,10 @@ export default function BotRow({
 			message.success(
 				`Bot ${checked ? "activated" : "deactivated"} successfully`,
 			);
-		} catch (error) {
+		} catch (error: any) {
 			console.error("Failed to update bot status:", error);
-			message.error("Failed to update bot status");
+			const errorMsg = error.response?.data?.message || "Failed to update bot status";
+			message.error(errorMsg);
 		} finally {
 			if (onStatusChange) onStatusChange();
 		}

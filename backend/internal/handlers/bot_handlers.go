@@ -19,7 +19,7 @@ func DeployBot(c *fiber.Ctx) error {
 	// 2. Ask service to save to DB
 	if err := services.DeployBot(&bot); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to deploy bot",
+			"message": err.Error(),
 		})
 	}
 
@@ -74,7 +74,7 @@ func UpdateBotStatus(c *fiber.Ctx) error {
 
 	if err := services.UpdateBotStatus(botId, body.Status); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to update bot status",
+			"message": err.Error(),
 		})
 	}
 

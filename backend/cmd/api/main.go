@@ -11,6 +11,7 @@ import (
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/config"
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/middleware"
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/routes"
+	"github.com/VeryGreenCat/AutoTrader/backend/internal/services"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
@@ -39,6 +40,7 @@ func main() {
 	}))
 	
 	config.ConnectDB()
+	services.StartUsageManager()
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, AI Dev Backend!")

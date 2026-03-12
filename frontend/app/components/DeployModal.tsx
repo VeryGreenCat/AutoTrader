@@ -87,9 +87,10 @@ export default function DeployModal(deployData: DeployModalProps) {
 			message.success("Deployment successful");
 			if (onSuccess) onSuccess();
 			onClose();
-		} catch (error) {
+		} catch (error: any) {
 			console.error("Deployment failed:", error);
-			message.error("Deployment failed");
+			const errorMsg = error.response?.data?.message || "Deployment failed";
+			message.error(errorMsg);
 		} finally {
 			setLoading(false);
 		}
