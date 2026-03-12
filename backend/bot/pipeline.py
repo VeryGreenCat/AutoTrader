@@ -113,13 +113,65 @@ def run_hourly_step():
             time_val = 0.05 # placeholder for "In a trade"
             pnl_val = float(pos.get("profit", 0.0)) / 10.0 # simple scaling
         
-        # Prepare observation
-        user_df = featured_df.copy()
-        user_df["position_state"] = pos_val
-        user_df["time_in_trade_state"] = time_val
-        user_df["unrealized_pnl_state"] = pnl_val
+        # 1. Prepare base features for the window (120 bars)
+        window_df = featured_df.iloc[-120:].copy()
         
-        final_features = user_df[feature_cols + ["position_state", "time_in_trade_state", "unrealized_pnl_state"]]
+        # 2. Apply Z-score Normalization to LLM features
+        # The model was trained on Z-scores, but the bot receives raw 0-1 values.
+        # We use standard approximations for mean=0.5, std=0.2 (common for these types of scores)
+        # to convert raw 0.7 into a recognizable standard deviation for the model.
+        llm_cols = ["bias_score", "confidence", "volatility", "trend_strength", "momentum", "skip_flag"]
+        for col in llm_cols:
+            if col in window_df.columns:
+                # Normalizing raw (0..1) to approximate training distribution (mean ~0.5, std ~0.2)
+                window_df[col] = (window_df[col] - 0.5) / 0.2
+
+        # 3. Calculate DYNAMIC state features for this specific user
+        # We need to build a 120-bar history of their current position
+        pos_series = np.zeros(120)
+        time_series = np.zeros(120)
+        pnl_series = np.zeros(120)
+
+        if open_positions:
+            pos = open_positions[0]
+            pos_val = 1.0 if pos.get("type") == "BUY" else -1.0
+            entry_price = float(pos.get("entry", 0.0))
+            
+            # Use current prices from the window to calculate what the PnL WAS at each bar
+            close_prices = window_df["Close"].values
+            
+            # Simplified point/pip calculation (keeping it robust)
+            # EURUSD 1 pip = 0.0001
+            if pos_val == 1.0:
+                pips_history = (close_prices - entry_price) / 0.0001
+            else:
+                pips_history = (entry_price - close_prices) / 0.0001
+            
+            # Fill the arrays
+            pos_series.fill(pos_val)
+            pnl_series = pips_history / 100.0 # Scaling used in environment
+            
+            # Time in trade (increments per bar)
+            # We don't have exact entry bar, but we can estimate or use current bars_elapsed
+            import time as pytime
+            entry_time = int(pos.get("time", pytime.time())) # Assuming EA provides this, otherwise fallback
+            current_time = int(pytime.time())
+            total_bars_in_trade = (current_time - entry_time) // 3600
+            
+            # Backfill the time series
+            for i in range(120):
+                # Bar i is (119 - i) steps ago
+                dist_from_now = 119 - i
+                bar_time_in_trade = total_bars_in_trade - dist_from_now
+                if bar_time_in_trade > 0:
+                    time_series[i] = bar_time_in_trade / 1000.0 # Scaling used in env
+
+        # 4. Attach state features to window
+        window_df["position_state"] = pos_series
+        window_df["time_in_trade_state"] = time_series
+        window_df["unrealized_pnl_state"] = pnl_series
+        
+        final_features = window_df[feature_cols + ["position_state", "time_in_trade_state", "unrealized_pnl_state"]]
         
         # ── PPO Input State Debug ──────────────────────────────────────
         last_row = final_features.iloc[-1]
@@ -129,30 +181,13 @@ def run_hourly_step():
         print(f"  [Account]")
         print(f"    Balance         : {user.get('balance', 'N/A'):.2f}")
         print(f"    Equity          : {user.get('equity', 'N/A'):.2f}")
-        print(f"    Realized Today  : {user.get('realized_today', 'N/A'):.2f}")
-        print(f"    Realized Week   : {user.get('realized_week', 'N/A'):.2f}")
-        print(f"  [Open Position]")
-        if open_positions:
-            pos = open_positions[0]
-            print(f"    Pair            : {pos.get('pair', 'N/A')}")
-            print(f"    Type            : {pos.get('type', 'N/A')}")
-            print(f"    Entry Price     : {pos.get('entry', 'N/A')}")
-            print(f"    Current Price   : {pos.get('current', 'N/A')}")
-            print(f"    Lot Size        : {pos.get('lot', 'N/A')}")
-            print(f"    Raw Profit      : {pos.get('profit', 0.0):.2f}")
-        else:
-            print(f"    (no open positions)")
-        print(f"  [RL State Features]")
-        print(f"    position_state       : {pos_val:+.4f}  (1=BUY, -1=SELL, 0=flat)")
-        print(f"    time_in_trade_state  : {time_val:+.4f}  (0=flat, 0.05=in trade)")
-        print(f"    unrealized_pnl_state : {pnl_val:+.4f}  (scaled profit / 10)")
-        print(f"  [LLM Context  —  last row]")
-        for col in ["bias_score", "confidence", "volatility", "trend_strength", "momentum", "skip_flag"]:
-            if col in last_row.index:
-                print(f"    {col:<22}: {last_row[col]:+.4f}")
-        print(f"  [Technical Features  —  last row  ({len(feature_cols)} cols)]")
-        for col in feature_cols:
-            print(f"    {col:<22}: {last_row[col]:+.6f}")
+        print(f"  [RL State Features (Last Bar)]")
+        print(f"    position_state       : {last_row['position_state']:+.4f}")
+        print(f"    time_in_trade_state  : {last_row['time_in_trade_state']:+.4f}")
+        print(f"    unrealized_pnl_state : {last_row['unrealized_pnl_state']:+.4f}")
+        print(f"  [LLM Context (Normalized)]")
+        for col in llm_cols:
+            print(f"    {col:<22}: {last_row[col]:+.4f}")
         print(f"{'='*55}\n")
         # ──────────────────────────────────────────────────────────────
 
@@ -161,8 +196,8 @@ def run_hourly_step():
         
         # Map and Send
         # Reconstruct the action space map from the training environment
-        sl_opts = [5, 10, 15, 25, 30, 60, 90, 120]
-        tp_opts = [5, 10, 15, 25, 30, 60, 90, 120]
+        sl_opts = [30, 50, 80]
+        tp_opts = [60, 100, 160]
         action_map_list = [("HOLD", None, None, None), ("CLOSE", None, None, None)]
         for direction in [0, 1]:  # 0=short, 1=long
             for sl in sl_opts:

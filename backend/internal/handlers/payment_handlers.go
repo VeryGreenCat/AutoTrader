@@ -22,21 +22,22 @@ func CreateCheckoutSession(c *fiber.Ctx) error {
     }
 
     var id string
-    if req.Type == "billing" {
+    switch req.Type {
+    case "billing":
         if req.BillID == "" {
             return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
                 "error": "bill_id is required for billing",
             })
         }
         id = req.BillID
-    } else if req.Type == "ticket" {
+    case "ticket":
         if req.PackageID == "" {
             return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
                 "error": "package_id is required for tickets",
             })
         }
         id = req.PackageID
-    } else {
+    default:
         return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
             "error": "invalid type",
         })

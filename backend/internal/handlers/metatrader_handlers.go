@@ -204,10 +204,10 @@ func MT5Push(c *fiber.Ctx) error {
 			// 1. Find the bot responsible for this pair
 			var bot models.Bot
 			// This query joins Bot and Model to find the bot that matches MT5ID and Currency
-			err := config.DB.Table("Bot").
-				Select("Bot.bot_id").
-				Joins("JOIN Model ON Bot.model_id = Model.model_id").
-				Where("Bot.mt5_id = ? AND Model.currency = ?", req.MT5ID, pos.Pair).
+			err := config.DB.Table(`"Bot"`).
+				Select(`"Bot".bot_id`).
+				Joins(`JOIN "Model" ON "Bot".model_id = "Model".model_id`).
+				Where(`"Bot".mt5_id = ? AND "Model".currency = ?`, req.MT5ID, pos.Pair).
 				First(&bot).Error
 			
 			if err == nil {
