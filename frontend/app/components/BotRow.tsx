@@ -9,6 +9,7 @@ import { BotRowProps } from "@/types/bot";
 export default function BotRow({
 	bot,
 	accountStatus,
+	isBanned,
 	onDelete,
 	onStatusChange,
 }: BotRowProps) {
@@ -63,8 +64,8 @@ export default function BotRow({
 	// Mock PnL for connected accounts as requested
 	const pnlValue = accountStatus ? 12.45 : null;
 
-	// Determine if row should be grayed out (bot is inactive or account is disconnected)
-	const isRowDisabled = !switchState || !accountStatus;
+	// Determine if row should be grayed out (bot is inactive or account is disconnected or user is banned)
+	const isRowDisabled = !switchState || !accountStatus || isBanned;
 
 	return (
 		<div className="flex items-center justify-between p-4 bg-[#141414] rounded-xl border border-gray-800/60 hover:border-gray-700 transition-colors">
@@ -125,10 +126,10 @@ export default function BotRow({
 				<Switch
 					checked={switchState}
 					onChange={handleStatusChange}
-					disabled={!accountStatus}
+					disabled={!accountStatus || isBanned}
 					style={{
 						background: switchState
-							? accountStatus
+							? accountStatus && !isBanned
 								? "#00FFA3"
 								: "#14533D"
 							: "#333",
@@ -136,7 +137,12 @@ export default function BotRow({
 				/>
 				<button
 					onClick={handleDeleteBot}
-					className="ml-4 p-1.5 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all cursor-pointer"
+					disabled={isBanned}
+					className={`ml-4 p-1.5 rounded-lg transition-all ${
+						isBanned
+							? "bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700"
+							: "bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white cursor-pointer"
+					}`}
 				>
 					<Trash2 className="w-3.5 h-3.5" />
 				</button>

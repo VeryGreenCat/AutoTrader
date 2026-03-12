@@ -1,6 +1,8 @@
 package services
 
 import (
+	"errors"
+
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/config"
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/handlers/dto"
 	"github.com/VeryGreenCat/AutoTrader/backend/internal/models"
@@ -50,6 +52,17 @@ func UpdateBotStatus(botId string, status bool) error {
 		userId, err := getUserIdByBotId(botId)
 		if err != nil {
 			return err
+		}
+
+		if status {
+			var user models.User
+			err := tx.Select("ban").Where("user_id = ?", userId).First(&user).Error
+			if err != nil {
+				return err
+			}
+			if user.Ban {
+				return errors.New("user is banned")
+			}
 		}
 
 		// update bot

@@ -7,4 +7,5 @@ export interface UserProfile {
 	auth_provider: "email" | "google";
 	created_at: string;
 	last_sign_in: string;
+	ban: boolean;
 }

@@ -42,12 +42,20 @@ func GetAccountById(c *fiber.Ctx) error {
 		})
 	}
 
+	// Fetch user ban status
+	user, err := services.GetProfile(userId)
+	isBanned := false
+	if err == nil && user != nil {
+		isBanned = user.Ban
+	}
+
 	// Dynamic check: update DB status if heartbeat is stale
 	RefreshAccountsStatus(accounts)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "MT5 account fetched successfully",
-		"data":    accounts,
+		"message":   "MT5 account fetched successfully",
+		"data":      accounts,
+		"is_banned": isBanned,
 	})
 }
 

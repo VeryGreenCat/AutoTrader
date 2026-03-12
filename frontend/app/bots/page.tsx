@@ -1,16 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import AccountCard from "../components/AccountCard";
 import ConnectMT5 from "../components/ConnectMT5";
 import { getAccountById } from "@/services/mt5";
-import { Spin } from "antd";
+import { Spin, App } from "antd";
 import { MT5 } from "@/types/mt5";
 
 export default function Bots() {
+	const { modal } = App.useApp();
+	const router = useRouter();
 	const [accounts, setAccounts] = useState<MT5[]>([]);
 	const [openModal, setOpenModal] = useState(false);
-	const [loading, setLoading] = useState(false);
+	const [loading, setLoading] = useState(true);
+	const [isBanned, setIsBanned] = useState(false);
 	const userId = localStorage.getItem("user_id");
 
 	const fetchData = async () => {
@@ -22,9 +26,26 @@ export default function Bots() {
 				return;
 			}
 
-			// API Call: Get User Accounts
+			// API Call: Get User Accounts and Ban Status
 			const userRes = await getAccountById(userId);
-			console.log("Bots | userRes:", userRes);
+
+			const userIsBanned = !!userRes.is_banned;
+			setIsBanned(userIsBanned);
+
+			if (userIsBanned) {
+				modal.confirm({
+					title: "Action Required: Outstanding Balance",
+					content:
+						"Your account has been temporarily suspended due to an unpaid billing balance. All trading bots will remain disabled until the outstanding balance is settled. Please manage any open positions manually in your MT5 terminal to prevent unexpected losses.",
+					okText: "Go to Billing",
+					okType: "danger",
+					cancelText: "Cancel",
+					centered: true,
+					onOk: () => {
+						router.push("/billing");
+					},
+				});
+			}
 
 			// Sort accounts: connected (true) first, then disconnected (false)
 			const sortedAccounts = [...userRes.data].sort((a, b) => {
@@ -34,7 +55,7 @@ export default function Bots() {
 
 			setAccounts(sortedAccounts);
 		} catch (error) {
-			console.error("Failed to fetch accounts data", error);
+			console.error("Failed to fetch data", error);
 		} finally {
 			setLoading(false);
 		}
@@ -71,6 +92,7 @@ export default function Bots() {
 						<AccountCard
 							key={account.mt5_id}
 							account={account}
+							isBanned={isBanned}
 							onDelete={fetchData}
 						/>
 					))

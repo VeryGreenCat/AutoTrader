@@ -22,9 +22,11 @@ export interface BotRowProps {
 	accountStatus: boolean;
 	onDelete?: () => void;
 	onStatusChange?: () => void;
+	isBanned?: boolean;
 }
 
 export interface AccountCardProps {
 	account: MT5;
 	onDelete?: () => void;
+	isBanned?: boolean;
 }

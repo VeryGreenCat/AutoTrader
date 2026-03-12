@@ -12,6 +12,7 @@ type User struct {
     CreatedAt        time.Time  `json:"created_at" gorm:"column:created_at"`
     LastSignIn       *time.Time `json:"last_sign_in" gorm:"column:last_sign_in"`
     StripeCustomerID string     `json:"stripe_customer_id" gorm:"column:stripe_customer_id"`
+    Ban              bool       `json:"ban" gorm:"column:ban"`
 }
 func (User) TableName() string {
     return "User"

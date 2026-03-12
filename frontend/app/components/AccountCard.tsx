@@ -10,7 +10,7 @@ import { Bot, AccountCardProps } from "@/types/bot";
 import { getBotsByMt5Id } from "@/services/bots";
 import { MT5AccountCardStats } from "@/types/mt5";
 
-export default function AccountCard({ account, onDelete }: AccountCardProps) {
+export default function AccountCard({ account, isBanned, onDelete }: AccountCardProps) {
 	const { message, modal } = App.useApp();
 	const [bots, setBots] = useState<Bot[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -194,10 +194,10 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 						</button>
 						<button
 							onClick={() => setIsDeployModalOpen(true)}
-							disabled={!$isLiveConnected}
+							disabled={!$isLiveConnected || isBanned}
 							className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-md flex items-center gap-1 transition-all w-max
                 ${
-									$isLiveConnected
+									$isLiveConnected && !isBanned
 										? "bg-[#00FFA3] text-black hover:shadow-[0_0_15px_rgba(0,255,163,0.4)] cursor-pointer"
 										: "bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700"
 								}`}
@@ -224,6 +224,7 @@ export default function AccountCard({ account, onDelete }: AccountCardProps) {
 							key={bot.bot_id}
 							bot={bot}
 							accountStatus={account.status}
+							isBanned={isBanned}
 							onDelete={fetchBots}
 							onStatusChange={fetchBots}
 						/>
