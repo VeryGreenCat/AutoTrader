@@ -12,21 +12,21 @@ from api_client import post_llm_analysis, get_latest_market_context, send_trade_
 # Configuration
 SYMBOL = "EURUSD"
 TIMEFRAME = mt5.TIMEFRAME_H1
-WEEKLY_BARS = 48    # 2 days of H1 as requested for LLM
+WEEKLY_BARS = 60    # 2 days of H1 as requested for LLM
 HOURLY_BARS = 300   # Enough bars for feature_eng warming up (needs ~200)
-MODEL_PATH = "models/model_eurusd_best.zip"
+MODEL_PATH = "models/model_eurusd_best_6.zip"
 BOT_VERSION = "v1"
 
-def run_weekly_update():
+def run_12hourly_update():
     """
-    Perform weekly LLM-based pattern analysis and pipe it to Go.
+    Perform 12 hourly LLM-based pattern analysis and pipe it to Go.
     """
-    print(f"\n--- RUNNING WEEKLY LLM ANALYSIS FOR {SYMBOL} ---")
+    print(f"\n--- RUNNING 12 HOURLY LLM ANALYSIS FOR {SYMBOL} ---")
     
     # 1. Fetch data
     ohlc_df = get_ohlc_data(SYMBOL, TIMEFRAME, WEEKLY_BARS)
     if ohlc_df is None:
-        print("Failed to fetch data for weekly update.")
+        print("Failed to fetch data for 12 hourly update.")
         return False
     
     # 2. Run LLM analysis
@@ -35,7 +35,7 @@ def run_weekly_update():
     # 3. Send to Go backend (Go will save it to Supabase)
     success = post_llm_analysis(SYMBOL, llm_features)
     if success:
-        print("Weekly LLM analysis complete and delivered to Go backend.")
+        print("12 hourly LLM analysis complete and delivered to Go backend.")
     return success
 
 def run_hourly_step():
@@ -47,8 +47,8 @@ def run_hourly_step():
     # 1. Fetch context from Go API
     llm_context = get_latest_market_context(SYMBOL)
     if llm_context is None:
-        print("Market context not found in DB via Go. Running weekly update first...")
-        if not run_weekly_update():
+        print("Market context not found in DB via Go. Running 12 hourly update first...")
+        if not run_12hourly_update():
             return False
         llm_context = get_latest_market_context(SYMBOL)
 
@@ -157,15 +157,50 @@ def run_hourly_step():
         # ──────────────────────────────────────────────────────────────
 
         # Predict
-        action, _ = predict_action(model, final_features, window_size=60)
+        action, action_probs = predict_action(model, final_features, window_size=120)
         
         # Map and Send
-        action_map = {0: "CLOSE", 1: "BUY", 2: "SELL"}
-        action_str = action_map.get(int(action), "CLOSE")
+        # Reconstruct the action space map from the training environment
+        sl_opts = [5, 10, 15, 25, 30, 60, 90, 120]
+        tp_opts = [5, 10, 15, 25, 30, 60, 90, 120]
+        action_map_list = [("HOLD", None, None, None), ("CLOSE", None, None, None)]
+        for direction in [0, 1]:  # 0=short, 1=long
+            for sl in sl_opts:
+                for tp in tp_opts:
+                    action_map_list.append(("OPEN", direction, float(sl), float(tp)))
+                    
+        act_tuple = action_map_list[int(action)]
+        act_type = act_tuple[0]
         
-        if send_trade_signal(SYMBOL, BOT_VERSION, action_str, mt5_id=mt5_id):
+        if act_type == "HOLD":
+            action_str = "HOLD"
+        elif act_type == "CLOSE":
+            action_str = "CLOSE"
+        elif act_type == "OPEN":
+            direction_val = act_tuple[1]
+            action_str = "BUY" if direction_val == 1 else "SELL"
+        else:
+            action_str = "HOLD"
+
+        # ── PPO Action Probabilities Debug ─────────────────────────────
+        print(f"  [PPO Action Probabilities] (130 distinct actions)")
+        print(f"    Chosen Action ID: {action}")
+        print(f"    Action Type: {act_type}")
+        if act_type == "OPEN":
+            print(f"    Direction: {'BUY' if act_tuple[1] == 1 else 'SELL'}, SL: {act_tuple[2]}, TP: {act_tuple[3]}")
+        print()
+        # ───────────────────────────────────────────────────────────────
+        
+        if act_type == "OPEN":
+            sl_pips = act_tuple[2]
+            tp_pips = act_tuple[3]
+        else:
+            sl_pips = 0.0
+            tp_pips = 0.0
+            
+        if send_trade_signal(SYMBOL, BOT_VERSION, action_str, sl_pips, tp_pips, mt5_id=mt5_id):
             success_count += 1
-            print(f"  > Signal {action_str} sent to MT5 {mt5_id}")
+            print(f"  > Signal {action_str} sent to MT5 {mt5_id} (SL={sl_pips}, TP={tp_pips})")
 
     print(f"Completed hourly step. Distributed {success_count} personalized signals.")
     return True
@@ -176,8 +211,8 @@ if __name__ == "__main__":
     
     if len(sys.argv) > 1:
         command = sys.argv[1]
-        if command == "weekly":
-            run_weekly_update()
+        if command == "12hourly":
+            run_12hourly_update()
             shutdown_mt5()
         elif command == "hourly":
             run_hourly_step()
@@ -185,8 +220,8 @@ if __name__ == "__main__":
         elif command == "auto":
             print("Starting automatic bot scheduler...")
             
-            # Schedule weekly update on Sunday at midnight
-            schedule.every().sunday.at("00:00").do(run_weekly_update)
+            # Schedule 12 hourly update everyday
+            schedule.every(12).hours.do(run_12hourly_update)
             
             # Schedule hourly step at the beginning of every hour
             schedule.every().hour.at(":00").do(run_hourly_step)
@@ -202,7 +237,7 @@ if __name__ == "__main__":
                 description="PPO Reinforcement Learning model with technical features and LLM bias context."
             )
             
-            run_weekly_update()
+            run_12hourly_update()
             run_hourly_step()
             
             print("Scheduler is now running! Waiting for the next scheduled job...")
@@ -215,7 +250,7 @@ if __name__ == "__main__":
             finally:
                 shutdown_mt5()
         else:
-            print("Unknown command. Use 'weekly', 'hourly', or 'auto'.")
+            print("Unknown command. Use '12hourly', 'hourly', or 'auto'.")
             shutdown_mt5()
     else:
         # Default behavior: run hourly

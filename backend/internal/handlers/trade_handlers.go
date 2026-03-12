@@ -26,7 +26,7 @@ func HandleBotSignal(c *fiber.Ctx) error {
 	}
 
 	// call trade services
-	count, err := services.ProcessSignalDistribution(payload.Currency, payload.Version, payload.Action, payload.MT5ID)
+	count, err := services.ProcessSignalDistribution(payload.Currency, payload.Version, payload.Action, payload.SL, payload.TP, payload.MT5ID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),

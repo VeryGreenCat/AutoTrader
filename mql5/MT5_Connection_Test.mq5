@@ -185,6 +185,34 @@ void CloseOppositePositions(ENUM_POSITION_TYPE typeToKeep) {
 //+------------------------------------------------------------------+
 //| Ask backend if there's a pending trade signal                    |
 //+------------------------------------------------------------------+
+double GetJsonDouble(string json, string key) {
+    string searchStr = "\"" + key + "\":";
+    int pos = StringFind(json, searchStr);
+    if (pos == -1) return 0.0;
+    
+    pos += StringLen(searchStr);
+    int end1 = StringFind(json, ",", pos);
+    int end2 = StringFind(json, "}", pos);
+    
+    int endPos = end1;
+    if (end1 == -1) endPos = end2;
+    else if (end2 != -1 && end2 < end1) endPos = end2;
+    
+    if (endPos == -1) return 0.0;
+    
+    string numStr = StringSubstr(json, pos, endPos - pos);
+    StringTrimLeft(numStr);
+    StringTrimRight(numStr);
+    return StringToDouble(numStr);
+}
+
+double GetPipSize(string symbol) {
+    double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
+    int digits = (int)SymbolInfoInteger(symbol, SYMBOL_DIGITS);
+    if (digits == 3 || digits == 5) return point * 10.0;
+    return point;
+}
+
 void FetchSignals() {
     long mt5_id = AccountInfoInteger(ACCOUNT_LOGIN);
     string endpoint = StringFormat("/metatrader/signal?mt5_id=%I64d", mt5_id);
@@ -200,7 +228,17 @@ void FetchSignals() {
         // Only open if we don't have a buy already
         if (PositionsTotal() == 0 || (PositionSelect(_Symbol) && PositionGetInteger(POSITION_TYPE) != POSITION_TYPE_BUY)) {
             double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-            ExtTrade.Buy(0.1, _Symbol, ask, 0, 0, "AutoTrader PPO Buy");
+            double pip = GetPipSize(_Symbol);
+            double sl_pips = GetJsonDouble(response, "sl");
+            double tp_pips = GetJsonDouble(response, "tp");
+            
+            double sl_price = 0;
+            double tp_price = 0;
+            if (sl_pips > 0) sl_price = NormalizeDouble(ask - sl_pips * pip, (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS));
+            if (tp_pips > 0) tp_price = NormalizeDouble(ask + tp_pips * pip, (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS));
+            
+            PrintFormat("Executing BUY at %f | SL: %f (%.1f pips) | TP: %f (%.1f pips)", ask, sl_price, sl_pips, tp_price, tp_pips);
+            ExtTrade.Buy(0.1, _Symbol, ask, sl_price, tp_price, "AutoTrader PPO Buy");
         }
     } 
     else if (StringFind(response, "\"signal\":\"SELL\"") >= 0) {
@@ -210,7 +248,17 @@ void FetchSignals() {
         // Only open if we don't have a sell already
         if (PositionsTotal() == 0 || (PositionSelect(_Symbol) && PositionGetInteger(POSITION_TYPE) != POSITION_TYPE_SELL)) {
             double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
-            ExtTrade.Sell(0.1, _Symbol, bid, 0, 0, "AutoTrader PPO Sell");
+            double pip = GetPipSize(_Symbol);
+            double sl_pips = GetJsonDouble(response, "sl");
+            double tp_pips = GetJsonDouble(response, "tp");
+            
+            double sl_price = 0;
+            double tp_price = 0;
+            if (sl_pips > 0) sl_price = NormalizeDouble(bid + sl_pips * pip, (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS));
+            if (tp_pips > 0) tp_price = NormalizeDouble(bid - tp_pips * pip, (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS));
+            
+            PrintFormat("Executing SELL at %f | SL: %f (%.1f pips) | TP: %f (%.1f pips)", bid, sl_price, sl_pips, tp_price, tp_pips);
+            ExtTrade.Sell(0.1, _Symbol, bid, sl_price, tp_price, "AutoTrader PPO Sell");
         }
     }
     else if (StringFind(response, "\"signal\":\"CLOSE\"") >= 0) {

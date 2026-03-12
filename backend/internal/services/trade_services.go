@@ -11,6 +11,8 @@ import (
 // PendingSignal represents a signal waiting to be picked up by an MT5 account
 type PendingSignal struct {
 	Action    string    `json:"action"`
+	SL        float64   `json:"sl"`
+	TP        float64   `json:"tp"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -21,14 +23,16 @@ var (
 )
 
 // ProcessSignalDistribution finds all active bots matching the criteria and queues signals for them
-func ProcessSignalDistribution(currency, version, action, targetMT5ID string) (int, error) {
+func ProcessSignalDistribution(currency, version, action string, sl, tp float64, targetMT5ID string) (int, error) {
 	if targetMT5ID != "" {
 		// Single targeted signal
 		PendingSignals[targetMT5ID] = PendingSignal{
 			Action:    action,
+			SL:        sl,
+			TP:        tp,
 			CreatedAt: time.Now(),
 		}
-		fmt.Printf("Queued targeted %s signal for MT5 %s\n", action, targetMT5ID)
+		fmt.Printf("Queued targeted %s signal for MT5 %s (SL: %.5f, TP: %.5f)\n", action, targetMT5ID, sl, tp)
 		return 1, nil
 	}
 
@@ -50,29 +54,31 @@ func ProcessSignalDistribution(currency, version, action, targetMT5ID string) (i
 	for _, bot := range bots {
 		PendingSignals[bot.MT5ID] = PendingSignal{
 			Action:    action,
+			SL:        sl,
+			TP:        tp,
 			CreatedAt: time.Now(),
 		}
 		count++
-		fmt.Printf("Queued %s signal for MT5 %s\n", action, bot.MT5ID)
+		fmt.Printf("Queued %s signal for MT5 %s (SL: %.5f, TP: %.5f)\n", action, bot.MT5ID, sl, tp)
 	}
 
 	return count, nil
 }
 
 // GetPendingSignal retrieves and clears a pending signal for an MT5 account
-func GetPendingSignal(mt5Id string) (string, bool) {
+func GetPendingSignal(mt5Id string) (PendingSignal, bool) {
 	signal, exists := PendingSignals[mt5Id]
 	if !exists {
-		return "HOLD", false
+		return PendingSignal{Action: "HOLD"}, false
 	}
 
 	// Expiry logic: signals older than 5 mins are ignored
 	if time.Since(signal.CreatedAt) > 5*time.Minute {
 		delete(PendingSignals, mt5Id)
-		return "HOLD", false
+		return PendingSignal{Action: "HOLD"}, false
 	}
 
 	// Clear the signal after it's retrieved
 	delete(PendingSignals, mt5Id)
-	return signal.Action, true
+	return signal, true
 }

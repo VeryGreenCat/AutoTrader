@@ -77,18 +77,20 @@ def get_latest_market_context(symbol):
         print(f"Failed to fetch context from Go: {e}")
         return None
 
-def send_trade_signal(symbol, version, action_str, mt5_id=None):
+def send_trade_signal(symbol, version, action_str, sl=0.0, tp=0.0, mt5_id=None):
     """
     Send the PPO prediction to Go.
     Go will then distribute it to all online MT5 accounts.
-    action_str: "BUY" | "SELL" | "HOLD"
+    action_str: "BUY" | "SELL" | "HOLD" | "CLOSE"
     """
     endpoint = f"{GO_BACKEND_URL}/api/internal/trade/signal"
     
     payload = {
         "currency": symbol,
         "version": version,
-        "action": action_str
+        "action": action_str,
+        "sl": float(sl),
+        "tp": float(tp)
     }
     if mt5_id:
         payload["mt5_id"] = str(mt5_id)

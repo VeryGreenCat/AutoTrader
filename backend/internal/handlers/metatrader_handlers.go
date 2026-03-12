@@ -34,7 +34,7 @@ func GetMT5Signal(c *fiber.Ctx) error {
 	}
 
 	// 2. Get pending signal
-	action, exists := services.GetPendingSignal(mt5Id)
+	signal, exists := services.GetPendingSignal(mt5Id)
 	
 	if !exists {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -43,7 +43,9 @@ func GetMT5Signal(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"signal": action,
+		"signal": signal.Action,
+		"sl":     signal.SL,
+		"tp":     signal.TP,
 	})
 }
 

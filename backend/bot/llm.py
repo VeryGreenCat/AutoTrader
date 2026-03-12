@@ -198,70 +198,85 @@ def top3_pattern(img, top_n=3):
 
 # step 4 send top3 info to llm and return json
 NEUTRAL_DEFAULTS = {
-    "bias_score": 0.0,
-    "confidence": 50.0,
-    "volatility": 1,
-    "trend_strength": 0.5,
-    "momentum": 0.0,
-    "skip_flag": 0,
+    "bias_score": 0.5,
+    "confidence": 0.0,
+    "volatility": 0.5,
+    "trend_strength": 0.0,
+    "momentum": 0.5,
+    "skip_flag": 1.0,
     "reasoning": "Neutral market context - no clear pattern detected."
 }
 
 
 def validate_llm_output(data: dict) -> dict:
-  required_keys = ["bias_score", "confidence", "volatility", "trend_strength", "momentum", "skip_flag", "reasoning"]
-  for key in required_keys:
-    if key not in data:
-      raise ValueError(f"Missing required field: {key}")
+    required_keys = [
+        "bias_score",
+        "confidence",
+        "volatility",
+        "trend_strength",
+        "momentum",
+        "skip_flag",
+        "reasoning"
+    ]
+    validated = {}
+    for key in required_keys:
+        val = data.get(key)
+        if key == "reasoning":
+            validated[key] = str(val) if val is not None else "No reasoning provided."
+            continue
+            
+        if val is None:
+            raise ValueError(f"Missing required field: {key}")
+        try:
+            val = float(val)
+        except (ValueError, TypeError):
+            raise ValueError(f"Invalid value for {key}: must be numeric, got {val}")
+        if not (0.0 <= val <= 1.0):
+            raise ValueError(
+                f"Value for {key} out of range: {val}, must be between 0.0 and 1.0"
+            )
+        validated[key] = val
+    return validated
 
-  return {
-    "bias_score": max(-1.0, min(1.0, float(data["bias_score"]))),
-    "confidence": max(0.0, min(100.0, float(data["confidence"]))),
-    "volatility": (
-      int(data["volatility"]) if data["volatility"] in [0, 1, 2] else 1
-    ),
-    "trend_strength": max(0.0, min(1.0, float(data["trend_strength"]))),
-    "momentum": max(-1.0, min(1.0, float(data["momentum"]))),
-    "skip_flag": int(bool(data["skip_flag"])),
-    "reasoning": str(data["reasoning"]),
-  }
 
 
 def build_prompt(info: str) -> str:
-  return f"""
-  You are a quantitative technical analyst. You are given:
-  1. A 2-day EURUSD candlestick chart (H1 candles, 48 candles total)
-  2. Retrieved pattern knowledge from a RAG system
+    return f"""You are a quantitative technical analyst. 
+    You are given: A top 3 retrieved pattern knowledge from a RAG system
 
-  Output a SINGLE valid JSON object — numeric features for a PPO trading agent.
-  The agent trades EURUSD H1, holds up to 3 positions. Your output guides but does not control it.
+Output a SINGLE valid JSON object — numeric features as a guideline for a PPO trading agent.
+The agent trades EURUSD H1, holds up to 1 positions. Your output guides but does not control it.
 
-  RETURN ONLY THIS JSON (no markdown, no explanation, no extra keys):
-  {{
-    "bias_score":     <float -1.0 to 1.0 | -1=strongly bearish, 0=neutral, 1=strongly bullish>,
-    "confidence":     <float 0.0 to 100.0 | how clearly identifiable the pattern is>,
-    "volatility":     <int 0=low 1=medium 2=high | based on candle body sizes and wick lengths>,
-    "trend_strength": <float 0.0 to 1.0 | 0=choppy/ranging, 1=strong clean trend>,
-    "momentum":       <float -1.0 to 1.0 | -1=strong selling pressure, 1=strong buying pressure>,
-    "skip_flag":      <int 0=tradeable, 1=avoid this window>,
+
+SCORING RULES:
+    1. If the patterns provide conflicting directions, 'confidence' must be below 0.4.
+    2. 'bias_score' should stay near 0.5 (neutral) unless all 3 patterns show strong directional alignment. however, take the matched confidence into account.
+    3. 'skip_flag' should be high (0.7+) if volatility is extreme or pattern confidence is too low (< 0.35).
+    4.  All values must be numbers only. No extra keys.
+
+
+RETURN ONLY THIS JSON (no markdown, no explanation, no extra keys):
+{{
+    "bias_score":     <float 0.0 to 1.0 | 0=strongly bearish, 0.5=neutral, 1=strongly bullish>,
+    "confidence":     <float 0.0 to 1.0 | how confidence are you for an agent to trust this json output. BE CONSERVATIVE. 0.9 is nearly impossible in FX>,
+    "volatility":     <float 0.0 to 1.0 | 0=low, 0.5=medium, 1=high | based on top 3 pattern matches and their properties>,
+    "trend_strength": <float 0.0 to 1.0 | based on matched confidence, if top match has >70% confidence, then 0.7-1.0, if top match is weak pattern or confidence is 50-80% then 0.5-0.8, otherwise 0-0.5>,
+    "momentum":       <float 0.0 to 1.0 | 0=strong selling pressure, 1=strong buying pressure>,
+    "skip_flag":      <float 0.0 to 1.0 | 0=tradeable, 0.5=fine 1=avoid this window>
     "reasoning":      <string | explain your reasoning in 1-2 sentences>
-  }}
+}}
 
-  RULES:
-  - Choppy chart with no clear pattern → skip_flag=1, confidence<30, bias_score near 0
-  - bias_score = pattern-based direction | momentum = raw candle pressure (can differ)
-  - All values must be numbers only. No extra keys.
-
-  RETRIEVED PATTERN KNOWLEDGE:
-  {info}
+RETRIEVED PATTERN KNOWLEDGE (use this as a reference for your analysis, do not repeat verbatim, synthesize and extract insights):
+{info}
 """
+
 
 
 def pred_from_info(info):
   prompt = build_prompt(info)
   client = ollama.Client()
 
-  for attempt in range(1, 6):
+  for attempt in range(1, 11):
     try:
       response = client.chat(
         model="qwen2.5:0.5b",  # fastest local model
@@ -277,11 +292,11 @@ def pred_from_info(info):
       
       return validate_llm_output(json.loads(raw))
     except json.JSONDecodeError:
-      print(f"  [WARN] Attempt {attempt}/5: JSON parse failed.")
+      print(f"  [WARN] Attempt {attempt}/10: JSON parse failed.")
     except Exception as e:
-      print(f"  [WARN] Attempt {attempt}/5: LLM error - {e}")
+      print(f"  [WARN] Attempt {attempt}/10: LLM error - {e}")
 
-  print(f"  [ERROR] Failed to get valid JSON from LLM after 5 attempts. Using neutral defaults.")
+  print(f"  [ERROR] Failed to get valid JSON from LLM after 10 attempts. Using neutral defaults.")
   return NEUTRAL_DEFAULTS.copy()
 
 
