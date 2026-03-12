@@ -2,7 +2,7 @@
 
 import { Modal, App } from "antd";
 import { useState } from "react";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Download } from "lucide-react";
 import { addAccount } from "@/services/mt5";
 
 interface ConnectMT5Props {
@@ -128,7 +128,7 @@ export default function ConnectMT5({
 								type="text"
 								value={name}
 								onChange={(e) => setName(e.target.value)}
-								placeholder="e.g. Primary Scalper"
+								placeholder="My Account Name"
 								className="w-full bg-black/40 border border-white/10 focus:border-[#00FFA3] rounded-xl py-3 px-4 text-sm text-white placeholder-gray-600 outline-none transition focus:shadow-[0_0_20px_rgba(0,255,163,0.1)]"
 							/>
 						</div>
@@ -186,14 +186,34 @@ export default function ConnectMT5({
 							</div>
 						)}
 
-						{/* Connect Button */}
+						{/* Action Buttons Pack */}
 						{token && (
-							<button
-								onClick={handleConnect}
-								className="w-full bg-[#00FFA3] text-black font-black py-4 rounded-xl mt-6 shadow-[0_10px_20px_rgba(0,255,163,0.2)] hover:scale-[1.02] hover:shadow-[0_10px_30px_rgba(0,255,163,0.4)] transition active:scale-95 uppercase tracking-tighter cursor-pointer"
-							>
-								Connect to this MT5 Account
-							</button>
+							<div className="flex flex-col gap-3 mt-8">
+								<a
+									href="/MT5_Connector.ex5"
+									download="MT5_Connector.ex5"
+									className="group flex items-center justify-center gap-3 w-full 
+                      bg-[#00FFA3]/[0.03] border border-[#00FFA3]/20 
+                      shadow-[0_0_20px_rgba(0,255,163,0.1)]
+                      py-4 rounded-xl 
+                      hover:bg-[#00FFA3]/[0.08] hover:border-[#00FFA3]/40
+                      hover:shadow-[0_0_25px_rgba(0,255,163,0.2)]
+                      transition-all duration-300 active:scale-[0.98] 
+                      cursor-pointer"
+								>
+									<Download className="w-5 h-5 text-[#00FFA3] group-hover:scale-110 transition-transform" />
+									<span className="text-[#00FFA3] text-[11px] uppercase tracking-[0.2em] font-black">
+										Download Expert Advisor (EA)
+									</span>
+								</a>
+
+								<button
+									onClick={handleConnect}
+									className="w-full bg-[#00FFA3] text-black font-black py-4 rounded-xl shadow-[0_10px_20px_rgba(0,255,163,0.2)] hover:scale-[1.02] hover:shadow-[0_10px_30px_rgba(0,255,163,0.4)] transition active:scale-95 uppercase tracking-tighter cursor-pointer text-sm"
+								>
+									Connect to this MT5 Account
+								</button>
+							</div>
 						)}
 					</div>
 				</div>

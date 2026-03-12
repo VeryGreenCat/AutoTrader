@@ -3,9 +3,11 @@
 #property version   "1.00"
 #property strict
 
-input string Token     = "PASTE_YOUR_TOKEN_HERE";
-input string ServerURL = "http://127.0.0.1:5000/api";
-input int    PushEvery = 60; // seconds
+input string Token     = "PASTE_YOUR_TOKEN_HERE"; // Your AutoTrader Access Token
+input string ServerURL = "http://127.0.0.1:5000"; // Backend API URL
+input int    PushEvery = 60; // Update Data Every (Seconds)
+
+string G_ServerURL = ""; // Global variable for processed URL
 
 //+------------------------------------------------------------------+
 //| Send a POST request to the given endpoint with a JSON body       |
@@ -18,13 +20,13 @@ int PostToServer(string endpoint, string json_payload) {
 
     StringToCharArray(json_payload, post, 0, StringLen(json_payload), CP_UTF8);
 
-    int res = WebRequest("POST", ServerURL + endpoint, reqHeaders, 5000, post, result, resultHeaders);
+    int res = WebRequest("POST", G_ServerURL + endpoint, reqHeaders, 5000, post, result, resultHeaders);
 
     if (res == -1) {
         int err = GetLastError();
         Print("WebRequest failed. Error: ", err);
         if (err == 4060)
-            Print("Add ", ServerURL, " to MT5 Options → Expert Advisors → Allow WebRequest");
+            Print("Add ", G_ServerURL, " to MT5 Options → Expert Advisors → Allow WebRequest");
         return -1;
     }
 
@@ -42,7 +44,7 @@ string GetFromServer(string endpoint) {
     string resultHeaders; // separate buffer for response headers
 
     string separator = (StringFind(endpoint, "?") >= 0) ? "&" : "?";
-    string url = ServerURL + endpoint + separator + "token=" + Token;
+    string url = G_ServerURL + endpoint + separator + "token=" + Token;
 
     int res = WebRequest("GET", url, reqHeaders, 5000, post, result, resultHeaders);
 
@@ -285,7 +287,19 @@ void ConnectToServer() {
 
 //+------------------------------------------------------------------+
 int OnInit() { //runs once when the EA starts
-    Print("Connecting to AutoTrader's Server...");
+    G_ServerURL = ServerURL;
+    // Ensure trailing slash and /api suffix
+    StringTrimRight(G_ServerURL);
+    if (StringSubstr(G_ServerURL, StringLen(G_ServerURL) - 1, 1) == "/") 
+        G_ServerURL = StringSubstr(G_ServerURL, 0, StringLen(G_ServerURL) - 1);
+    
+    if (StringFind(G_ServerURL, "/api") == -1)
+        G_ServerURL += "/api";
+
+    Print("--- AutoTrader EA Initializing ---");
+    Print("Target Server: ", G_ServerURL);
+    Print("Important: Ensure this URL is in MT5 -> Tools -> Options -> Expert Advisors -> Allow WebRequest");
+    
     EventSetTimer(PushEvery);
     ConnectToServer();
     return INIT_SUCCEEDED;
