@@ -143,3 +143,49 @@
 	color: rgba(255, 255, 255, 0.45) !important;
 	background: transparent !important;
 }
+
+/* ─── Cohesive Dark Mode Tour Buttons ─────────────────────── */
+.ant-tour .ant-btn {
+	border-radius: 8px !important;
+	font-weight: 600 !important;
+	font-size: 13px !important;
+	height: 34px !important;
+	padding: 0 16px !important;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+	box-shadow: none !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+/* Next / Primary Button */
+.ant-tour .ant-btn-primary {
+	background-color: #00ffa3 !important;
+	color: #000 !important;
+	border: none !important;
+}
+
+.ant-tour .ant-btn-primary:hover {
+	background-color: #00d186 !important;
+	transform: translateY(-1px);
+	box-shadow: 0 4px 15px rgba(0, 255, 163, 0.3) !important;
+}
+
+/* Prev / Default Button */
+.ant-tour .ant-btn-default {
+	background-color: rgba(255, 255, 255, 0.05) !important;
+	color: #e2e8f0 !important;
+	border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.ant-tour .ant-btn-default:hover {
+	background-color: rgba(255, 255, 255, 0.1) !important;
+	color: #fff !important;
+	border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.ant-tour .ant-tour-footer {
+	margin-top: 20px !important;
+	padding-top: 12px !important;
+	border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+}

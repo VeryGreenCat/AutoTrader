@@ -8,6 +8,8 @@ import { getAccountById } from "@/services/mt5";
 import { Spin, App } from "antd";
 import { MT5 } from "@/types/mt5";
 import api from "@/services/api";
+import PageTour from "../components/tour/PageTour";
+import { UserProfile } from "@/types/user";
 
 export default function Bots() {
 	const { modal } = App.useApp();
@@ -19,7 +21,10 @@ export default function Bots() {
 	const [hasNoTime, setHasNoTime] = useState(false);
 	const userId = localStorage.getItem("user_id");
 	const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000";
-	const [apiStatus, setApiStatus] = useState<"connecting" | "online" | "offline">("connecting");
+	const [apiStatus, setApiStatus] = useState<
+		"connecting" | "online" | "offline"
+	>("connecting");
+	const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
 	const fetchData = async () => {
 		try {
@@ -38,6 +43,7 @@ export default function Bots() {
 
 			setIsBanned(userIsBanned);
 			setHasNoTime(userHasNoTime);
+			setUserProfile(userRes); // Assuming userRes contains the Full Profile
 
 			if (userIsBanned) {
 				modal.confirm({
@@ -81,6 +87,11 @@ export default function Bots() {
 		}
 	};
 
+	const handleOpenModal = () => {
+		setOpenModal(true);
+		window.dispatchEvent(new CustomEvent("CONNECT_MT5_OPENED"));
+	};
+
 	useEffect(() => {
 		fetchData();
 
@@ -95,9 +106,15 @@ export default function Bots() {
 		};
 		checkApi();
 
+		const handleCloseModal = () => setOpenModal(false);
 		window.addEventListener("MT5_ACCOUNTS_UPDATED", fetchData);
+		window.addEventListener("CLOSE_CONNECT_MT5", handleCloseModal);
+		window.addEventListener("OPEN_CONNECT_MT5", handleOpenModal);
+
 		return () => {
 			window.removeEventListener("MT5_ACCOUNTS_UPDATED", fetchData);
+			window.removeEventListener("CLOSE_CONNECT_MT5", handleCloseModal);
+			window.removeEventListener("OPEN_CONNECT_MT5", handleOpenModal);
 		};
 	}, []);
 
@@ -121,8 +138,8 @@ export default function Bots() {
 								apiStatus === "online"
 									? "bg-[#00FFA3] shadow-[0_0_8px_#00FFA3]"
 									: apiStatus === "offline"
-									? "bg-red-500"
-									: "bg-yellow-500 animate-pulse"
+										? "bg-red-500"
+										: "bg-yellow-500 animate-pulse"
 							}`}
 						/>
 						<p className="text-gray-500 font-medium">
@@ -132,8 +149,8 @@ export default function Bots() {
 									apiStatus === "online"
 										? "text-[#00FFA3]"
 										: apiStatus === "offline"
-										? "text-red-500"
-										: "text-yellow-500"
+											? "text-red-500"
+											: "text-yellow-500"
 								}
 							>
 								{apiStatus}
@@ -141,7 +158,8 @@ export default function Bots() {
 						</p>
 					</div>
 					<p className="text-gray-500 font-medium">
-						Server URL: <span className="text-gray-400 font-mono">{API_URL}</span>
+						Server URL:{" "}
+						<span className="text-gray-400 font-mono">{API_URL}</span>
 					</p>
 				</div>
 			</div>
@@ -164,7 +182,8 @@ export default function Bots() {
 
 				{/* Add Account Button */}
 				<div
-					onClick={() => setOpenModal(true)}
+					id="add-account-card"
+					onClick={handleOpenModal}
 					className="cursor-pointer bg-[#0b1117] border border-[#1e293b] rounded-2xl p-10 text-center hover:border-[#00FFA3] transition"
 				>
 					<div className="flex flex-col items-center gap-3">
@@ -189,6 +208,8 @@ export default function Bots() {
 					onSuccess={fetchData}
 				/>
 			)}
+
+			<PageTour user={userProfile} accountsCount={accounts.length} />
 		</section>
 	);
 }

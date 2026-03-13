@@ -193,6 +193,7 @@ export default function AccountCard({ account, isBanned, onDelete }: AccountCard
 							<Trash2 className="w-3 h-3" />
 						</button>
 						<button
+							id="deploy-bot-btn"
 							onClick={() => setIsDeployModalOpen(true)}
 							disabled={!$isLiveConnected || isBanned}
 							className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-md flex items-center gap-1 transition-all w-max

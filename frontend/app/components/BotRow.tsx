@@ -123,7 +123,7 @@ export default function BotRow({
 				</span>
 			</div>
 
-			<div className="w-[10%] flex justify-end">
+			<div id="bot-activation-switch" className="w-[10%] flex justify-end">
 				<Switch
 					checked={switchState}
 					onChange={handleStatusChange}

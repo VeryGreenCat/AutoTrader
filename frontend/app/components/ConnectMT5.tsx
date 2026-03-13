@@ -99,11 +99,12 @@ export default function ConnectMT5({
 		>
 			<div className="flex items-center justify-center p-4">
 				<div
+					id="connect-mt5-modal-content"
 					className="w-full max-w-md p-8 rounded-2xl 
-                  bg-[#0f0f0f] 
-                  border border-[#00FFA3]/20
-                  shadow-[0_0_40px_rgba(0,255,163,0.12)]
-                  relative"
+                   bg-[#0f0f0f] 
+                   border border-[#00FFA3]/20
+                   shadow-[0_0_40px_rgba(0,255,163,0.12)]
+                   relative"
 				>
 					<div className="absolute -top-24 -left-24 w-48 h-48 bg-[#00FFA3]/10 rounded-full blur-3xl"></div>
 
@@ -125,6 +126,7 @@ export default function ConnectMT5({
 								Account Name
 							</label>
 							<input
+								id="account-name-input"
 								type="text"
 								value={name}
 								onChange={(e) => setName(e.target.value)}
@@ -139,6 +141,7 @@ export default function ConnectMT5({
 								MT5 Login ID
 							</label>
 							<input
+								id="mt5-id-input"
 								type="text"
 								value={mt5Id}
 								onChange={(e) => setMt5Id(e.target.value)}
@@ -150,6 +153,7 @@ export default function ConnectMT5({
 						{/* Generate Token Button */}
 						{!token && (
 							<button
+								id="generate-token-btn"
 								onClick={generateToken}
 								disabled={!canGenerate || loading}
 								className="w-full bg-[#00FFA3] text-black font-black py-3 rounded-xl mt-2 shadow-[0_10px_20px_rgba(0,255,163,0.2)] hover:scale-[1.02] transition active:scale-95 uppercase tracking-tighter disabled:opacity-50 disabled:cursor-not-allowed"
@@ -190,6 +194,7 @@ export default function ConnectMT5({
 						{token && (
 							<div className="flex flex-col gap-3 mt-8">
 								<a
+									id="download-ea-link"
 									href="/MT5_Connector.ex5"
 									download="MT5_Connector.ex5"
 									className="group flex items-center justify-center gap-3 w-full 
@@ -208,6 +213,7 @@ export default function ConnectMT5({
 								</a>
 
 								<button
+									id="connect-account-btn"
 									onClick={handleConnect}
 									className="w-full bg-[#00FFA3] text-black font-black py-4 rounded-xl shadow-[0_10px_20px_rgba(0,255,163,0.2)] hover:scale-[1.02] hover:shadow-[0_10px_30px_rgba(0,255,163,0.4)] transition active:scale-95 uppercase tracking-tighter cursor-pointer text-sm"
 								>

@@ -85,6 +85,7 @@ export default function DeployModal(deployData: DeployModalProps) {
 		try {
 			await deployBot(mt5Id, selectedBot);
 			message.success("Deployment successful");
+			window.dispatchEvent(new CustomEvent("BOT_DEPLOYED"));
 			if (onSuccess) onSuccess();
 			onClose();
 		} catch (error: any) {
