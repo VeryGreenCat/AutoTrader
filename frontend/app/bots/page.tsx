@@ -7,6 +7,7 @@ import ConnectMT5 from "../components/ConnectMT5";
 import { getAccountById } from "@/services/mt5";
 import { Spin, App } from "antd";
 import { MT5 } from "@/types/mt5";
+import api from "@/services/api";
 
 export default function Bots() {
 	const { modal } = App.useApp();
@@ -17,6 +18,8 @@ export default function Bots() {
 	const [isBanned, setIsBanned] = useState(false);
 	const [hasNoTime, setHasNoTime] = useState(false);
 	const userId = localStorage.getItem("user_id");
+	const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000";
+	const [apiStatus, setApiStatus] = useState<"connecting" | "online" | "offline">("connecting");
 
 	const fetchData = async () => {
 		try {
@@ -81,6 +84,17 @@ export default function Bots() {
 	useEffect(() => {
 		fetchData();
 
+		const checkApi = async () => {
+			try {
+				await api.get("/");
+				setApiStatus("online");
+			} catch (error) {
+				console.error("API Health Check Failed:", error);
+				setApiStatus("offline");
+			}
+		};
+		checkApi();
+
 		window.addEventListener("MT5_ACCOUNTS_UPDATED", fetchData);
 		return () => {
 			window.removeEventListener("MT5_ACCOUNTS_UPDATED", fetchData);
@@ -90,13 +104,46 @@ export default function Bots() {
 	return (
 		<section className="pb-20 max-w-7xl mx-auto px-4">
 			{/* Header */}
-			<div className="mb-10">
-				<h2 className="text-4xl font-bold tracking-tighter uppercase italic text-white">
-					Bot <span className="text-[#00FFA3]">Manager</span>
-				</h2>
-				<p className="text-gray-500 text-sm mt-1">
-					Overview of linked MT5 terminals and active bots.
-				</p>
+			<div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+				<div>
+					<h2 className="text-4xl font-bold tracking-tighter uppercase italic text-white">
+						Bot <span className="text-[#00FFA3]">Manager</span>
+					</h2>
+					<p className="text-gray-500 text-sm mt-1">
+						Overview of linked MT5 terminals and active bots.
+					</p>
+				</div>
+
+				<div className="flex flex-col items-start md:items-end text-sm">
+					<div className="flex items-center gap-2 mb-0.5">
+						<div
+							className={`w-2 h-2 rounded-full ${
+								apiStatus === "online"
+									? "bg-[#00FFA3] shadow-[0_0_8px_#00FFA3]"
+									: apiStatus === "offline"
+									? "bg-red-500"
+									: "bg-yellow-500 animate-pulse"
+							}`}
+						/>
+						<p className="text-gray-500 font-medium">
+							Server Status:{" "}
+							<span
+								className={
+									apiStatus === "online"
+										? "text-[#00FFA3]"
+										: apiStatus === "offline"
+										? "text-red-500"
+										: "text-yellow-500"
+								}
+							>
+								{apiStatus}
+							</span>
+						</p>
+					</div>
+					<p className="text-gray-500 font-medium">
+						Server URL: <span className="text-gray-400 font-mono">{API_URL}</span>
+					</p>
+				</div>
 			</div>
 
 			<div className="space-y-8">
