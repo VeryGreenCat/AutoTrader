@@ -8,7 +8,7 @@ import { getAccountById } from "@/services/mt5";
 import { Spin, App } from "antd";
 import { MT5 } from "@/types/mt5";
 import api from "@/services/api";
-import PageTour from "../components/tour/PageTour";
+import PageTour from "../components/PageTour"; 
 import { UserProfile } from "@/types/user";
 
 export default function Bots() {

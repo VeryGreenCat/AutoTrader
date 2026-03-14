@@ -7,6 +7,32 @@
 
 	--color-text: #e0e0e0;
 	--color-text-secondary: #00ffa3;
+	color-scheme: dark;
+}
+
+/* Global Custom Scrollbar */
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(0, 255, 163, 0.3);
+}
+
+/* Firefox Support */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
 
 .account-dropdown .ant-dropdown-menu {
@@ -142,6 +168,21 @@
 .custom-pagination .ant-pagination-next .ant-pagination-item-link {
 	color: rgba(255, 255, 255, 0.45) !important;
 	background: transparent !important;
+}
+/* Custom Scrollbar Utility */
+.custom-scrollbar::-webkit-scrollbar {
+	width: 5px;
+	height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+	background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: rgba(0, 255, 163, 0.3);
 }
 
 /* ─── Cohesive Dark Mode Tour Buttons ─────────────────────── */

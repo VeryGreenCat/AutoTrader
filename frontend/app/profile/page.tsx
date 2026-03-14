@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { UserProfile } from "@/types/user";
-import { Mail, Info } from "lucide-react";
+import { Mail, Info, PlayCircle } from "lucide-react";
 import { getProfileById } from "@/services/profile";
+import HowToUseDoc from "../components/HowToUseDoc";
 
 export default function ProfilePage() {
+	const router = useRouter();
 	const [loading, setLoading] = useState(true);
 	const [profile, setProfile] = useState<UserProfile | null>(null);
 	const userId = localStorage.getItem("user_id");
@@ -138,14 +141,33 @@ export default function ProfilePage() {
 
 				{/* RIGHT COLUMN: Payment Methods */}
 				<div className="col-span-12 lg:col-span-8">
-					<div className="p-8 min-h-[500px] border border-white/5 bg-white/5 backdrop-blur-md rounded-2xl shadow-[0_0_30px_rgba(0,255,163,0.05)]">
+					<div className="p-8 border border-white/5 bg-white/5 backdrop-blur-md rounded-2xl shadow-[0_0_30px_rgba(0,255,163,0.05)]">
 						<div className="flex justify-between items-center mb-8">
 							<div className="flex items-center gap-3">
-								<Info className="text-[#00FFA3] w-6 h-6" />
+								<div className="w-10 h-10 rounded-lg bg-[#00FFA3]/10 flex items-center justify-center">
+									<Info className="text-[#00FFA3] w-6 h-6" />
+								</div>
 								<h3 className="text-xl font-bold uppercase italic tracking-tighter text-white">
-									How to use AutoTrader
+									How to use <span className="text-[#00FFA3]">AutoTrader</span>
 								</h3>
 							</div>
+
+							<button
+								onClick={() => {
+									sessionStorage.setItem("start_tour", "true");
+									router.push("/bots");
+								}}
+								className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00FFA3]/10 border border-[#00FFA3]/20 hover:bg-[#00FFA3] hover:text-black transition-all group active:scale-95 cursor-pointer"
+							>
+								<PlayCircle className="w-4 h-4 group-hover:scale-110 transition" />
+								<span className="text-xs font-bold uppercase tracking-wider">
+									Start Interactive Tour
+								</span>
+							</button>
+						</div>
+
+						<div className="max-h-[800px] overflow-y-auto pr-4 custom-scrollbar">
+							<HowToUseDoc />
 						</div>
 					</div>
 				</div>
