@@ -328,9 +328,14 @@ export default function Navbar() {
 											Profile
 										</button>
 										<button
-											onClick={() =>
-												window.dispatchEvent(new CustomEvent("START_PAGE_TOUR"))
-											}
+											onClick={() => {
+												if (pathname === "/bots") {
+													window.dispatchEvent(new CustomEvent("START_PAGE_TOUR"));
+												} else {
+													sessionStorage.setItem("start_tour", "true");
+													router.push("/bots");
+												}
+											}}
 											className="flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-[#00FFA3] transition-colors text-left cursor-pointer"
 										>
 											<Info className="w-4 h-4" />

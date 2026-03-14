@@ -112,27 +112,32 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 
 	const steps: TourProps["steps"] = [
 		{
-			title: "Welcome",
-			description:
-				"We'll guide you through linking MT5 and starting your first bot.",
+			title: <div className="text-2xl font-bold mb-1">Welcome</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed">
+					We'll guide you step-by-step through linking your MetaTrader 5
+					terminal and starting your very first automated trading bot.
+				</div>
+			),
 			target: null,
 		},
 		{
-			title: "Link MT5",
+			title: <div className="text-2xl font-bold mb-1">Link MT5</div>,
 			description: (
-				<div>
-					<p className="mb-2">
-						Click <b>Next</b> below to open the MT5 connection terminal.
+				<div className="text-lg text-gray-400 leading-relaxed">
+					<p className="mb-4">
+						To begin, click <b>Next</b> below to open the MT5 connection
+						terminal window.
 					</p>
-					<p className="text-[11px] text-gray-500">
-						No MT5 yet?{" "}
+					<p className="text-sm text-gray-500">
+						Don't have MT5 installed yet?{" "}
 						<a
 							href="https://www.metatrader5.com/en/download"
 							target="_blank"
 							rel="noreferrer"
 							className="text-[#00FFA3] underline"
 						>
-							Download it here
+							Download the official terminal here
 						</a>
 						.
 					</p>
@@ -146,8 +151,13 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			},
 		},
 		{
-			title: "Account Info",
-			description: "Enter your account name and MT5 Login ID.",
+			title: <div className="text-2xl font-bold mb-1">Account Info</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed">
+					Enter any recognizable name for your account and your official MT5
+					Login ID. This identifies your terminal to our system.
+				</div>
+			),
 			target: () => document.getElementById("connect-mt5-modal-content")!,
 			placement: "right",
 			mask: false,
@@ -159,132 +169,204 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			},
 		},
 		{
-			title: "Connect",
-			description: "Gen Token, download EA, then click Connect.",
+			title: <div className="text-2xl font-bold mb-1">Connect</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed">
+					Click 'Generate Token' to create your secure access key. After
+					generating, download the EA file and click Connect to verify.
+				</div>
+			),
 			target: () => document.getElementById("generate-token-btn")!,
 			placement: "right",
 			mask: false,
 		},
 		{
-			title: "Open Data Folder",
-			description: "In MT5, go to File > Open Data Folder.",
+			title: <div className="text-2xl font-bold mb-1">Open Data Folder</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed mb-4">
+					In your MetaTrader 5 terminal, navigate to the top menu bar, click on{" "}
+					<b>'File'</b>, and then select <b>'Open Data Folder'</b> from the
+					dropdown list. This will open the core directory where all your MT5
+					files are stored.
+				</div>
+			),
 			cover: (
 				<img
 					src="/images/tour/pic1.png"
 					alt="S1"
-					className="w-full aspect-video object-cover rounded shadow-lg border border-white/5"
+					className="w-full aspect-video object-cover rounded shadow-xl border border-white/10"
 				/>
 			),
 			target: null,
 		},
 		{
-			title: "MQL5 Folder",
-			description: "Inside the data folder, open the 'MQL5' folder.",
+			title: <div className="text-2xl font-bold mb-1">MQL5 Folder</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed mb-4">
+					Inside the newly opened data folder window, locate and double-click to
+					open exactly the <b>'MQL5'</b> folder. This directory contains all the
+					custom indicators, scripts, and Expert Advisors for your terminal.
+				</div>
+			),
 			cover: (
 				<img
 					src="/images/tour/pic2.png"
 					alt="S2"
-					className="w-full aspect-video object-cover rounded shadow-lg border border-white/5"
+					className="w-full aspect-video object-cover rounded shadow-xl border border-white/10"
 				/>
 			),
 			target: null,
 		},
 		{
-			title: "Experts Folder",
-			description: "Open the 'Experts' folder.",
+			title: <div className="text-2xl font-bold mb-1">Experts Folder</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed mb-4">
+					Within the MQL5 directory, find and open the <b>'Experts'</b> folder.
+					This is the specific location where MetaTrader 5 looks for automated
+					trading robots.
+				</div>
+			),
 			cover: (
 				<img
 					src="/images/tour/pic3.png"
 					alt="S3"
-					className="w-full aspect-video object-cover rounded shadow-lg border border-white/5"
+					className="w-full aspect-video object-cover rounded shadow-xl border border-white/10"
 				/>
 			),
 			target: null,
 		},
 		{
-			title: "Paste Connector",
-			description:
-				"Paste the 'MT5_Connector.ex5' file into the Experts folder.",
+			title: <div className="text-2xl font-bold mb-1">Paste Connector</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed mb-4">
+					Now, paste the <b>'MT5_Connector.ex5'</b> file that you downloaded
+					earlier directly into this Experts folder. This file is the secure
+					bridge that allows our platform to communicate with your terminal.
+				</div>
+			),
 			cover: (
 				<img
 					src="/images/tour/pic4.png"
 					alt="S4"
-					className="w-full aspect-video object-cover rounded shadow-lg border border-white/5"
+					className="w-full aspect-video object-cover rounded shadow-xl border border-white/10"
 				/>
 			),
 			target: null,
 		},
 		{
-			title: "Refresh Experts",
-			description: "Right-click 'Experts' in MT5 Navigator and select Refresh.",
+			title: <div className="text-2xl font-bold mb-1">Refresh Experts</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed mb-4">
+					Go back to your MT5 terminal. In the 'Navigator' panel on the left
+					(press Ctrl+N if hidden), expand 'Expert Advisors', right-click
+					anywhere in that list, and select <b>'Refresh'</b>. The connector
+					should now appear.
+				</div>
+			),
 			cover: (
 				<img
 					src="/images/tour/pic5.png"
 					alt="S5"
-					className="w-full aspect-video object-cover rounded shadow-lg border border-white/5"
+					className="w-full aspect-video object-cover rounded shadow-xl border border-white/10"
 				/>
 			),
 			target: null,
 		},
 		{
-			title: "EA Common Tab",
-			description:
-				"Double-click EA. In 'Common' tab, enable 'Allow Algo Trading'.",
+			title: <div className="text-2xl font-bold mb-1">EA Common Tab</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed mb-4">
+					Double-click the 'MT5_Connector' from the Navigator to attach it to a
+					chart. A configuration window will pop up. In the 'Common' tab, ensure
+					that the <b>'Allow Algo Trading'</b> checkbox is verified.
+				</div>
+			),
 			cover: (
 				<img
 					src="/images/tour/ea_config_left.png"
 					alt="C1"
-					className="w-full aspect-video object-cover rounded border border-white/5"
+					className="w-full aspect-video object-cover rounded shadow-xl border border-white/10"
 				/>
 			),
 			target: null,
 		},
 		{
-			title: "EA Inputs Tab",
-			description: "In 'Inputs' tab, enter your Token and Server URL.",
+			title: <div className="text-2xl font-bold mb-1">EA Inputs Tab</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed mb-4">
+					Switch over to the 'Inputs' tab in the same window. Here, you must
+					paste your generated <b>Token</b> and verify that the{" "}
+					<b>Server URL</b> matches exactly. Click 'OK' when done.
+				</div>
+			),
 			cover: (
 				<img
 					src="/images/tour/ea_config_right.png"
 					alt="C2"
-					className="w-full aspect-video object-cover rounded border border-white/5"
+					className="w-full aspect-video object-cover rounded shadow-xl border border-white/10"
 				/>
 			),
 			target: null,
 		},
 		{
-			title: "WebRequest",
-			description: "Tools > Options > EA. Allow WebRequest for our Server URL.",
+			title: <div className="text-2xl font-bold mb-1">WebRequest</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed mb-4">
+					For the connection to work, MT5 needs permission to communicate
+					outward. Go to Tools &gt; Options (or press Ctrl+O), navigate to the
+					'Expert Advisors' tab, check <b>'Allow WebRequest for listed URL'</b>,
+					and add our Server URL.
+				</div>
+			),
 			cover: (
 				<img
 					src="/images/tour/webrequest_setup.png"
 					alt="WR"
-					className="w-full aspect-video object-cover rounded border border-white/5"
+					className="w-full aspect-video object-cover rounded shadow-xl border border-white/10"
 				/>
 			),
 			target: null,
 		},
 		{
-			title: "Success",
-			description:
-				"Check Experts tab. It should show 'Connected Successfully'.",
+			title: <div className="text-2xl font-bold mb-1">Success</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed mb-4">
+					Look at the 'Experts' tab at the very bottom of your MT5 terminal (in
+					the Toolbox window). If everything was set up correctly, you should
+					see a <b>'Connected Successfully'</b> message. You are ready to close
+					this guide!
+				</div>
+			),
 			cover: (
 				<img
 					src="/images/tour/connection_success.png"
 					alt="OK"
-					className="w-full aspect-video object-cover rounded border border-white/5"
+					className="w-full aspect-video object-cover rounded shadow-xl border border-white/10"
 				/>
 			),
 			target: null,
 		},
 		{
-			title: "Deploy Bot",
-			description: "Click Deploy. Select your pair and bot version.",
+			title: <div className="text-2xl font-bold mb-1">Deploy Bot</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed">
+					You are now ready to trade! Click the <b>'Deploy New Bot'</b> button
+					to create your first automated strategy. Select your preferred trading
+					pair and choose the algorithm version you want to run.
+				</div>
+			),
 			target: () => document.getElementById("deploy-bot-btn")!,
 			mask: false,
 		},
 		{
-			title: "Activation",
-			description: "Toggle switch to start. Bot stops if ticket is 0.",
+			title: <div className="text-2xl font-bold mb-1">Activation</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed">
+					Once deployed, your bot will appear in the list. Just toggle this
+					activation switch to start live trading immediately! Note: The bot
+					will automatically halt if your system fuel ticket runs to zero.
+				</div>
+			),
 			target: () => document.getElementById("bot-activation-switch")!,
 			placement: "left",
 		},
@@ -307,7 +389,7 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			onChange={setCurrent}
 			steps={steps}
 			// @ts-ignore
-			width={600}
+			width="80vw"
 			mask={{
 				color: "rgba(0, 0, 0, 0.85)",
 			}}

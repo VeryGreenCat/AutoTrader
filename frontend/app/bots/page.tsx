@@ -95,6 +95,13 @@ export default function Bots() {
 	useEffect(() => {
 		fetchData();
 
+		if (sessionStorage.getItem("start_tour") === "true") {
+			sessionStorage.removeItem("start_tour");
+			setTimeout(() => {
+				window.dispatchEvent(new CustomEvent("START_PAGE_TOUR"));
+			}, 500);
+		}
+
 		const checkApi = async () => {
 			try {
 				await api.get("/");
@@ -142,7 +149,7 @@ export default function Bots() {
 										: "bg-yellow-500 animate-pulse"
 							}`}
 						/>
-						<p className="text-gray-500 font-medium">
+						<p className="text-gray-500 font-medium select-none">
 							Server Status:{" "}
 							<span
 								className={
@@ -158,7 +165,7 @@ export default function Bots() {
 						</p>
 					</div>
 					<p className="text-gray-500 font-medium">
-						Server URL:{" "}
+						<span className="select-none">Server URL:</span>{" "}
 						<span className="text-gray-400 font-mono">{API_URL}</span>
 					</p>
 				</div>
