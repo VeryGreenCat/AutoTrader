@@ -91,7 +91,7 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 
 		const handleBotActivated = () => {
 			if (openRef.current) {
-				setOpen(false); // Close tour on final activation
+				setCurrent(15); // Progress to final System Fuel step
 			}
 		};
 
@@ -176,9 +176,14 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 					generating, download the EA file and click Connect to verify.
 				</div>
 			),
-			target: () => document.getElementById("generate-token-btn")!,
+			target: () => document.getElementById("connect-mt5-modal-content")!,
 			placement: "right",
 			mask: false,
+			nextButtonProps: {
+				onClick: () => {
+					window.dispatchEvent(new CustomEvent("CLOSE_CONNECT_MT5"));
+				},
+			},
 		},
 		{
 			title: <div className="text-2xl font-bold mb-1">Open Data Folder</div>,
@@ -198,6 +203,12 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 				/>
 			),
 			target: null,
+			prevButtonProps: {
+				onClick: () => {
+					window.dispatchEvent(new CustomEvent("OPEN_CONNECT_MT5"));
+					setCurrent(3); // Go back to Connect step (index 3)
+				},
+			},
 		},
 		{
 			title: <div className="text-2xl font-bold mb-1">MQL5 Folder</div>,
@@ -355,31 +366,66 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 					pair and choose the algorithm version you want to run.
 				</div>
 			),
-			target: () => document.getElementById("deploy-bot-btn")!,
-			mask: false,
+			target: () => {
+				const el = document.getElementById("deploy-bot-btn");
+				if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+				return el!;
+			},
 		},
 		{
 			title: <div className="text-2xl font-bold mb-1">Activation</div>,
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed">
 					Once deployed, your bot will appear in the list. Just toggle this
-					activation switch to start live trading immediately! Note: The bot
-					will automatically halt if your system fuel ticket runs to zero.
+					activation switch to start live trading immediately!
 				</div>
 			),
-			target: () => document.getElementById("bot-activation-switch")!,
+			target: () => {
+				const el = document.getElementById("bot-activation-switch");
+				if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+				return el!;
+			},
 			placement: "left",
+		},
+		{
+			title: <div className="text-2xl font-bold mb-1">System Fuel</div>,
+			description: (
+				<div className="text-lg text-gray-400 leading-relaxed">
+					Keep an eye on your System Fuel tickets here. Bots consume fuel while active. If your tickets run to zero, all bots will automatically pause.
+				</div>
+			),
+			target: () => document.getElementById("navbar-system-fuel")!,
+			placement: "bottom",
 		},
 	];
 
 	useEffect(() => {
 		const card = document.getElementById("add-account-card");
-		if (open && current === 1) {
-			if (card) card.style.pointerEvents = "none";
-		} else {
-			if (card) card.style.pointerEvents = "auto";
+		const deployBtn = document.getElementById("deploy-bot-btn");
+		const activationSwitch = document.getElementById("bot-activation-switch");
+		const systemFuel = document.getElementById("navbar-system-fuel");
+
+		// Reset all to auto first
+		if (card) card.style.pointerEvents = "auto";
+		if (deployBtn) deployBtn.style.pointerEvents = "auto";
+		if (activationSwitch) activationSwitch.style.pointerEvents = "auto";
+		if (systemFuel) systemFuel.style.pointerEvents = "auto";
+
+		// Only disable pointer events if the tour is open AND on specific steps
+		if (open) {
+			if (current === 1) {
+				if (card) card.style.pointerEvents = "none";
+			} else if (current === 13) {
+				if (deployBtn) deployBtn.style.pointerEvents = "none";
+			} else if (current === 14) {
+				if (activationSwitch) activationSwitch.style.pointerEvents = "none";
+			} else if (current === 15) {
+				if (systemFuel) systemFuel.style.pointerEvents = "none";
+			}
 		}
 	}, [open, current]);
+
+	const isLargeStep = current >= 4 && current <= 12;
 
 	return (
 		<Tour
@@ -389,7 +435,7 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			onChange={setCurrent}
 			steps={steps}
 			// @ts-ignore
-			width="80vw"
+			width={isLargeStep ? "80vw" : 600}
 			mask={{
 				color: "rgba(0, 0, 0, 0.85)",
 			}}

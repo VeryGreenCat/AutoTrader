@@ -241,7 +241,10 @@ export default function Navbar() {
 				{/* RIGHT: System Fuel + Status + Profile */}
 				<div className="flex items-center gap-6">
 					{/* System Fuel */}
-					<div className="hidden lg:flex items-center gap-4 px-6 border-r border-white/10">
+					<div
+						id="navbar-system-fuel"
+						className="hidden lg:flex items-center gap-4 px-6 border-r border-white/10"
+					>
 						<div className="text-right">
 							<div className="flex items-center justify-end gap-2 mb-1">
 								<Ticket className="w-3 h-3 text-[#00FFA3]" />
