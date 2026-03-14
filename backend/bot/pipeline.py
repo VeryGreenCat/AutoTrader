@@ -8,23 +8,16 @@ from feature_eng import run_feature_pipeline
 from ppo_agent import load_model, predict_action
 from mt5_connector import get_ohlc_data, shutdown_mt5, get_mt5_state_features
 from api_client import post_llm_analysis, get_latest_market_context, send_trade_signal, register_model, get_active_bot_states
+from model_config import ModelConfig, MODEL_REGISTRY
 
-# Configuration
-SYMBOL = "EURUSD"
-TIMEFRAME = mt5.TIMEFRAME_H1
-WEEKLY_BARS = 60    # 2 days of H1 as requested for LLM
-HOURLY_BARS = 300   # Enough bars for feature_eng warming up (needs ~200)
-MODEL_PATH = "models/model_eurusd_best_6.zip"
-BOT_VERSION = "v1"
-
-def run_12hourly_update():
+def run_12hourly_update(cfg: ModelConfig):
     """
     Perform 12 hourly LLM-based pattern analysis and pipe it to Go.
     """
-    print(f"\n--- RUNNING 12 HOURLY LLM ANALYSIS FOR {SYMBOL} ---")
+    print(f"\n--- RUNNING 12 HOURLY LLM ANALYSIS FOR {cfg.symbol} ({cfg.version}) ---")
     
     # 1. Fetch data
-    ohlc_df = get_ohlc_data(SYMBOL, TIMEFRAME, WEEKLY_BARS)
+    ohlc_df = get_ohlc_data(cfg.symbol, cfg.timeframe, cfg.weekly_bars)
     if ohlc_df is None:
         print("Failed to fetch data for 12 hourly update.")
         return False
@@ -33,31 +26,31 @@ def run_12hourly_update():
     llm_features = add_llm_features(ohlc_df)
     
     # 3. Send to Go backend (Go will save it to Supabase)
-    success = post_llm_analysis(SYMBOL, llm_features)
+    success = post_llm_analysis(cfg.symbol, llm_features)
     if success:
         print("12 hourly LLM analysis complete and delivered to Go backend.")
     return success
 
-def run_hourly_step():
+def run_hourly_step(cfg: ModelConfig):
     """
     Perform hourly trading step using context from Go backend.
     """
-    print(f"\n--- RUNNING HOURLY TRADING STEP FOR {SYMBOL} ---")
+    print(f"\n--- RUNNING HOURLY TRADING STEP FOR {cfg.symbol} ({cfg.version}) ---")
     
     # 1. Fetch context from Go API
-    llm_context = get_latest_market_context(SYMBOL)
+    llm_context = get_latest_market_context(cfg.symbol)
     if llm_context is None:
         print("Market context not found in DB via Go. Running 12 hourly update first...")
-        if not run_12hourly_update():
+        if not run_12hourly_update(cfg):
             return False
-        llm_context = get_latest_market_context(SYMBOL)
+        llm_context = get_latest_market_context(cfg.symbol)
 
     if llm_context is None:
         print("CRITICAL: Failed to retrieve market context from Go backend.")
         return False
 
     # 2. Fetch latest OHLC data for feature engineering
-    ohlc_df = get_ohlc_data(SYMBOL, TIMEFRAME, HOURLY_BARS)
+    ohlc_df = get_ohlc_data(cfg.symbol, cfg.timeframe, cfg.hourly_bars)
     if ohlc_df is None:
         print("Failed to fetch data for hourly step.")
         return False
@@ -78,13 +71,13 @@ def run_hourly_step():
         return False
 
     # 5. Fetch Active User States from Go
-    user_states = get_active_bot_states(SYMBOL, BOT_VERSION)
+    user_states = get_active_bot_states(cfg.symbol, cfg.version)
     if not user_states:
-        print(f"No active online users found for {SYMBOL} {BOT_VERSION}. Skipping prediction.")
+        print(f"No active online users found for {cfg.symbol} {cfg.version}. Skipping prediction.")
         return True
 
     # 6. Load model (once)
-    model = load_model(MODEL_PATH)
+    model = load_model(cfg.model_path)
     if model is None:
         print("Failed to load PPO model.")
         return False
@@ -114,23 +107,17 @@ def run_hourly_step():
             pnl_val = float(pos.get("profit", 0.0)) / 10.0 # simple scaling
         
         # 1. Prepare base features for the window (120 bars)
-        window_df = featured_df.iloc[-120:].copy()
+        window_df = featured_df.iloc[-cfg.observation_window:].copy()
         
-        # 2. Apply Z-score Normalization to LLM features
-        # The model was trained on Z-scores, but the bot receives raw 0-1 values.
-        # We use standard approximations for mean=0.5, std=0.2 (common for these types of scores)
-        # to convert raw 0.7 into a recognizable standard deviation for the model.
+        # 2. Prepare LLM features for the window (Using raw values as requested)
         llm_cols = ["bias_score", "confidence", "volatility", "trend_strength", "momentum", "skip_flag"]
-        for col in llm_cols:
-            if col in window_df.columns:
-                # Normalizing raw (0..1) to approximate training distribution (mean ~0.5, std ~0.2)
-                window_df[col] = (window_df[col] - 0.5) / 0.2
 
         # 3. Calculate DYNAMIC state features for this specific user
         # We need to build a 120-bar history of their current position
-        pos_series = np.zeros(120)
-        time_series = np.zeros(120)
-        pnl_series = np.zeros(120)
+        window_len = cfg.observation_window
+        pos_series = np.zeros(window_len)
+        time_series = np.zeros(window_len)
+        pnl_series = np.zeros(window_len)
 
         if open_positions:
             pos = open_positions[0]
@@ -141,11 +128,10 @@ def run_hourly_step():
             close_prices = window_df["Close"].values
             
             # Simplified point/pip calculation (keeping it robust)
-            # EURUSD 1 pip = 0.0001
             if pos_val == 1.0:
-                pips_history = (close_prices - entry_price) / 0.0001
+                pips_history = (close_prices - entry_price) / cfg.pip_size
             else:
-                pips_history = (entry_price - close_prices) / 0.0001
+                pips_history = (entry_price - close_prices) / cfg.pip_size
             
             # Fill the arrays
             pos_series.fill(pos_val)
@@ -159,12 +145,11 @@ def run_hourly_step():
             total_bars_in_trade = (current_time - entry_time) // 3600
             
             # Backfill the time series
-            for i in range(120):
-                # Bar i is (119 - i) steps ago
-                dist_from_now = 119 - i
+            for i in range(window_len):
+                dist_from_now = (window_len - 1) - i
                 bar_time_in_trade = total_bars_in_trade - dist_from_now
                 if bar_time_in_trade > 0:
-                    time_series[i] = bar_time_in_trade / 1000.0 # Scaling used in env
+                    time_series[i] = bar_time_in_trade / 1000.0  # Scaling used in env
 
         # 4. Attach state features to window
         window_df["position_state"] = pos_series
@@ -192,18 +177,10 @@ def run_hourly_step():
         # ──────────────────────────────────────────────────────────────
 
         # Predict
-        action, action_probs = predict_action(model, final_features, window_size=120)
+        action, action_probs = predict_action(model, final_features, window_size=cfg.observation_window)
         
         # Map and Send
-        # Reconstruct the action space map from the training environment
-        sl_opts = [30, 50, 80]
-        tp_opts = [60, 100, 160]
-        action_map_list = [("HOLD", None, None, None), ("CLOSE", None, None, None)]
-        for direction in [0, 1]:  # 0=short, 1=long
-            for sl in sl_opts:
-                for tp in tp_opts:
-                    action_map_list.append(("OPEN", direction, float(sl), float(tp)))
-                    
+        action_map_list = cfg.build_action_map()
         act_tuple = action_map_list[int(action)]
         act_type = act_tuple[0]
         
@@ -233,7 +210,7 @@ def run_hourly_step():
             sl_pips = 0.0
             tp_pips = 0.0
             
-        if send_trade_signal(SYMBOL, BOT_VERSION, action_str, sl_pips, tp_pips, mt5_id=mt5_id):
+        if send_trade_signal(cfg.symbol, cfg.version, action_str, sl_pips, tp_pips, mt5_id=mt5_id):
             success_count += 1
             print(f"  > Signal {action_str} sent to MT5 {mt5_id} (SL={sl_pips}, TP={tp_pips})")
 
@@ -246,34 +223,34 @@ if __name__ == "__main__":
     
     if len(sys.argv) > 1:
         command = sys.argv[1]
-        if command == "12hourly":
-            run_12hourly_update()
+        if command == "12hr":
+            for cfg in MODEL_REGISTRY:
+                run_12hourly_update(cfg)
             shutdown_mt5()
-        elif command == "hourly":
-            run_hourly_step()
+        elif command == "hr":
+            for cfg in MODEL_REGISTRY:
+                run_hourly_step(cfg)
             shutdown_mt5()
         elif command == "auto":
             print("Starting automatic bot scheduler...")
+            print(f"Loaded {len(MODEL_REGISTRY)} model(s): {[c.symbol + ' ' + c.version for c in MODEL_REGISTRY]}")
             
-            # Schedule 12 hourly update everyday
-            schedule.every(12).hours.do(run_12hourly_update)
+            # Register & schedule each model
+            for cfg in MODEL_REGISTRY:
+                register_model(
+                    name=cfg.name,
+                    version=cfg.version,
+                    currency=cfg.symbol,
+                    description=cfg.description,
+                )
+                schedule.every(cfg.llm_interval_hours).hours.do(run_12hourly_update, cfg)
+                schedule.every().hour.at(cfg.trade_interval).do(run_hourly_step, cfg)
             
-            # Schedule hourly step at the beginning of every hour
-            schedule.every().hour.at(":00").do(run_hourly_step)
-            
-            # Run initial executions so it doesn't wait for the next scheduled time
+            # Run initial executions
             print("Running initial setup...")
-            
-            # 1. Register the model automatically
-            register_model(
-                name="PPO RL Agent", 
-                version=BOT_VERSION, 
-                currency=SYMBOL, 
-                description="PPO Reinforcement Learning model with technical features and LLM bias context."
-            )
-            
-            run_12hourly_update()
-            run_hourly_step()
+            for cfg in MODEL_REGISTRY:
+                run_12hourly_update(cfg)
+                run_hourly_step(cfg)
             
             print("Scheduler is now running! Waiting for the next scheduled job...")
             try:
@@ -285,9 +262,10 @@ if __name__ == "__main__":
             finally:
                 shutdown_mt5()
         else:
-            print("Unknown command. Use '12hourly', 'hourly', or 'auto'.")
+            print("Unknown command. Use '12hr', 'hr', or 'auto'.")
             shutdown_mt5()
-    else:
-        # Default behavior: run hourly
-        run_hourly_step()
+    else:   
+        # Default behavior: run hourly for all models
+        for cfg in MODEL_REGISTRY:
+            run_hourly_step(cfg)
         shutdown_mt5()

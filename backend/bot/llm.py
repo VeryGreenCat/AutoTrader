@@ -193,7 +193,7 @@ def top3_pattern(img, top_n=3):
     """)
     knowledge_texts.append(text)
 
-  return "\\n".join(knowledge_texts)
+  return "\n".join(knowledge_texts)
 
 
 # step 4 send top3 info to llm and return json
@@ -222,7 +222,9 @@ def validate_llm_output(data: dict) -> dict:
     for key in required_keys:
         val = data.get(key)
         if key == "reasoning":
-            validated[key] = str(val) if val is not None else "No reasoning provided."
+            if not val or len(str(val)) < 5:
+                raise ValueError("Reasoning field is missing or too short.")
+            validated[key] = str(val)
             continue
             
         if val is None:
@@ -281,16 +283,17 @@ def pred_from_info(info):
       response = client.chat(
         model="qwen2.5:0.5b",  # fastest local model
         messages=[{"role": "user", "content": prompt}],
+        format="json", # Force JSON output
       )
 
-      raw = (
-        response.message.content.strip()
-        .replace("```json", "")
-        .replace("```", "")
-        .strip()
-      )
+      raw = response.message.content.strip()
+      # Handle potential markdown fencing even with format='json'
+      if raw.startswith("```"):
+          raw = raw.split("```")[1]
+          if raw.startswith("json"):
+              raw = raw[4:]
       
-      return validate_llm_output(json.loads(raw))
+      return validate_llm_output(json.loads(raw.strip()))
     except json.JSONDecodeError:
       print(f"  [WARN] Attempt {attempt}/10: JSON parse failed.")
     except Exception as e:
