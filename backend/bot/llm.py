@@ -262,7 +262,7 @@ RETURN ONLY THIS JSON (no markdown, no explanation, no extra keys):
     "volatility":     <float 0.0 to 1.0 | 0=low, 0.5=medium, 1=high | based on top 3 pattern matches and their properties>,
     "trend_strength": <float 0.0 to 1.0 | based on matched confidence, if top match has >70% confidence, then 0.7-1.0, if top match is weak pattern or confidence is 50-80% then 0.5-0.8, otherwise 0-0.5>,
     "momentum":       <float 0.0 to 1.0 | 0=strong selling pressure, 1=strong buying pressure>,
-    "skip_flag":      <float 0.0 to 1.0 | 0=tradeable, 0.5=fine 1=avoid this window>
+    "skip_flag":      <float 0.0 to 1.0 | 0=tradeable, 0.5=fine 1=avoid this window>,
     "reasoning":      <string | explain your reasoning in 1-2 sentences>
 }}
 
