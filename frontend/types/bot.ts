@@ -20,6 +20,7 @@ export interface DeployModalProps {
 export interface BotRowProps {
 	bot: Bot;
 	accountStatus: boolean;
+	pnl?: number | null;
 	onDelete?: () => void;
 	onStatusChange?: () => void;
 	isBanned?: boolean;

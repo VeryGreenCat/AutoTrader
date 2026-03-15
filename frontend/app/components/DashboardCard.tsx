@@ -3,10 +3,27 @@ import { cardType } from "@/types/dashboardCard";
 const DashboardCard = ({
 	type,
 	value,
+	subValue,
 }: {
 	type: cardType;
 	value?: number | string;
+	subValue?: string | number;
 }) => {
+	const renderSubValue = (val?: string | number) => {
+		if (val === undefined || val === null) return null;
+		
+		if (typeof val === "number") {
+			const isPositive = val >= 0;
+			return (
+				<p className={`text-xs mt-2 ${isPositive ? "text-emerald-400" : "text-red-400"}`}>
+					{isPositive ? "▲" : "▼"} {Math.abs(val).toFixed(2)}%
+				</p>
+			);
+		}
+		
+		return <p className="text-xs text-emerald-400 mt-2">{val}</p>;
+	};
+
 	const formatCurrency = (val: number) => {
 		const isNegative = val < 0;
 		const absVal = Math.abs(val);
@@ -27,7 +44,7 @@ const DashboardCard = ({
 							? formatStandard(value)
 							: value || "$0.00"}
 					</h2>
-					<p className="text-xs text-emerald-400 mt-2">+12.5% this month</p>
+					{subValue ? renderSubValue(subValue) : <p className="text-xs text-gray-500 mt-2">Floating P/L active</p>}
 				</div>
 			);
 		case "TT_pl":
@@ -67,7 +84,7 @@ const DashboardCard = ({
 							? formatCurrency(value)
 							: value || "+$0.00"}
 					</h2>
-					<p className="text-xs text-emerald-400 mt-2">+12.5% this week</p>
+					{subValue ? renderSubValue(subValue) : <p className="text-xs text-gray-500 mt-2">Cumulative week</p>}
 				</div>
 			);
 		case "equity":
@@ -79,7 +96,7 @@ const DashboardCard = ({
 							? formatStandard(value)
 							: value || "$0.00"}
 					</h2>
-					<p className="text-xs text-emerald-400 mt-2">+12.5% this month</p>
+					{subValue ? renderSubValue(subValue) : <p className="text-xs text-gray-500 mt-2">Account Equity</p>}
 				</div>
 			);
 		case "pl":
@@ -111,7 +128,7 @@ const DashboardCard = ({
 							? formatStandard(value)
 							: value || "$0.00"}
 					</h2>
-					<p className="text-xs text-emerald-400 mt-2">+12.5% this month</p>
+					{subValue ? renderSubValue(subValue) : <p className="text-xs text-gray-500 mt-2">Available Balance</p>}
 				</div>
 			);
 		case "connection":

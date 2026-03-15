@@ -220,16 +220,25 @@ export default function AccountCard({ account, isBanned, onDelete }: AccountCard
 						No bots deployed yet.
 					</div>
 				) : (
-					bots.map((bot) => (
-						<BotRow
-							key={bot.bot_id}
-							bot={bot}
-							accountStatus={account.status}
-							isBanned={isBanned}
-							onDelete={fetchBots}
-							onStatusChange={fetchBots}
-						/>
-					))
+					bots.map((bot) => {
+						const botPnl = stats?.closed_positions
+							? stats.closed_positions
+									.filter((pos) => pos.pair === bot.currency)
+									.reduce((sum, pos) => sum + pos.profit, 0)
+							: null;
+							
+						return (
+							<BotRow
+								key={bot.bot_id}
+								bot={bot}
+								accountStatus={account.status}
+								pnl={botPnl}
+								isBanned={isBanned}
+								onDelete={fetchBots}
+								onStatusChange={fetchBots}
+							/>
+						);
+					})
 				)}
 			</div>
 

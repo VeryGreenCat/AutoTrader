@@ -82,22 +82,29 @@ export default function Home() {
 
 					{/* Stats Grid */}
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-center">
-						<div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl hover:bg-white/10 transition duration-300">
-							<h3 className="text-[#00FFA3] text-3xl font-bold mb-1">$1.2M+</h3>
-							<p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">
-								Total Profit Generated
+						<div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl hover:bg-white/10 transition duration-300 group">
+							<h3 className="text-[#00FFA3] text-3xl font-bold mb-1 group-hover:scale-110 transition-transform duration-300">
+								$3,142.50
+							</h3>
+							<p className="text-gray-500 text-[10px] uppercase tracking-[0.2em] font-bold">
+								Realized Alpha Profit
 							</p>
 						</div>
-						<div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl hover:bg-white/10 transition duration-300">
-							<h3 className="text-[#00FFA3] text-3xl font-bold mb-1">94.2%</h3>
-							<p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">
-								AI Accuracy Rate
+						<div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl hover:bg-white/10 transition duration-300 group">
+							<h3 className="text-[#00FFA3] text-3xl font-bold mb-1 group-hover:scale-110 transition-transform duration-300">
+								51.2%
+							</h3>
+							<p className="text-gray-500 text-[10px] uppercase tracking-[0.2em] font-bold">
+								Statistical Predictive Edge
 							</p>
 						</div>
-						<div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl hover:bg-white/10 transition duration-300">
-							<h3 className="text-[#00FFA3] text-3xl font-bold mb-1">2,400+</h3>
-							<p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">
-								Active AI Nodes
+						<div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl hover:bg-white/10 transition duration-300 group">
+							<h3 className="text-[#00FFA3] text-3xl font-bold mb-1 group-hover:scale-110 transition-transform duration-300 flex items-center justify-center gap-2">
+								<div className="w-2 h-2 bg-[#00FFA3] rounded-full animate-pulse shadow-[0_0_10px_#00FFA3]"></div>
+								Live
+							</h3>
+							<p className="text-gray-500 text-[10px] uppercase tracking-[0.2em] font-bold">
+								Signal Execution Status
 							</p>
 						</div>
 					</div>

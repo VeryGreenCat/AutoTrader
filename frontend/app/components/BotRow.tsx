@@ -9,6 +9,7 @@ import { BotRowProps } from "@/types/bot";
 export default function BotRow({
 	bot,
 	accountStatus,
+	pnl,
 	isBanned,
 	onDelete,
 	onStatusChange,
@@ -62,8 +63,7 @@ export default function BotRow({
 		}
 	};
 
-	// Mock PnL for connected accounts as requested
-	const pnlValue = accountStatus ? 12.45 : null;
+	const pnlValue = pnl !== undefined ? pnl : (accountStatus ? null : null);
 
 	// Determine if row should be grayed out (bot is inactive or account is disconnected or user is banned)
 	const isRowDisabled = !switchState || !accountStatus || isBanned;
