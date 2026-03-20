@@ -120,6 +120,13 @@ export default function VerifyOTP({
 		setOpen(false);
 	};
 
+	const handleLogout = async () => {
+		await supabase.auth.signOut();
+		localStorage.removeItem("user_id");
+		sessionStorage.removeItem("otp_verified");
+		window.location.reload();
+	};
+
 	return (
 		<Modal
 			open={open}
@@ -211,8 +218,8 @@ export default function VerifyOTP({
 						)}
 					</button>
 
-					{/* Resend Timer */}
-					<div className="text-center pt-2 border-t border-white/5">
+					{/* Resend Timer & Emergency Exit */}
+					<div className="text-center pt-2 border-t border-white/5 space-y-4">
 						<button
 							onClick={handleResend}
 							disabled={!canResend}
@@ -233,6 +240,13 @@ export default function VerifyOTP({
 									<span className="font-mono text-white ml-1">{timeLeft}s</span>
 								</span>
 							)}
+						</button>
+
+						<button
+							onClick={handleLogout}
+							className="text-[9px] text-gray-700 hover:text-red-400 font-black uppercase tracking-[0.2em] transition-colors cursor-pointer block mx-auto outline-none"
+						>
+							Not your account? Sign Out
 						</button>
 					</div>
 				</div>

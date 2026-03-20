@@ -121,6 +121,7 @@ export default function Navbar() {
 		await supabase.auth.signOut();
 		router.push("/");
 		sessionStorage.removeItem("otp_verified");
+		localStorage.removeItem("user_id");
 	};
 
 	const formatTime = (seconds: number) => {

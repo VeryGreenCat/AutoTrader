@@ -11,15 +11,15 @@ export default function ProfilePage() {
 	const router = useRouter();
 	const [loading, setLoading] = useState(true);
 	const [profile, setProfile] = useState<UserProfile | null>(null);
-	const userId = localStorage.getItem("user_id");
-
 	useEffect(() => {
 		const fetchData = async () => {
+			const currentUserId = localStorage.getItem("user_id");
+			if (!currentUserId) return;
 			try {
 				setLoading(true);
 
 				// API Call: Get User Profile
-				const userRes = await getProfileById(userId!);
+				const userRes = await getProfileById(currentUserId);
 				console.log("ProfilePage | userRes:", userRes);
 
 				setProfile(userRes.data);

@@ -44,7 +44,7 @@ export default function AuthProvider({
 			// Check OTP logic
 			const isOtpVerified = sessionStorage.getItem("otp_verified") === "true";
 
-			if (!isOtpVerified && !openModal) {
+			if (!isOtpVerified && !openModal && pathname !== "/") {
 				setOpenModal(true);
 			}
 

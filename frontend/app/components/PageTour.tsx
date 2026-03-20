@@ -22,13 +22,13 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 		const hasSeenTour = localStorage.getItem("has_seen_tour");
 
 		// Logic to detect new user:
-		// 1. remaining_seconds is exactly 43200 (12 hours)
+		// 1. remaining_seconds is exactly 432000 (120 hours)
 		// 2. bot_started_at is null
 		// 3. no accounts added yet
 		// 4. haven't shown the tour prompt in this session
 		if (
 			!hasSeenTour &&
-			user?.remaining_seconds === 43200 &&
+			user?.remaining_seconds === 432000 &&
 			!user?.bot_started_at &&
 			accountsCount === 0
 		) {

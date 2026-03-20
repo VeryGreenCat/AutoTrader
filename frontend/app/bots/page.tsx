@@ -19,7 +19,6 @@ export default function Bots() {
 	const [loading, setLoading] = useState(true);
 	const [isBanned, setIsBanned] = useState(false);
 	const [hasNoTime, setHasNoTime] = useState(false);
-	const userId = localStorage.getItem("user_id");
 	const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000";
 	const [apiStatus, setApiStatus] = useState<
 		"connecting" | "online" | "offline"
@@ -30,13 +29,14 @@ export default function Bots() {
 		try {
 			setLoading(true);
 
-			if (!userId) {
+			const currentUserId = localStorage.getItem("user_id");
+			if (!currentUserId) {
 				setLoading(false);
 				return;
 			}
 
 			// API Call: Get User Accounts and Ban Status
-			const userRes = await getAccountById(userId);
+			const userRes = await getAccountById(currentUserId);
 
 			const userIsBanned = !!userRes.is_banned;
 			const userHasNoTime = userRes.remaining_seconds <= 0;

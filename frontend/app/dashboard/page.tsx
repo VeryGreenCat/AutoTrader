@@ -110,8 +110,14 @@ const DashboardContent = () => {
 		};
 
 		fetchData();
-		const interval = setInterval(fetchData, 10000); // Poll every 10 seconds
-		return () => clearInterval(interval);
+		const interval = setInterval(fetchData, 60000); // Poll every 1 minute
+
+		window.addEventListener("MT5_ACCOUNTS_UPDATED", fetchData);
+
+		return () => {
+			clearInterval(interval);
+			window.removeEventListener("MT5_ACCOUNTS_UPDATED", fetchData);
+		};
 	}, []);
 
 	// Aggregations
@@ -200,45 +206,49 @@ const DashboardContent = () => {
 			{/* below will be a 4 cards */}
 			{!accountParam ? (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-					<DashboardCard 
-						type={"TT_equity"} 
-						value={totalEquity} 
+					<DashboardCard
+						type={"TT_equity"}
+						value={totalEquity}
 						subValue={`Across ${activeAccounts.length} accounts`}
 					/>
-					<DashboardCard 
-						type={"TT_pl"} 
-						value={totalTodayPL} 
-					/>
-					<DashboardCard 
-						type={"TT_bots"} 
-						value={totalActiveBots} 
+					<DashboardCard type={"TT_pl"} value={totalTodayPL} />
+					<DashboardCard
+						type={"TT_bots"}
+						value={totalActiveBots}
 						subValue="Execution engines"
 					/>
-					<DashboardCard 
-						type={"TT_week_pl"} 
-						value={totalWeekPL} 
-					/>
+					<DashboardCard type={"TT_week_pl"} value={totalWeekPL} />
 				</div>
 			) : (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-					<DashboardCard 
-						type={"equity"} 
-						value={selectedStats?.equity || 0} 
-						subValue={selectedStats ? ((selectedStats.equity - selectedStats.balance) / selectedStats.balance) * 100 : undefined}
+					<DashboardCard
+						type={"equity"}
+						value={selectedStats?.equity || 0}
+						subValue={
+							selectedStats
+								? ((selectedStats.equity - selectedStats.balance) /
+										selectedStats.balance) *
+									100
+								: undefined
+						}
 					/>
 					<DashboardCard
 						type={"pl"}
 						value={selectedStats?.realized_today || 0}
 					/>
-					<DashboardCard 
-						type={"bots"} 
-						value={activeBotsForSelected} 
+					<DashboardCard
+						type={"bots"}
+						value={activeBotsForSelected}
 						subValue="Targeted strategies"
 					/>
-					<DashboardCard 
-						type={"balance"} 
-						value={selectedStats?.balance || 0} 
-						subValue={selectedStats?.is_connected ? "Live MT5 Balance" : "Last known state"}
+					<DashboardCard
+						type={"balance"}
+						value={selectedStats?.balance || 0}
+						subValue={
+							selectedStats?.is_connected
+								? "Live MT5 Balance"
+								: "Last known state"
+						}
 					/>
 				</div>
 			)}

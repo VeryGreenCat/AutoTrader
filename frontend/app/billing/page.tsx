@@ -15,10 +15,9 @@ export default function BillingPage() {
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		const userId = localStorage.getItem("user_id");
-		if (!userId) return;
-
-		const fetchUnpaidBill = async (userId: string) => {
+		const fetchUnpaidBill = async () => {
+			const userId = localStorage.getItem("user_id");
+			if (!userId) return;
 			try {
 				const res = await getUnpaidBills(userId);
 				setUnpaidBill(res.data || null);
@@ -30,7 +29,7 @@ export default function BillingPage() {
 			}
 		};
 
-		fetchUnpaidBill(userId);
+		fetchUnpaidBill();
 	}, []);
 
 	useEffect(() => {
