@@ -3,7 +3,14 @@
 import React, { useEffect, useState } from "react";
 import { Tour, Button, Modal, App, Carousel } from "antd";
 import type { TourProps } from "antd";
-import { Download, ChevronLeft, ChevronRight, Copy, Check } from "lucide-react";
+import {
+	Download,
+	ChevronLeft,
+	ChevronRight,
+	Copy,
+	Check,
+	Play,
+} from "lucide-react";
 
 interface PageTourProps {
 	user: {
@@ -225,10 +232,14 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 		{
 			title: <div className="text-2xl font-bold mb-1">Open Data Folder</div>,
 			description: (
-				<div className="text-lg text-gray-400 leading-relaxed mb-4">
+				<div className="text-base text-gray-400 leading-relaxed mb-4">
 					In your MetaTrader 5 terminal, navigate to the top menu bar, click on{" "}
 					<b>'File &gt; Open Data Folder'</b> from the dropdown list.
-				</div>
+					<br />
+					<b>IMPORTANT:</b> Algo Trading must always be enabled{" [ "}
+					<Play className="inline-block w-4 h-4 text-[#00FFA3] fill-[#00FFA3] mb-1" />{" "}
+					{" ]."}
+				</div> 
 			),
 			cover: (
 				<img
