@@ -10,9 +10,10 @@ import { MT5 } from "@/types/mt5";
 import api from "@/services/api";
 import PageTour from "../components/PageTour"; 
 import { UserProfile } from "@/types/user";
+import { Copy, Check } from "lucide-react";
 
 export default function Bots() {
-	const { modal } = App.useApp();
+	const { modal, message } = App.useApp();
 	const router = useRouter();
 	const [accounts, setAccounts] = useState<MT5[]>([]);
 	const [openModal, setOpenModal] = useState(false);
@@ -24,6 +25,14 @@ export default function Bots() {
 		"connecting" | "online" | "offline"
 	>("connecting");
 	const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+	const [copied, setCopied] = useState(false);
+
+	const handleCopy = () => {
+		navigator.clipboard.writeText(API_URL);
+		setCopied(true);
+		message.success("URL copied to clipboard");
+		setTimeout(() => setCopied(false), 2000);
+	};
 
 	const fetchData = async () => {
 		try {
@@ -164,9 +173,19 @@ export default function Bots() {
 							</span>
 						</p>
 					</div>
-					<p className="text-gray-500 font-medium">
+					<p className="text-gray-500 font-medium flex items-center gap-2 group">
 						<span className="select-none">Server URL:</span>{" "}
 						<span className="text-gray-400 font-mono">{API_URL}</span>
+						<button
+							onClick={handleCopy}
+							className="text-gray-500 hover:text-[#00FFA3] transition-colors p-1 flex items-center justify-center cursor-pointer"
+						>
+							{copied ? (
+								<Check size={14} className="text-[#00FFA3]" />
+							) : (
+								<Copy size={14} />
+							)}
+						</button>
 					</p>
 				</div>
 			</div>

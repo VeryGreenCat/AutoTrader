@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Tour, Button, Modal, App, Carousel } from "antd";
 import type { TourProps } from "antd";
-import { Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { Download, ChevronLeft, ChevronRight, Copy, Check } from "lucide-react";
 
 interface PageTourProps {
 	user: {
@@ -16,7 +16,18 @@ interface PageTourProps {
 const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 	const [open, setOpen] = useState<boolean>(false);
 	const [current, setCurrent] = useState<number>(0);
+	const [copyingURL, setCopyingURL] = useState(false);
 	const { message } = App.useApp();
+
+	const serverUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000";
+
+	const copyToClipboard = (text: string) => {
+		navigator.clipboard.writeText(text).then(() => {
+			setCopyingURL(true);
+			message.success("Server URL copied to clipboard!");
+			setTimeout(() => setCopyingURL(false), 2000);
+		});
+	};
 
 	useEffect(() => {
 		const hasSeenTour = localStorage.getItem("has_seen_tour");
@@ -305,9 +316,33 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			title: <div className="text-2xl font-bold mb-1">EA Inputs Tab</div>,
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed mb-4">
-					Switch over to the 'Inputs' tab in the same window. Here, you must
-					paste your generated <b>Token</b> and verify that the{" "}
-					<b>Server URL</b> matches exactly. Click 'OK' when done.
+					<p className="mb-4">
+						Switch over to the 'Inputs' tab in the same window. Here, you must
+						paste your generated <b>Token</b> and verify that the{" "}
+						<b>Server URL</b> matches exactly. Click 'OK' when done.
+					</p>
+					<div className="flex items-center gap-2 mt-2">
+						<span className="text-gray-500 text-sm font-medium shrink-0">
+							Server URL:
+						</span>
+						<code 
+							className="text-[#00FFA3] font-mono text-sm bg-[#00FFA3]/10 px-2 py-0.5 rounded border border-[#00FFA3]/20 truncate flex-1"
+							title={serverUrl}
+						>
+							{serverUrl}
+						</code>
+						<Button
+							type="text"
+							className="text-gray-400 hover:text-[#00FFA3] p-1 h-auto shrink-0"
+							onClick={() => copyToClipboard(serverUrl)}
+						>
+							{copyingURL ? (
+								<Check className="w-4 h-4" />
+							) : (
+								<Copy className="w-4 h-4" />
+							)}
+						</Button>
+					</div>
 				</div>
 			),
 			cover: (
@@ -323,10 +358,35 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			title: <div className="text-2xl font-bold mb-1">WebRequest</div>,
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed mb-4">
-					For the connection to work, MT5 needs permission to communicate
-					outward. Go to Tools &gt; Options (or press Ctrl+O), navigate to the
-					'Expert Advisors' tab, check <b>'Allow WebRequest for listed URL'</b>,
-					and add our Server URL.
+					<p className="mb-4">
+						For the connection to work, MT5 needs permission to communicate
+						outward. Go to Tools &gt; Options (or press Ctrl+O), navigate to the
+						'Expert Advisors' tab, check <b>'Allow WebRequest for listed URL'</b>,
+						and add our Server URL.
+					</p>
+
+					<div className="flex items-center gap-2 mt-2">
+						<span className="text-gray-500 text-sm font-medium shrink-0">
+							Server URL:
+						</span>
+						<code 
+							className="text-[#00FFA3] font-mono text-sm bg-[#00FFA3]/10 px-2 py-0.5 rounded border border-[#00FFA3]/20 truncate flex-1"
+							title={serverUrl}
+						>
+							{serverUrl}
+						</code>
+						<Button
+							type="text"
+							className="text-gray-400 hover:text-[#00FFA3] p-1 h-auto shrink-0"
+							onClick={() => copyToClipboard(serverUrl)}
+						>
+							{copyingURL ? (
+								<Check className="w-4 h-4" />
+							) : (
+								<Copy className="w-4 h-4" />
+							)}
+						</Button>
+					</div>
 				</div>
 			),
 			cover: (

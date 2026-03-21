@@ -11,6 +11,8 @@ export default function ProfilePage() {
 	const router = useRouter();
 	const [loading, setLoading] = useState(true);
 	const [profile, setProfile] = useState<UserProfile | null>(null);
+	const [shouldBlink, setShouldBlink] = useState(false);
+
 	useEffect(() => {
 		const fetchData = async () => {
 			const currentUserId = localStorage.getItem("user_id");
@@ -23,6 +25,10 @@ export default function ProfilePage() {
 				console.log("ProfilePage | userRes:", userRes);
 
 				setProfile(userRes.data);
+
+				// Trigger blink effect for the tour button
+				setShouldBlink(true);
+				setTimeout(() => setShouldBlink(false), 2500);
 			} catch (error) {
 				console.error("Failed to fetch profile data", error);
 			} finally {
@@ -157,7 +163,9 @@ export default function ProfilePage() {
 									sessionStorage.setItem("start_tour", "true");
 									router.push("/bots");
 								}}
-								className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00FFA3]/10 border border-[#00FFA3]/20 hover:bg-[#00FFA3] hover:text-black transition-all group active:scale-95 cursor-pointer"
+								className={`flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00FFA3]/10 border border-[#00FFA3]/20 hover:bg-[#00FFA3] hover:text-black transition-all group active:scale-95 cursor-pointer ${
+									shouldBlink ? "animate-blink-twice" : ""
+								}`}
 							>
 								<PlayCircle className="w-4 h-4 group-hover:scale-110 transition" />
 								<span className="text-xs font-bold uppercase tracking-wider">
