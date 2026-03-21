@@ -2,7 +2,7 @@
 
 import { Modal, App } from "antd";
 import { useState } from "react";
-import { Copy, Check, Download } from "lucide-react";
+import { Copy, Check, Download, X } from "lucide-react";
 import { addAccount } from "@/services/mt5";
 
 interface ConnectMT5Props {
@@ -35,6 +35,7 @@ export default function ConnectMT5({
 
 		setToken(generated);
 		setLoading(false);
+		window.dispatchEvent(new CustomEvent("MT5_TOKEN_GENERATED"));
 	};
 
 	const [copied, setCopied] = useState(false);
@@ -46,6 +47,7 @@ export default function ConnectMT5({
 	};
 
 	const handleConnect = async () => {
+		window.dispatchEvent(new CustomEvent("MT5_CONNECT_CLICKED"));
 		try {
 			setLoading(true);
 
@@ -96,6 +98,7 @@ export default function ConnectMT5({
 			footer={null}
 			centered
 			closeIcon={null}
+			mask={{ closable: false }}
 		>
 			<div className="flex items-center justify-center p-4">
 				<div
@@ -106,6 +109,13 @@ export default function ConnectMT5({
                    shadow-[0_0_40px_rgba(0,255,163,0.12)]
                    relative"
 				>
+					{/* Custom Close Icon */}
+					<button
+						onClick={handleCancel}
+						className="absolute top-4 right-4 text-gray-600 hover:text-white transition-colors cursor-pointer p-1 group"
+					>
+						<X size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+					</button>
 					<div className="absolute -top-24 -left-24 w-48 h-48 bg-[#00FFA3]/10 rounded-full blur-3xl"></div>
 
 					{/* Header */}
@@ -156,7 +166,7 @@ export default function ConnectMT5({
 								id="generate-token-btn"
 								onClick={generateToken}
 								disabled={!canGenerate || loading}
-								className="w-full bg-[#00FFA3] text-black font-black py-3 rounded-xl mt-2 shadow-[0_10px_20px_rgba(0,255,163,0.2)] hover:scale-[1.02] transition active:scale-95 uppercase tracking-tighter disabled:opacity-50 disabled:cursor-not-allowed"
+								className="w-full bg-[#00FFA3] text-black font-black py-3 rounded-xl mt-2 shadow-[0_10px_20px_rgba(0,255,163,0.2)] hover:scale-[1.02] transition active:scale-95 uppercase tracking-tighter disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
 							>
 								{loading ? "Generating..." : "Generate Token"}
 							</button>

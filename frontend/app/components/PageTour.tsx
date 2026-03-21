@@ -100,6 +100,18 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			}
 		};
 
+		const handleTokenGenerated = () => {
+			if (openRef.current) {
+				setCurrent(3); // Jump to "Connect" step after generating token
+			}
+		};
+
+		const handleConnectClicked = () => {
+			if (openRef.current) {
+				setCurrent(4); // Jump to "Open Data Folder" step (page 5)
+			}
+		};
+
 		const handleBotActivated = () => {
 			if (openRef.current) {
 				setCurrent(15); // Progress to final System Fuel step
@@ -109,6 +121,8 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 		window.addEventListener("START_PAGE_TOUR", handleManualStart);
 		window.addEventListener("CONNECT_MT5_OPENED", handleModalOpened);
 		window.addEventListener("MT5_ACCOUNTS_UPDATED", handleAccountAdded);
+		window.addEventListener("MT5_TOKEN_GENERATED", handleTokenGenerated);
+		window.addEventListener("MT5_CONNECT_CLICKED", handleConnectClicked);
 		window.addEventListener("BOT_DEPLOYED", handleBotDeployed);
 		window.addEventListener("BOT_STATUS_UPDATED", handleBotActivated);
 
@@ -116,6 +130,8 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			window.removeEventListener("START_PAGE_TOUR", handleManualStart);
 			window.removeEventListener("CONNECT_MT5_OPENED", handleModalOpened);
 			window.removeEventListener("MT5_ACCOUNTS_UPDATED", handleAccountAdded);
+			window.removeEventListener("MT5_TOKEN_GENERATED", handleTokenGenerated);
+			window.removeEventListener("MT5_CONNECT_CLICKED", handleConnectClicked);
 			window.removeEventListener("BOT_DEPLOYED", handleBotDeployed);
 			window.removeEventListener("BOT_STATUS_UPDATED", handleBotActivated);
 		};
@@ -123,7 +139,9 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 
 	const steps: TourProps["steps"] = [
 		{
-			title: <div className="text-2xl font-bold mb-1">Welcome</div>,
+			title: (
+				<div className="text-2xl font-bold mb-1">Welcome to AutoTrader!</div>
+			),
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed">
 					We'll guide you step-by-step through linking your MetaTrader 5
@@ -133,12 +151,12 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			target: null,
 		},
 		{
-			title: <div className="text-2xl font-bold mb-1">Link MT5</div>,
+			title: <div className="text-2xl font-bold mb-1">Open MetaTrader 5</div>,
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed">
 					<p className="mb-4">
-						To begin, click <b>Next</b> below to open the MT5 connection
-						terminal window.
+						Open MetaTrader 5 and right click on 'Accounts' to <b>create</b> a
+						new MT5 account if you don't have one.
 					</p>
 					<p className="text-sm text-gray-500">
 						Don't have MT5 installed yet?{" "}
@@ -154,7 +172,14 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 					</p>
 				</div>
 			),
-			target: () => document.getElementById("add-account-card")!,
+			cover: (
+				<img
+					src="/images/tour/createAcc.png"
+					alt="Create Account"
+					className="w-full aspect-video object-cover rounded shadow-xl border border-white/10"
+				/>
+			),
+			target: null,
 			nextButtonProps: {
 				onClick: () => {
 					window.dispatchEvent(new CustomEvent("OPEN_CONNECT_MT5"));
@@ -165,8 +190,8 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			title: <div className="text-2xl font-bold mb-1">Account Info</div>,
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed">
-					Enter any recognizable name for your account and your official MT5
-					Login ID. This identifies your terminal to our system.
+					Enter any display name and your MT5 Login ID. <br /> This identifies
+					your terminal to our system. <br /> Then click <b>"Generate Token"</b>
 				</div>
 			),
 			target: () => document.getElementById("connect-mt5-modal-content")!,
@@ -183,8 +208,9 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			title: <div className="text-2xl font-bold mb-1">Connect</div>,
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed">
-					Click 'Generate Token' to create your secure access key. After
-					generating, download the EA file and click Connect to verify.
+					Download the <b>'Expert Advisor (EA)'</b> file and <br />
+					click <b>'Connect to this MT5 account'</b> to link <br />
+					your terminal.
 				</div>
 			),
 			target: () => document.getElementById("connect-mt5-modal-content")!,
@@ -201,9 +227,7 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed mb-4">
 					In your MetaTrader 5 terminal, navigate to the top menu bar, click on{" "}
-					<b>'File'</b>, and then select <b>'Open Data Folder'</b> from the
-					dropdown list. This will open the core directory where all your MT5
-					files are stored.
+					<b>'File &gt; Open Data Folder'</b> from the dropdown list.
 				</div>
 			),
 			cover: (
@@ -225,9 +249,7 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			title: <div className="text-2xl font-bold mb-1">MQL5 Folder</div>,
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed mb-4">
-					Inside the newly opened data folder window, locate and double-click to
-					open exactly the <b>'MQL5'</b> folder. This directory contains all the
-					custom indicators, scripts, and Expert Advisors for your terminal.
+					Inside the Folder, locate and open the <b>'MQL5'</b> folder.
 				</div>
 			),
 			cover: (
@@ -243,9 +265,7 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			title: <div className="text-2xl font-bold mb-1">Experts Folder</div>,
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed mb-4">
-					Within the MQL5 directory, find and open the <b>'Experts'</b> folder.
-					This is the specific location where MetaTrader 5 looks for automated
-					trading robots.
+					Within the MQL5 folder, find and open the <b>'Experts'</b> folder.
 				</div>
 			),
 			cover: (
@@ -262,8 +282,7 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed mb-4">
 					Now, paste the <b>'MT5_Connector.ex5'</b> file that you downloaded
-					earlier directly into this Experts folder. This file is the secure
-					bridge that allows our platform to communicate with your terminal.
+					earlier into this Experts folder.
 				</div>
 			),
 			cover: (
@@ -279,10 +298,8 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			title: <div className="text-2xl font-bold mb-1">Refresh Experts</div>,
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed mb-4">
-					Go back to your MT5 terminal. In the 'Navigator' panel on the left
-					(press Ctrl+N if hidden), expand 'Expert Advisors', right-click
-					anywhere in that list, and select <b>'Refresh'</b>. The connector
-					should now appear.
+					In your MT5 terminal, expand 'Expert Advisors' and hit right-click,
+					then select <b>'Refresh'</b>. The connector should now appear.
 				</div>
 			),
 			cover: (
@@ -295,12 +312,15 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			target: null,
 		},
 		{
-			title: <div className="text-2xl font-bold mb-1">EA Common Tab</div>,
+			title: (
+				<div className="text-2xl font-bold mb-1">Expert Advisor Common Tab</div>
+			),
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed mb-4">
-					Double-click the 'MT5_Connector' from the Navigator to attach it to a
-					chart. A configuration window will pop up. In the 'Common' tab, ensure
-					that the <b>'Allow Algo Trading'</b> checkbox is verified.
+					<b>Double-click</b> the 'MT5_Connector' inside the Experts Advisors. A
+					configuration window will pop up. In the <b>'Common'</b> tab, ensure
+					that the <b>'Allow Algo Trading'</b> checkbox is checked. Then click
+					<b> 'Inputs'</b> tab.
 				</div>
 			),
 			cover: (
@@ -313,19 +333,21 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			target: null,
 		},
 		{
-			title: <div className="text-2xl font-bold mb-1">EA Inputs Tab</div>,
+			title: (
+				<div className="text-2xl font-bold mb-1">Expert Advisor Inputs Tab</div>
+			),
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed mb-4">
 					<p className="mb-4">
-						Switch over to the 'Inputs' tab in the same window. Here, you must
-						paste your generated <b>Token</b> and verify that the{" "}
-						<b>Server URL</b> matches exactly. Click 'OK' when done.
+						Switch over to the <b>'Inputs'</b> tab. Here, you must paste your
+						generated <b>Token</b> and <b>Backend API URL</b>. <br /> Click{" "}
+						<b>'OK' </b>when done.
 					</p>
 					<div className="flex items-center gap-2 mt-2">
 						<span className="text-gray-500 text-sm font-medium shrink-0">
-							Server URL:
+							Backend API URL:
 						</span>
-						<code 
+						<code
 							className="text-[#00FFA3] font-mono text-sm bg-[#00FFA3]/10 px-2 py-0.5 rounded border border-[#00FFA3]/20 truncate flex-1"
 							title={serverUrl}
 						>
@@ -355,21 +377,21 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			target: null,
 		},
 		{
-			title: <div className="text-2xl font-bold mb-1">WebRequest</div>,
+			title: <div className="text-2xl font-bold mb-1">Allow WebRequest</div>,
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed mb-4">
 					<p className="mb-4">
 						For the connection to work, MT5 needs permission to communicate
-						outward. Go to Tools &gt; Options (or press Ctrl+O), navigate to the
-						'Expert Advisors' tab, check <b>'Allow WebRequest for listed URL'</b>,
-						and add our Server URL.
+						outward. Go to <b>Tools &gt; Options &gt; 'Expert Advisors'</b>
+						tab, check <b>'Allow WebRequest for listed URL'</b>, and add our
+						Server URL.
 					</p>
 
 					<div className="flex items-center gap-2 mt-2">
 						<span className="text-gray-500 text-sm font-medium shrink-0">
 							Server URL:
 						</span>
-						<code 
+						<code
 							className="text-[#00FFA3] font-mono text-sm bg-[#00FFA3]/10 px-2 py-0.5 rounded border border-[#00FFA3]/20 truncate flex-1"
 							title={serverUrl}
 						>
@@ -403,9 +425,8 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed mb-4">
 					Look at the 'Experts' tab at the very bottom of your MT5 terminal (in
-					the Toolbox window). If everything was set up correctly, you should
-					see a <b>'Connected Successfully'</b> message. You are ready to close
-					this guide!
+					the Toolbox window). You should see a <b>'Connected Successfully' </b>
+					message. If not, try closing and reopening the app.
 				</div>
 			),
 			cover: (
@@ -423,7 +444,7 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 				<div className="text-lg text-gray-400 leading-relaxed">
 					You are now ready to trade! Click the <b>'Deploy New Bot'</b> button
 					to create your first automated strategy. Select your preferred trading
-					pair and choose the algorithm version you want to run.
+					pair and choose the Bot's version you want to run.
 				</div>
 			),
 			target: () => {
@@ -451,7 +472,9 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			title: <div className="text-2xl font-bold mb-1">System Fuel</div>,
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed">
-					Keep an eye on your System Fuel tickets here. Bots consume fuel while active. If your tickets run to zero, all bots will automatically pause.
+					Keep an eye on your System Fuel tickets here. Bots consume fuel while
+					active. If your tickets run to zero, all bots will automatically
+					pause.
 				</div>
 			),
 			target: () => document.getElementById("navbar-system-fuel")!,
@@ -485,7 +508,7 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 		}
 	}, [open, current]);
 
-	const isLargeStep = current >= 4 && current <= 12;
+	const isLargeStep = current === 1 || (current >= 4 && current <= 12);
 
 	return (
 		<Tour
