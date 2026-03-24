@@ -155,18 +155,24 @@ const DashboardContent = () => {
 	// Aggregate all active open positions for the All_ActivePosition component
 	const allActivePositions = accounts.flatMap((acc) => {
 		const stats = accountsStats[acc.mt5_id];
+		const bots = accountsBots[acc.mt5_id] || [];
+		
 		if (!stats || !stats.open_positions) return [];
-		return stats.open_positions.map((pos, idx) => ({
-			key: `${acc.mt5_id}-${idx}`,
-			pair: pos.pair,
-			account: acc.name,
-			type: pos.type as "BUY" | "SELL",
-			lot: pos.lot,
-			entry: pos.entry,
-			current: pos.current,
-			pl: pos.profit,
-			bot: "Manual",
-		}));
+		return stats.open_positions.map((pos, idx) => {
+			const matchingBot = bots.find((b) => b.currency === pos.pair);
+			
+			return {
+				key: `${acc.mt5_id}-${idx}`,
+				pair: pos.pair,
+				account: acc.name,
+				type: pos.type as "BUY" | "SELL",
+				lot: pos.lot,
+				entry: pos.entry,
+				current: pos.current,
+				pl: pos.profit,
+				bot: matchingBot ? matchingBot.name : "Manual",
+			};
+		});
 	});
 
 	const initTradingView = () => {

@@ -41,7 +41,7 @@ export default function OpenedPosition({ positions }: Props) {
 			key: "entry",
 			render: (value: number) => (
 				<span className="text-gray-400 font-mono text-sm">
-					{value.toLocaleString()}
+					{value.toFixed(5)}
 				</span>
 			),
 		},
@@ -51,7 +51,7 @@ export default function OpenedPosition({ positions }: Props) {
 			key: "current",
 			render: (value: number) => (
 				<span className="text-white font-mono text-sm font-medium">
-					{value.toLocaleString()}
+					{value.toFixed(5)}
 				</span>
 			),
 		},

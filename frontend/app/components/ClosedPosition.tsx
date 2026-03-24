@@ -41,7 +41,7 @@ export default function ClosedPosition({ positions }: Props) {
 			key: "entry",
 			render: (value: number) => (
 				<span className="text-gray-400 font-mono text-sm">
-					{value.toLocaleString()}
+					{value.toFixed(5)}
 				</span>
 			),
 		},
