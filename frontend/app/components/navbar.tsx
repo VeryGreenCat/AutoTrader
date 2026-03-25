@@ -11,6 +11,8 @@ import {
 	LogIn,
 	ChevronDown,
 	Info,
+	Menu,
+	X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Dropdown, MenuProps } from "antd";
@@ -32,6 +34,7 @@ export default function Navbar() {
 
 	const [profile, setProfile] = useState<UserProfile | null>(null);
 	const [displaySeconds, setDisplaySeconds] = useState<number>(0);
+	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
 	// 1. Check User Session on Mount
 	useEffect(() => {
@@ -312,7 +315,7 @@ export default function Navbar() {
 					</div>
 
 					{/* PROFILE DROPDOWN AREA */}
-					<div className="relative group">
+					<div className="relative group hidden md:block">
 						{/* Avatar Trigger */}
 						<div className="w-10 h-10 rounded-full bg-linear-to-tr from-emerald-400 to-blue-500 border-2 border-white/10 cursor-pointer hover:scale-105 transition shadow-[0_0_15px_rgba(0,255,163,0.2)] flex items-center justify-center">
 							<User className="w-5 h-5 text-white/90" />
@@ -325,7 +328,10 @@ export default function Navbar() {
 									// LOGGED IN MENU
 									<div className="flex flex-col">
 										<button
-											onClick={() => router.push("/profile")}
+											onClick={() => {
+												setIsMobileMenuOpen(false);
+												router.push("/profile");
+											}}
 											className="flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-[#00FFA3] transition-colors text-left cursor-pointer"
 										>
 											<User className="w-4 h-4" />
@@ -333,6 +339,7 @@ export default function Navbar() {
 										</button>
 										<button
 											onClick={() => {
+												setIsMobileMenuOpen(false);
 												if (pathname === "/bots") {
 													window.dispatchEvent(new CustomEvent("START_PAGE_TOUR"));
 												} else {
@@ -346,7 +353,10 @@ export default function Navbar() {
 											Tutorial
 										</button>
 										<button
-											onClick={handleLogout}
+											onClick={() => {
+												setIsMobileMenuOpen(false);
+												handleLogout();
+											}}
 											className="flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-white/5 hover:text-red-300 transition-colors text-left cursor-pointer"
 										>
 											<LogOut className="w-4 h-4" />
@@ -357,7 +367,10 @@ export default function Navbar() {
 									// LOGGED OUT MENU
 									<div className="flex flex-col p-1">
 										<button
-											onClick={() => setOpenModal(true)}
+											onClick={() => {
+												setIsMobileMenuOpen(false);
+												setOpenModal(true);
+											}}
 											className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-white bg-[#00FFA3]/10 hover:bg-[#00FFA3] hover:text-black rounded-lg transition-all cursor-pointer"
 										>
 											<LogIn className="w-4 h-4" />
@@ -368,8 +381,210 @@ export default function Navbar() {
 							</div>
 						</div>
 					</div>
+
+					{/* Mobile Menu Toggle */}
+					<button
+						onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+						className="md:hidden w-10 h-10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+					>
+						{isMobileMenuOpen ? (
+							<X className="w-6 h-6" />
+						) : (
+							<Menu className="w-6 h-6" />
+						)}
+					</button>
 				</div>
 			</nav>
+
+			{/* Sidebar Drawer (Mobile) */}
+			<div
+				className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
+					isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+				}`}
+				onClick={() => setIsMobileMenuOpen(false)}
+			/>
+
+			<div
+				className={`fixed top-0 left-0 bottom-0 w-72 z-50 bg-[#0B0B0B] border-r border-white/5 shadow-2xl transition-transform duration-300 ease-in-out md:hidden flex flex-col ${
+					isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+				}`}
+			>
+				{/* Drawer Header */}
+				<div className="p-6 flex items-center justify-between border-b border-white/5">
+					<div
+						onClick={() => {
+							setIsMobileMenuOpen(false);
+							router.push("/");
+						}}
+						className="flex items-center gap-3 cursor-pointer"
+					>
+						<div className="w-8 h-8 bg-[#00FFA3] rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(0,255,163,0.4)]">
+							<Cpu className="text-black w-5 h-5" />
+						</div>
+						<span className="text-xl font-bold tracking-tighter italic text-white">
+							Auto<span className="text-[#00FFA3]">Trader</span>
+						</span>
+					</div>
+				</div>
+
+				{/* Drawer Content */}
+				<div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+					{/* Navigation Links */}
+					<div className="mb-6 flex flex-col gap-1">
+						<p className="px-4 text-[10px] text-gray-500 uppercase tracking-widest mb-2">
+							Navigation
+						</p>
+						<button
+							onClick={() => {
+								setIsMobileMenuOpen(false);
+								router.push("/");
+							}}
+							className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all ${
+								isActive("/")
+									? "bg-[#00FFA3]/10 text-[#00FFA3]"
+									: "text-gray-400 hover:bg-white/5 hover:text-white"
+							}`}
+						>
+							Home
+						</button>
+						<button
+							onClick={() => {
+								setIsMobileMenuOpen(false);
+								if (hasConnectedAccount) router.push("/dashboard");
+							}}
+							className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all ${
+								isActive("/dashboard")
+									? "bg-[#00FFA3]/10 text-[#00FFA3]"
+									: "text-gray-400 hover:bg-white/5 hover:text-white"
+							} ${!hasConnectedAccount ? "opacity-30 grayscale cursor-not-allowed" : ""}`}
+							disabled={!hasConnectedAccount}
+						>
+							Dashboard
+						</button>
+						<button
+							onClick={() => {
+								setIsMobileMenuOpen(false);
+								router.push("/bots");
+							}}
+							className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all ${
+								isActive("/bots")
+									? "bg-[#00FFA3]/10 text-[#00FFA3]"
+									: "text-gray-400 hover:bg-white/5 hover:text-white"
+							}`}
+						>
+							My Bots
+						</button>
+						<button
+							onClick={() => {
+								setIsMobileMenuOpen(false);
+								router.push("/billing");
+							}}
+							className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all ${
+								isActive("/billing")
+									? "bg-[#00FFA3]/10 text-[#00FFA3]"
+									: "text-gray-400 hover:bg-white/5 hover:text-white"
+							}`}
+						>
+							Billing
+						</button>
+					</div>
+
+					{/* Status Information (Visible only here on mobile) */}
+					<div className="mb-6 flex flex-col gap-4 px-4 py-4 rounded-xl bg-white/5 border border-white/5">
+						<div>
+							<p className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">
+								MT5 Status
+							</p>
+							{(() => {
+								const connectedCount = accounts.filter(
+									(acc) => acc.status,
+								).length;
+								return (
+									<div
+										className={`text-sm flex items-center gap-2 font-bold ${
+											connectedCount > 0 ? "text-[#00FFA3]" : "text-red-500"
+										}`}
+									>
+										<Activity
+											className={`w-4 h-4 ${connectedCount > 0 ? "animate-pulse" : ""}`}
+										/>
+										{connectedCount > 0
+											? `${connectedCount} Connected`
+											: "Disconnected"}
+									</div>
+								);
+							})()}
+						</div>
+
+						<div className="pt-4 border-t border-white/5">
+							<div className="flex items-center justify-between mb-3">
+								<div className="flex items-center gap-2">
+									<Ticket className="w-3 h-3 text-[#00FFA3]" />
+									<p className="text-[10px] text-gray-500 uppercase tracking-widest">
+										System Fuel
+									</p>
+								</div>
+								<button
+									onClick={() => {
+										setIsMobileMenuOpen(false);
+										router.push("/buyTickets");
+									}}
+									className="text-[10px] font-bold text-[#00FFA3] hover:underline"
+								>
+									Add More
+								</button>
+							</div>
+
+							<div className="flex flex-col gap-1">
+								<span className="text-sm font-bold text-white">
+									<span className="text-[#00FFA3]">
+										{(displaySeconds / 43200).toFixed(2)}
+									</span>{" "}
+									Tickets
+								</span>
+								<span className="text-[10px] text-gray-500 font-mono">
+									Expires in: {formatTime(displaySeconds)}
+								</span>
+								<div className="w-full h-1.5 bg-white/10 rounded-full mt-2 overflow-hidden border border-white/5">
+									<div
+										className="bg-linear-to-r from-[#00FFA3] to-emerald-500 h-full shadow-[0_0_10px_rgba(0,255,163,0.5)] transition-all duration-1000 ease-linear"
+										style={{
+											width: `${((displaySeconds % 43200) / 43200) * 100}%`,
+										}}
+									></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{/* Drawer Footer */}
+				<div className="p-4 border-t border-white/5">
+					{user ? (
+						<button
+							onClick={() => {
+								setIsMobileMenuOpen(false);
+								handleLogout();
+							}}
+							className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-red-400/10 hover:text-red-300 rounded-lg transition-all active:scale-95"
+						>
+							<LogOut className="w-4 h-4" />
+							Log Out
+						</button>
+					) : (
+						<button
+							onClick={() => {
+								setIsMobileMenuOpen(false);
+								setOpenModal(true);
+							}}
+							className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-white bg-[#00FFA3]/10 hover:bg-[#00FFA3] hover:text-black hover:shadow-[0_0_20px_rgba(0,255,163,0.4)] rounded-lg transition-all active:scale-95 active:shadow-[0_0_25px_rgba(0,255,163,0.6)] cursor-pointer"
+						>
+							<LogIn className="w-4 h-4" />
+							Log In
+						</button>
+					)}
+				</div>
+			</div>
 
 			<AuthModal
 				open={openModal}
