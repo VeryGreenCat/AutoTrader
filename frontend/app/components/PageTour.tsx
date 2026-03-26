@@ -24,7 +24,7 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 	const [open, setOpen] = useState<boolean>(false);
 	const [current, setCurrent] = useState<number>(0);
 	const [copyingURL, setCopyingURL] = useState(false);
-	const { message } = App.useApp();
+	const { message, modal } = App.useApp();
 
 	const serverUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000";
 
@@ -50,10 +50,18 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			!user?.bot_started_at &&
 			accountsCount === 0
 		) {
-			Modal.confirm({
-				title: "Welcome to AutoTrader!",
-				content:
-					"Would you like a professional guided tour to help you set up your first MT5 connection and start your trading bot?",
+			modal.confirm({
+				title: (
+					<div className="text-2xl font-bold text-white mb-1">
+						Welcome to AutoTrader!
+					</div>
+				),
+				content: (
+					<div className="text-lg text-gray-400 leading-relaxed mt-4">
+						Would you like a professional guided tour to help you set up your
+						first MT5 connection and start your trading bot?
+					</div>
+				),
 				okText: "Start Tutorial",
 				cancelText: "Maybe Later",
 				onOk: () => {
@@ -64,6 +72,25 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 					localStorage.setItem("has_seen_tour", "true");
 				},
 				centered: true,
+				width: 600,
+				icon: null,
+				styles: {
+					mask: {
+						backgroundColor: "rgba(0, 0, 0, 0.15)",
+						backdropFilter: "blur(4px)",
+					},
+					body: {
+						padding: "4px",
+					},
+				},
+				okButtonProps: {
+					className:
+						"bg-[#00FFA3] hover:bg-[#00D185]! border-none text-black! font-bold h-10 px-6 rounded-lg shadow-none! transition-all",
+				},
+				cancelButtonProps: {
+					className:
+						"bg-white/5 hover:bg-white/10! border-white/10 hover:border-white/20! text-gray-400 hover:text-white h-10 px-6 rounded-lg transition-all",
+				},
 			});
 		}
 	}, [user, accountsCount]);
@@ -152,7 +179,8 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed">
 					We'll guide you step-by-step through linking your MetaTrader 5
-					terminal and starting your very first automated trading bot.<br/>
+					terminal and starting your very first automated trading bot.
+					<br />
 					<span className="text-red-400 block mt-2 text-sm italic">
 						Note: MT5 must remain open at all times during bot operation.
 					</span>
@@ -242,7 +270,7 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 					<b>IMPORTANT:</b> Algo Trading must always be enabled{" [ "}
 					<Play className="inline-block w-4 h-4 text-[#00FFA3] fill-[#00FFA3] mb-1" />{" "}
 					{" ]."}
-				</div> 
+				</div>
 			),
 			cover: (
 				<img

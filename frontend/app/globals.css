@@ -233,12 +233,13 @@
 
 /* ─── Attention Blink Animation ───────────────────────────── */
 @keyframes attention-blink {
-	0%, 100% { 
-		background-color: rgba(0, 255, 163, 0.1); 
+	0%,
+	100% {
+		background-color: rgba(0, 255, 163, 0.1);
 		color: #fff;
 	}
-	50% { 
-		background-color: rgba(0, 255, 163, 1); 
+	50% {
+		background-color: rgba(0, 255, 163, 1);
 		color: #000;
 	}
 }
