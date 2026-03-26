@@ -152,7 +152,10 @@ const PageTour: React.FC<PageTourProps> = ({ user, accountsCount }) => {
 			description: (
 				<div className="text-lg text-gray-400 leading-relaxed">
 					We'll guide you step-by-step through linking your MetaTrader 5
-					terminal and starting your very first automated trading bot.
+					terminal and starting your very first automated trading bot.<br/>
+					<span className="text-red-400 block mt-2 text-sm italic">
+						Note: MT5 must remain open at all times during bot operation.
+					</span>
 				</div>
 			),
 			target: null,
