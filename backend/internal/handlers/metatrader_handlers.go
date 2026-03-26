@@ -141,6 +141,9 @@ func MT5Disconnect(c *fiber.Ctx) error { //not used yet
 		fmt.Printf("Warning: Failed to update status for account %s\n", req.MT5ID)
 	}
 
+	// Turn off all bots for this account since MT5 is disconnected
+	_ = services.TurnOffBotsByMT5Id(req.MT5ID)
+
 	// Just print the received data to terminal as requested for the test
 	fmt.Printf("\n--- disconnection verified ---\n")
 	fmt.Printf("MT5 ID : %s\n", req.MT5ID)
@@ -268,6 +271,8 @@ func GetMT5Stats(c *fiber.Ctx) error {
 		if err == nil && account.Status {
 			account.Status = false
 			config.DB.Save(account)
+			// Turn off all bots for this account since MT5 is disconnected
+			_ = services.TurnOffBotsByMT5Id(mt5Id)
 		}
 	}
 
@@ -292,6 +297,8 @@ func RefreshAccountsStatus(accounts []models.MT5) {
 		if accounts[i].Status && !isActuallyConnected {
 			accounts[i].Status = false
 			config.DB.Model(&models.MT5{}).Where("mt5_id = ?", accounts[i].MT5ID).Update("status", false)
+			// Turn off all bots for this account since MT5 is disconnected
+			_ = services.TurnOffBotsByMT5Id(accounts[i].MT5ID)
 		}
 		
 	}
