@@ -143,15 +143,3 @@ func getUserIdByBotId(botId string) (string, error) {
 
 	return userId, nil
 }
-
-func TurnOffBotsByMT5Id(mt5Id string) error {
-	var bots []models.Bot
-	if err := config.DB.Where("mt5_id = ? AND status = true", mt5Id).Find(&bots).Error; err != nil {
-		return err
-	}
-	for _, b := range bots {
-		// Calling UpdateBotStatus so user bot_started_at and running time logic fires properly
-		_ = UpdateBotStatus(b.BotID, false)
-	}
-	return nil
-}
