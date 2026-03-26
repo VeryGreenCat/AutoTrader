@@ -23,6 +23,7 @@ import { getAccountById } from "@/services/mt5";
 import { MT5 } from "@/types/mt5";
 import { getProfileById } from "@/services/profile";
 import { UserProfile } from "@/types/user";
+import LogoutConfirmModal from "./LogoutConfirmModal";
 
 export default function Navbar() {
 	const pathname = usePathname();
@@ -35,6 +36,8 @@ export default function Navbar() {
 	const [profile, setProfile] = useState<UserProfile | null>(null);
 	const [displaySeconds, setDisplaySeconds] = useState<number>(0);
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+	const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+	const [isLoggingOut, setIsLoggingOut] = useState(false);
 
 	// 1. Check User Session on Mount
 	useEffect(() => {
@@ -121,10 +124,18 @@ export default function Navbar() {
 
 	// 4. Logout Function
 	const handleLogout = async () => {
-		await supabase.auth.signOut();
-		router.push("/");
-		sessionStorage.removeItem("otp_verified");
-		localStorage.removeItem("user_id");
+		setIsLoggingOut(true);
+		try {
+			await supabase.auth.signOut();
+			router.push("/");
+			sessionStorage.removeItem("otp_verified");
+			localStorage.removeItem("user_id");
+			setIsLogoutModalOpen(false);
+		} catch (error) {
+			console.error("Logout failed:", error);
+		} finally {
+			setIsLoggingOut(false);
+		}
 	};
 
 	const formatTime = (seconds: number) => {
@@ -355,7 +366,7 @@ export default function Navbar() {
 										<button
 											onClick={() => {
 												setIsMobileMenuOpen(false);
-												handleLogout();
+												setIsLogoutModalOpen(true);
 											}}
 											className="flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-white/5 hover:text-red-300 transition-colors text-left cursor-pointer"
 										>
@@ -564,7 +575,7 @@ export default function Navbar() {
 						<button
 							onClick={() => {
 								setIsMobileMenuOpen(false);
-								handleLogout();
+								setIsLogoutModalOpen(true);
 							}}
 							className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-red-400/10 hover:text-red-300 rounded-lg transition-all active:scale-95"
 						>
@@ -591,6 +602,13 @@ export default function Navbar() {
 				setOpen={setOpenModal}
 				mode={authMode}
 				setMode={setAuthMode}
+			/>
+
+			<LogoutConfirmModal
+				open={isLogoutModalOpen}
+				onClose={() => setIsLogoutModalOpen(false)}
+				onConfirm={handleLogout}
+				loading={isLoggingOut}
 			/>
 		</>
 	);
