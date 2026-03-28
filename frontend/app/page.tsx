@@ -6,11 +6,26 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import AuthModal from "./auth/components/AuthModal";
 import { AuthMode } from "@/types/auth";
+import { App } from "antd";
 
 export default function Home() {
 	const [openModal, setOpenModal] = useState(false);
 	const [authMode, setAuthMode] = useState<AuthMode>("signup");
 	const router = useRouter();
+	const { message } = App.useApp();
+
+	const handleAuthAction = async (mode: AuthMode) => {
+		const {
+			data: { session },
+		} = await supabase.auth.getSession();
+
+		if (session) {
+			message.info("You are already logged in");
+		} else {
+			setAuthMode(mode);
+			setOpenModal(true);
+		}
+	};
 
 	// Smooth Scroll Function
 	const scrollToPricing = () => {
@@ -205,7 +220,7 @@ export default function Home() {
 					{/* CTA Button */}
 					<div className="flex justify-center mt-16">
 						<button
-							onClick={() => setOpenModal(true)}
+							onClick={() => handleAuthAction("signup")}
 							className="bg-[#00FFA3] text-black font-bold px-8 py-4 rounded-xl hover:scale-105 transition shadow-[0_0_30px_rgba(0,255,163,0.3)] hover:shadow-[0_0_50px_rgba(0,255,163,0.5)] flex items-center gap-2 uppercase tracking-wide cursor-pointer"
 						>
 							Sign Up for 10 Free Tickets

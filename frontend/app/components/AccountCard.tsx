@@ -3,24 +3,44 @@
 import { useEffect, useState } from "react";
 import BotRow from "./BotRow";
 import DeployModal from "./DeployModal";
-import { Server, Plus, Trash2 } from "lucide-react";
+import { Server, Plus, Trash2, Copy, Check } from "lucide-react";
 import { App } from "antd";
 import { deleteAccount, getMt5Stats } from "@/services/mt5";
 import { Bot, AccountCardProps } from "@/types/bot";
 import { getBotsByMt5Id } from "@/services/bots";
 import { MT5AccountCardStats } from "@/types/mt5";
 
-export default function AccountCard({ account, isBanned, onDelete }: AccountCardProps) {
+export default function AccountCard({
+	account,
+	isBanned,
+	onDelete,
+}: AccountCardProps) {
 	const { message, modal } = App.useApp();
 	const [bots, setBots] = useState<Bot[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
 	const [stats, setStats] = useState<MT5AccountCardStats | null>(null);
+	const [tokenCopied, setTokenCopied] = useState(false);
+
+	const handleCopyToken = () => {
+		navigator.clipboard.writeText(account?.token || "");
+		setTokenCopied(true);
+		message.success("Token copied to clipboard");
+		setTimeout(() => setTokenCopied(false), 2000);
+	};
 
 	const handleDelete = () => {
 		modal.confirm({
 			title: "Delete Account",
-			content: `Are you sure you want to delete "${account.name}"? This action cannot be undone.`,
+			content: (
+				<div>
+					<p>Are you sure you want to delete "{account.name}"?</p>
+					<p className="mt-2 text-xs text-gray-400">
+						Any active positions in this account will no longer be managed by
+						the AI and must be handled manually within your MT5 terminal.
+					</p>
+				</div>
+			),
 			okText: "Delete",
 			okType: "danger",
 			cancelText: "Cancel",
@@ -91,8 +111,8 @@ export default function AccountCard({ account, isBanned, onDelete }: AccountCard
 		fetchBots();
 		fetchStats();
 
-		// Poll for stats/heartbeat every 5 minutes
-		const interval = setInterval(fetchStats, 300000);
+		// Poll for stats/heartbeat every 10 seconds
+		const interval = setInterval(fetchStats, 10000);
 		return () => clearInterval(interval);
 	}, [account]);
 
@@ -119,9 +139,19 @@ export default function AccountCard({ account, isBanned, onDelete }: AccountCard
 							<span className="select-none">mt5ID: </span>
 							{account.mt5_id}
 						</span>
-						<span className="text-gray-500 text-xs">
+						<span className="text-gray-500 text-xs flex items-center gap-1 group">
 							<span className="select-none">Token: </span>
 							{account.token}
+							<button
+								onClick={handleCopyToken}
+								className="text-gray-500 hover:text-[#00FFA3] transition-colors p-1 flex items-center justify-center cursor-pointer"
+							>
+								{tokenCopied ? (
+									<Check size={12} className="text-[#00FFA3]" />
+								) : (
+									<Copy size={12} />
+								)}
+							</button>
 						</span>
 					</div>
 				</div>
@@ -226,7 +256,7 @@ export default function AccountCard({ account, isBanned, onDelete }: AccountCard
 									.filter((pos) => pos.pair === bot.currency)
 									.reduce((sum, pos) => sum + pos.profit, 0)
 							: null;
-							
+
 						return (
 							<BotRow
 								key={bot.bot_id}
