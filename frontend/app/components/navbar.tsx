@@ -228,12 +228,9 @@ export default function Navbar() {
 					) : (
 						<button
 							onClick={() => {
-								if (hasConnectedAccount) {
-									router.push("/dashboard");
-								}
+								router.push("/dashboard");
 							}}
-							className={`${getLinkClass("/dashboard")} ${!hasConnectedAccount ? "opacity-30 cursor-not-allowed grayscale" : ""}`}
-							disabled={!hasConnectedAccount}
+							className={`${getLinkClass("/dashboard")}`}
 						>
 							Dashboard
 						</button>
@@ -352,7 +349,9 @@ export default function Navbar() {
 											onClick={() => {
 												setIsMobileMenuOpen(false);
 												if (pathname === "/bots") {
-													window.dispatchEvent(new CustomEvent("START_PAGE_TOUR"));
+													window.dispatchEvent(
+														new CustomEvent("START_PAGE_TOUR"),
+													);
 												} else {
 													sessionStorage.setItem("start_tour", "true");
 													router.push("/bots");
