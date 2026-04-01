@@ -86,7 +86,21 @@ MODEL_REGISTRY: List[ModelConfig] = [
         sl_options=[30, 50, 80],
         tp_options=[60, 100, 160],
     ),
-]
+    ModelConfig(
+        name="GBPUSD",
+        version="v1",
+        description="PPO Reinforcement Learning model with technical features and LLM bias context.",
+        symbol="GBPUSD",
+        timeframe=mt5.TIMEFRAME_H1,
+        pip_size=0.0001,
+        weekly_bars=60,
+        hourly_bars=300,
+        observation_window=120,
+        model_path="models/model_eurusd_best_5.zip",
+        sl_options=[30, 50, 80],
+        tp_options=[60, 100, 160],
+    ),
+] 
 
 
 def get_config(symbol: str, version: str) -> ModelConfig | None:

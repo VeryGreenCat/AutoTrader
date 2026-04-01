@@ -217,18 +217,20 @@ double GetPipSize(string symbol) {
 
 void FetchSignals() {
     long mt5_id = AccountInfoInteger(ACCOUNT_LOGIN);
-    string endpoint = StringFormat("/metatrader/signal?mt5_id=%I64d", mt5_id);
+    string endpoint = StringFormat("/metatrader/signal?mt5_id=%I64d&symbol=%s", mt5_id, _Symbol);
     string response = GetFromServer(endpoint);
     if (response == "" || StringFind(response, "\"signal\":\"HOLD\"") >= 0) return;
 
     Print("Fetched Signal response: ", response);
     
+    // Check if the signal contains the correct currency just in case (optional, since the backend handles it)
+    
     if (StringFind(response, "\"signal\":\"BUY\"") >= 0) {
         Print("🚀 SIGNAL RECEIVED: BUY. Closing opposite and opening Long...");
         CloseOppositePositions(POSITION_TYPE_BUY);
         
-        // Only open if we don't have a buy already
-        if (PositionsTotal() == 0 || (PositionSelect(_Symbol) && PositionGetInteger(POSITION_TYPE) != POSITION_TYPE_BUY)) {
+        // Only open if we don't have a buy already for THIS symbol
+        if (!PositionSelect(_Symbol) || PositionGetInteger(POSITION_TYPE) != POSITION_TYPE_BUY) {
             double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
             double pip = GetPipSize(_Symbol);
             double sl_pips = GetJsonDouble(response, "sl");
@@ -240,15 +242,20 @@ void FetchSignals() {
             if (tp_pips > 0) tp_price = NormalizeDouble(ask + tp_pips * pip, (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS));
             
             PrintFormat("Executing BUY at %f | SL: %f (%.1f pips) | TP: %f (%.1f pips)", ask, sl_price, sl_pips, tp_price, tp_pips);
-            ExtTrade.Buy(0.1, _Symbol, ask, sl_price, tp_price, "AutoTrader PPO Buy");
+            if (ExtTrade.Buy(0.1, _Symbol, ask, sl_price, tp_price, "AutoTrader PPO Buy")) {
+                ulong ticket = ExtTrade.ResultOrder();
+                PrintFormat("✅ BUY executed successfully! Transaction ID: %I64d | Currency: %s", ticket, _Symbol);
+            } else {
+                Print("❌ BUY execution failed. Error: ", GetLastError());
+            }
         }
     } 
     else if (StringFind(response, "\"signal\":\"SELL\"") >= 0) {
         Print("🚀 SIGNAL RECEIVED: SELL. Closing opposite and opening Short...");
         CloseOppositePositions(POSITION_TYPE_SELL);
         
-        // Only open if we don't have a sell already
-        if (PositionsTotal() == 0 || (PositionSelect(_Symbol) && PositionGetInteger(POSITION_TYPE) != POSITION_TYPE_SELL)) {
+        // Only open if we don't have a sell already for THIS symbol
+        if (!PositionSelect(_Symbol) || PositionGetInteger(POSITION_TYPE) != POSITION_TYPE_SELL) {
             double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
             double pip = GetPipSize(_Symbol);
             double sl_pips = GetJsonDouble(response, "sl");
@@ -260,7 +267,12 @@ void FetchSignals() {
             if (tp_pips > 0) tp_price = NormalizeDouble(bid - tp_pips * pip, (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS));
             
             PrintFormat("Executing SELL at %f | SL: %f (%.1f pips) | TP: %f (%.1f pips)", bid, sl_price, sl_pips, tp_price, tp_pips);
-            ExtTrade.Sell(0.1, _Symbol, bid, sl_price, tp_price, "AutoTrader PPO Sell");
+            if (ExtTrade.Sell(0.1, _Symbol, bid, sl_price, tp_price, "AutoTrader PPO Sell")) {
+                ulong ticket = ExtTrade.ResultOrder();
+                PrintFormat("✅ SELL executed successfully! Transaction ID: %I64d | Currency: %s", ticket, _Symbol);
+            } else {
+                Print("❌ SELL execution failed. Error: ", GetLastError());
+            }
         }
     }
     else if (StringFind(response, "\"signal\":\"CLOSE\"") >= 0) {

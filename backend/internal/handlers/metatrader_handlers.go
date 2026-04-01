@@ -18,10 +18,11 @@ import (
 func GetMT5Signal(c *fiber.Ctx) error {
 	mt5Id := c.Query("mt5_id")
 	token := c.Query("token")
+	symbol := c.Query("symbol")
 
-	if mt5Id == "" || token == "" {
+	if mt5Id == "" || token == "" || symbol == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "mt5_id and token are required",
+			"error": "mt5_id, token, and symbol are required",
 		})
 	}
 
@@ -34,7 +35,7 @@ func GetMT5Signal(c *fiber.Ctx) error {
 	}
 
 	// 2. Get pending signal
-	signal, exists := services.GetPendingSignal(mt5Id)
+	signal, exists := services.GetPendingSignal(mt5Id, symbol)
 	
 	if !exists {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -43,9 +44,10 @@ func GetMT5Signal(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"signal": signal.Action,
-		"sl":     signal.SL,
-		"tp":     signal.TP,
+		"signal":   signal.Action,
+		"sl":       signal.SL,
+		"tp":       signal.TP,
+		"currency": signal.Currency,
 	})
 }
 
