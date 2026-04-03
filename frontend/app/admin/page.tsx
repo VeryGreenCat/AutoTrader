@@ -121,7 +121,7 @@ export default function AdminPage() {
 
 				<div className="glass-card p-6 border-white/5 bg-white/5 rounded-2xl border">
 					<p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-1">
-						Performance Fees (5%)
+						Performance Fees (2%)
 					</p>
 					<p className="text-2xl font-mono font-bold text-cyan-400">
 						$12,490.12

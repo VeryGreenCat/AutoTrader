@@ -53,7 +53,7 @@ export default function BillingPage() {
 	}, [unpaidBill]);
 
 	const NET_PROFIT = accounts.reduce((acc, account) => acc + account.pnl, 0);
-	const PERFORMANCE_FEE = NET_PROFIT * 0.05;
+	const PERFORMANCE_FEE = NET_PROFIT * 0.02;
 
 	return (
 		<section className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 max-w-7xl mx-auto px-4">
@@ -156,7 +156,7 @@ export default function BillingPage() {
 								<div className="bg-[#00FFA3]/10 p-5 rounded-2xl border border-[#00FFA3]/30 mt-4 shadow-[0_0_20px_rgba(0,255,163,0.1)]">
 									<div className="flex justify-between items-center mb-4">
 										<span className="text-sm font-black uppercase text-white tracking-wider">
-											Amount Due (5% Fee)
+											Amount Due (2% Fee)
 										</span>
 										<span className="text-3xl font-black text-[#00FFA3] font-mono">
 											${PERFORMANCE_FEE.toFixed(2)}
