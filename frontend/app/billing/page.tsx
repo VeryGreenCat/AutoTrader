@@ -167,11 +167,11 @@ export default function BillingPage() {
 										<div className="flex items-center gap-2">
 											<Gift className="w-4 h-4 text-cyan-400" />
 											<span className="text-xs text-cyan-400/80">
-												Rebate: 1 Ticket per $20 Profit
+												Rebate: 1 Ticket per $10 Profit
 											</span>
 										</div>
 										<span className="text-xs font-bold text-black bg-cyan-400 px-3 py-1 rounded-full uppercase tracking-wider">
-											+{Math.floor(PERFORMANCE_FEE / 20)} Free Tickets
+											+{Math.floor(PERFORMANCE_FEE / 10)} Free Tickets
 										</span>
 									</div>
 								</div>

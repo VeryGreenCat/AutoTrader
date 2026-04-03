@@ -11,6 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	stripe "github.com/stripe/stripe-go/v76"
 	"github.com/stripe/stripe-go/v76/webhook"
+	"gorm.io/gorm"
 )
 
 // stripe listen --forward-to localhost:5000/api/webhook
@@ -63,6 +64,11 @@ func handlePaymentSuccess(event stripe.Event) error {
             return fmt.Errorf("bill_id not found in session metadata for billing type")
         }
 
+        var bill models.Billing
+        if err := config.DB.Where("bill_id = ?", billID).First(&bill).Error; err != nil {
+            return fmt.Errorf("failed to fetch billing record: %w", err)
+        }
+
         result := config.DB.Model(&models.Billing{}).
             Where("bill_id = ? AND status IN ?", billID, []string{"unpaid", "overdue"}).
             Updates(map[string]interface{}{
@@ -73,6 +79,19 @@ func handlePaymentSuccess(event stripe.Event) error {
 
         if result.Error != nil {
             return fmt.Errorf("failed to update billing record: %w", result.Error)
+        }
+
+        // Add reward tickets: 1 ticket per $10 of performance fee paid
+        // 1 ticket = 12 hours = 43200 seconds
+        if bill.Amount > 0 {
+            ticketsToAward := int64(bill.Amount / 10)
+            if ticketsToAward > 0 {
+                secondsToAdd := ticketsToAward * 12 * 3600
+                config.DB.Model(&models.User{}).
+                    Where("user_id = ?", bill.UserID).
+                    Update("remaining_seconds", gorm.Expr("remaining_seconds + ?", secondsToAdd))
+                fmt.Printf("Awarded %d tickets (%d seconds) to user %s for paying bill %s\n", ticketsToAward, secondsToAdd, bill.UserID, billID)
+            }
         }
     case "ticket":
         userID := sess.Metadata["user_id"]

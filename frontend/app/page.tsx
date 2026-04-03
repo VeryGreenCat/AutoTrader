@@ -203,7 +203,7 @@ export default function Home() {
 							<ul className="text-sm text-gray-400 space-y-3 text-left pl-4">
 								<li className="flex items-center gap-2">
 									<div className="w-1 h-1 bg-[#00FFA3] rounded-full"></div> 1
-									free ticket per $20 profit
+									free ticket per $10 profit
 								</li>
 								<li className="flex items-center gap-2">
 									<div className="w-1 h-1 bg-[#00FFA3] rounded-full"></div> Max
